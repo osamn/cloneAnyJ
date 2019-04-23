@@ -32,3 +32,6 @@ build
 .settings
 .project
 .classpath
+
+# and
+bin
