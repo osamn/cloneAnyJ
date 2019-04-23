@@ -27,3 +27,8 @@ hs_err_pid*
 
 # Ignore Gradle build output directory
 build
+
+# Ignore Eclipse settings
+.settings
+.project
+.classpath
