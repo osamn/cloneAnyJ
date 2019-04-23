@@ -8,22 +8,51 @@
 
 plugins {
     // Apply the java plugin to add support for Java
-    id 'java'
-
-    // Apply the application plugin to add support for building an application
-    id 'application'
+    id 'java-library'
 
     // Apply the groovy plugin to also add support for Groovy (needed for Spock)
     id 'groovy'
+
+    // eclipse に読み込ませるための設定作る人
+    id 'eclipse'
+
+}
+
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+// ソースとかjavadocとかつける設定しとく
+eclipse {
+    classpath {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+    jdt {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+}
+
+eclipseJdt.doLast {
+    File f = file('.settings/org.eclipse.core.resources.prefs')
+    f.write('eclipse.preferences.version=1\n')
+    f.append('encoding/<project>=UTF-8')
 }
 
 repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+
+    // Add mavenCentral.
+    mavenCentral()
 }
 
 dependencies {
+    api 'org.ow2.asm:asm:7.1'
+
     // This dependency is found on compile classpath of this component and consumers.
     implementation 'com.google.guava:guava:27.0.1-jre'
 
@@ -35,5 +64,3 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 }
 
-// Define the main class for the application
-mainClassName = 'ReIW.tiny.cloneAny.App'
