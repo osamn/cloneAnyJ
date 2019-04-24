@@ -13,7 +13,6 @@ plugins {
     // Apply the groovy plugin to also add support for Groovy (needed for Spock)
     id 'groovy'
 
-    // eclipse に読み込ませるための設定作る人
     id 'eclipse'
 
 }
@@ -23,22 +22,11 @@ compileJava {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-// ソースとかjavadocとかつける設定しとく
 eclipse {
     classpath {
         downloadJavadoc = true
         downloadSources = true
     }
-    jdt {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-}
-
-eclipseJdt.doLast {
-    File f = file('.settings/org.eclipse.core.resources.prefs')
-    f.write('eclipse.preferences.version=1\n')
-    f.append('encoding/<project>=UTF-8')
 }
 
 repositories {
