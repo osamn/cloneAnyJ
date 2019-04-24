@@ -34,15 +34,14 @@ public final class AssemblyDomain extends ClassLoader {
 		return domainRef.get();
 	}
 
-	public static void setDefaultAssemblyDomain(AssemblyDomain domain) {
+	public static void setDefaultAssemblyDomain(final AssemblyDomain domain) {
 		domainRef.set(domain);
 	}
 
 	public AssemblyDomain() {
-		super();
 	}
 
-	public AssemblyDomain(ClassLoader parent) {
+	public AssemblyDomain(final ClassLoader parent) {
 		super(parent);
 	}
 
@@ -50,7 +49,7 @@ public final class AssemblyDomain extends ClassLoader {
 		return new ClassResolver();
 	}
 
-	// for Debug use only;-)
+	/** for Debug use only;-) */
 	public ClassVisitor getTerminalClassVisitor(final ClassVisitor inspector) {
 		// ClassVisitor チェーンの一番最後に ClassResolver を連結
 		// わざわざ reflection でやるまでもないし、本来 test 側でやった方がいいよね
