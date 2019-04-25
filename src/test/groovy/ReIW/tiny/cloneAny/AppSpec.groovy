@@ -5,7 +5,7 @@ package ReIW.tiny.cloneAny
 
 import spock.lang.Specification
 
-class SpockAppTest extends Specification {
+class AppSpec extends Specification {
     def "application has a greeting"() {
         setup:
         def app = new App()
