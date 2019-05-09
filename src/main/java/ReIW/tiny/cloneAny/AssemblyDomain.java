@@ -24,7 +24,8 @@ public final class AssemblyDomain extends ClassLoader {
 		final AssemblyDomain domain = AccessController.doPrivileged(new PrivilegedAction<AssemblyDomain>() {
 			@Override
 			public AssemblyDomain run() {
-				return new AssemblyDomain(Thread.currentThread().getContextClassLoader());
+				return new AssemblyDomain(ClassLoader.getSystemClassLoader());
+				// return new AssemblyDomain(Thread.currentThread().getContextClassLoader());
 			}
 		});
 		domainRef = new AtomicReference<AssemblyDomain>(domain);
