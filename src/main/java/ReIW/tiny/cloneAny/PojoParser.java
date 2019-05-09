@@ -14,9 +14,9 @@ import org.objectweb.asm.Type;
 
 public class PojoParser {
 
-	private final Consumer<AccessibleElement> cons;
+	private final Consumer<AccessElement> cons;
 
-	public PojoParser(Consumer<AccessibleElement> cons) {
+	public PojoParser(Consumer<AccessElement> cons) {
 		this.cons = cons;
 	}
 
@@ -48,8 +48,8 @@ public class PojoParser {
 		@Override
 		public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
 			if ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_INTERFACE) != 0) {
-				final int type = (access & Opcodes.ACC_FINAL) == 0 ? AccessibleElement.FIELD : AccessibleElement.FINAL_FIELD;
-				PojoParser.this.cons.accept(new AccessibleElement(type, name, descriptor, null));
+				final int type = (access & Opcodes.ACC_FINAL) == 0 ? AccessElement.FIELD : AccessElement.FINAL_FIELD;
+				PojoParser.this.cons.accept(new AccessElement(type, name, descriptor, null));
 			}
 			return null;
 		}
@@ -61,10 +61,10 @@ public class PojoParser {
 				if (name.contentEquals("<init>")) {
 					return new CollectCtorParamVisitor(Type.getArgumentTypes(descriptor));
 				} else if (AccessorUtil.isGetter(name, descriptor)) {
-					PojoParser.this.cons.accept(new AccessibleElement(AccessibleElement.PROP_GET,
+					PojoParser.this.cons.accept(new AccessElement(AccessElement.PROP_GET,
 							AccessorUtil.getPropertyName(name), descriptor, name));
 				} else if (AccessorUtil.isSetter(name, descriptor)) {
-					PojoParser.this.cons.accept(new AccessibleElement(AccessibleElement.PROP_SET,
+					PojoParser.this.cons.accept(new AccessElement(AccessElement.PROP_SET,
 							AccessorUtil.getPropertyName(name), descriptor, name));
 				}
 			}
@@ -86,7 +86,7 @@ public class PojoParser {
 		@Override
 		public void visitParameter(String name, int access) {
 			Type t = arguments[pos];
-			PojoParser.this.cons.accept(new AccessibleElement(AccessibleElement.CTOR_ARG, name, t.getInternalName(), null));
+			PojoParser.this.cons.accept(new AccessElement(AccessElement.CTOR_ARG, name, t.getInternalName(), null));
 			pos++;
 		}
 

@@ -1,6 +1,6 @@
 package ReIW.tiny.cloneAny;
 
-public class AccessibleElement {
+public class AccessElement {
 
 	public static final int FIELD = 0;
 	public static final int FINAL_FIELD = 1;
@@ -8,7 +8,7 @@ public class AccessibleElement {
 	public static final int PROP_GET = 3;
 	public static final int PROP_SET = 4;
 
-	AccessibleElement(int elementType, String name, String typeName, String rel) {
+	AccessElement(int elementType, String name, String typeName, String rel) {
 		this.elementType = elementType;
 		this.name = name;
 		this.typeName = typeName;
