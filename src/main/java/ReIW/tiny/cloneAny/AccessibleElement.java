@@ -24,4 +24,10 @@ public class AccessibleElement {
 	public final boolean canSet;
 	public final String rel;
 
+	@Override
+	public String toString() {
+		return "AccessibleElement [elementType=" + elementType + ", name=" + name + ", typeName=" + typeName
+				+ ", canGet=" + canGet + ", canSet=" + canSet + ", rel=" + rel + "]";
+	}
+
 }
