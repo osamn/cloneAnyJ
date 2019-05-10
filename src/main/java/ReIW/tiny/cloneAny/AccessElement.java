@@ -26,8 +26,8 @@ public class AccessElement {
 
 	@Override
 	public String toString() {
-		return "AccessibleElement [elementType=" + elementType + ", name=" + name + ", typeName=" + typeName
-				+ ", canGet=" + canGet + ", canSet=" + canSet + ", rel=" + rel + "]";
+		return "[Name=" + name + ", Type=" + typeName + ", Rel=" + rel + " " + (canGet ? "r" : "-")
+				+ (canSet ? "w" : "-") + " " + elementType + "]";
 	}
 
 }

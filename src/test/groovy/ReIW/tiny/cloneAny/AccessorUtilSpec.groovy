@@ -1,21 +1,16 @@
 package ReIW.tiny.cloneAny
 
-import static org.junit.jupiter.api.Assertions.*
-
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
-
 import spock.lang.Specification
 import spock.lang.Unroll
 
 class AccessorUtilSpec extends Specification {
 
-	def "get property name from method name"() {
+	def "Property name from #methodName => #propName"() {
 		expect:
-		expected == AccessorUtil.getPropertyName(methodName)
+		propName == AccessorUtil.getPropertyName(methodName)
 
 		where:
-		methodName	|| expected
+		methodName	|| propName
 		"setFoo"	|| "foo"
 		"setFooBar"	|| "fooBar"
 		"setFOoBar"	|| "FOoBar"
@@ -31,7 +26,7 @@ class AccessorUtilSpec extends Specification {
 		"fooBar"	|| null
 	}
 
-	def "check method is getter or not"() {
+	def "Method #name#descriptor is getter or not => #expected"() {
 		expect:
 		expected == AccessorUtil.isGetter(name, descriptor)
 
@@ -47,7 +42,7 @@ class AccessorUtilSpec extends Specification {
 		false		|| "fooBar"		| "()Ljava/lang/Object;"
 	}
 
-	def "check method is setter or not"() {
+	def "Method #name#descriptor is setter or not => #expected"() {
 		expect:
 		expected == AccessorUtil.isSetter(name, descriptor)
 
