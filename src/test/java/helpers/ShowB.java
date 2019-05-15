@@ -6,12 +6,12 @@ import java.io.PrintWriter;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.util.TraceClassVisitor;
 
-import beans.Bean2;
+import beans.Struct1;
 
 public final class ShowB {
 
 	public static void main(String[] args) throws Exception {
-		showBytecode(Bean2.class);
+		showBytecode(Struct1.class);
 	}
 
 	public static void showBytecode(Class<?> clazz) throws Exception {

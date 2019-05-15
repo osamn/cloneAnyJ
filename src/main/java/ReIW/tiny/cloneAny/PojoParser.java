@@ -41,15 +41,15 @@ public class PojoParser {
 				String[] interfaces) {
 			if (superName != null) {
 				// 親クラスのプロパティを見に行く
-				new PojoParser(PojoParser.this.cons).parse(superName);
+				new PojoParser(PojoParser.this.cons).parse(superName.replace('.', '/'));
 			}
 		}
 
 		@Override
 		public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-			if ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_INTERFACE) != 0) {
+			if ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_STATIC) == 0) {
 				final int type = (access & Opcodes.ACC_FINAL) == 0 ? AccessElement.FIELD : AccessElement.FINAL_FIELD;
-				PojoParser.this.cons.accept(new AccessElement(type, name, descriptor, null));
+				PojoParser.this.cons.accept(new AccessElement(type, name, descriptor, signature, null));
 			}
 			return null;
 		}
@@ -57,15 +57,17 @@ public class PojoParser {
 		@Override
 		public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
 				String[] exceptions) {
-			if ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_INTERFACE) != 0) {
+			if ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_STATIC) == 0) {
 				if (name.contentEquals("<init>")) {
-					return new CollectCtorParamVisitor(Type.getArgumentTypes(descriptor));
+					return new CollectCtorParamVisitor(descriptor, signature);
 				} else if (AccessorUtil.isGetter(name, descriptor)) {
-					PojoParser.this.cons.accept(new AccessElement(AccessElement.PROP_GET,
-							AccessorUtil.getPropertyName(name), descriptor, name));
+					PojoParser.this.cons
+							.accept(new AccessElement(AccessElement.PROP_GET, AccessorUtil.getPropertyName(name),
+									Type.getReturnType(descriptor).getInternalName(), name, signature));
 				} else if (AccessorUtil.isSetter(name, descriptor)) {
-					PojoParser.this.cons.accept(new AccessElement(AccessElement.PROP_SET,
-							AccessorUtil.getPropertyName(name), descriptor, name));
+					PojoParser.this.cons
+							.accept(new AccessElement(AccessElement.PROP_SET, AccessorUtil.getPropertyName(name),
+									Type.getArgumentTypes(descriptor)[0].getInternalName(), name, signature));
 				}
 			}
 			return null;
@@ -75,19 +77,13 @@ public class PojoParser {
 
 	private final class CollectCtorParamVisitor extends MethodVisitor {
 
-		private final Type[] arguments;
-		private int pos = 0;
-
-		public CollectCtorParamVisitor(Type[] arguments) {
+		public CollectCtorParamVisitor(String descriptor, String signature) {
 			super(ASM7);
-			this.arguments = arguments;
 		}
 
 		@Override
 		public void visitParameter(String name, int access) {
-			Type t = arguments[pos];
-			PojoParser.this.cons.accept(new AccessElement(AccessElement.CTOR_ARG, name, t.getInternalName(), null));
-			pos++;
+			// TODO
 		}
 
 	}

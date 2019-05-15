@@ -2,20 +2,23 @@ package beans;
 
 public class Bean1 {
 
-	private String str;
-	private int i;
+	private int intVal;
+	private String stringVal;
 
-	public String getStr() {
-		return str;
+	public int getIntVal() {
+		return intVal;
 	}
-	public void setStr(String str) {
-		this.str = str;
+
+	public void setIntVal(int intVal) {
+		this.intVal = intVal;
 	}
-	public int getI() {
-		return i;
+
+	public String getStringVal() {
+		return stringVal;
 	}
-	public void setI(int i) {
-		this.i = i;
+
+	public void setStringVal(String stringVal) {
+		this.stringVal = stringVal;
 	}
-	
+
 }

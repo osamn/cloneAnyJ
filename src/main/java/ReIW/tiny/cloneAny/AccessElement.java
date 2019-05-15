@@ -8,12 +8,13 @@ public class AccessElement {
 	public static final int PROP_GET = 3;
 	public static final int PROP_SET = 4;
 
-	AccessElement(int elementType, String name, String typeName, String rel) {
+	AccessElement(int elementType, String name, String typeName, String rel, String signature) {
 		this.elementType = elementType;
 		this.name = name;
 		this.typeName = typeName;
 		this.canGet = (elementType == FIELD || elementType == FINAL_FIELD || elementType == PROP_GET);
 		this.canSet = (elementType == FIELD || elementType == CTOR_ARG || elementType == PROP_SET);
+		this.signature = signature;
 		this.rel = rel;
 	}
 
@@ -23,11 +24,12 @@ public class AccessElement {
 	public final boolean canGet;
 	public final boolean canSet;
 	public final String rel;
+	public final String signature;
 
 	@Override
 	public String toString() {
-		return "[Name=" + name + ", Type=" + typeName + ", Rel=" + rel + " " + (canGet ? "r" : "-")
-				+ (canSet ? "w" : "-") + " " + elementType + "]";
+		return "[" + elementType + " " + (canGet ? "r" : "-") + (canSet ? "w" : "-") + ": Name=" + name + ", Type="
+				+ typeName + ", Signature=" + signature + ", Rel=" + rel + "]";
 	}
 
 }
