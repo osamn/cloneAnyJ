@@ -1,11 +1,5 @@
 package ReIW.tiny.cloneAny
 
-import static org.junit.jupiter.api.Assertions.*
-
-import java.util.function.Consumer
-
-import org.junit.jupiter.api.Test
-
 import spock.lang.Specification
 
 class PojoParserSpec extends Specification {
