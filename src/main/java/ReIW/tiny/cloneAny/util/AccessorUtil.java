@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny;
+package ReIW.tiny.cloneAny.util;
 
 import org.objectweb.asm.Type;
 

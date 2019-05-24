@@ -1,13 +1,61 @@
-package beans;
+package ReIW.tiny.cloneAny.pojo;
 
+import java.io.IOException;
+
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
-public class SigRd extends SignatureVisitor {
+public class PrintSignature extends SignatureVisitor {
+
+	public static void main(String[] args) throws Exception {
+		readSig(Typed1.class);
+	}
+
+	public static void readSig(Class<?> clazz) throws IOException {
+		new ClassReader(clazz.getName()).accept(new ClassVisitor(Opcodes.ASM7) {
+
+			@Override
+			public void visit(int version, int access, String name, String signature, String superName,
+					String[] interfaces) {
+				if (signature != null) {
+					System.out.println(":: Class " + name);
+					System.out.println(":: " + signature);
+					new SignatureReader(signature).accept(new PrintSignature());
+					System.out.println();
+				}
+			}
+
+			@Override
+			public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+				if (signature != null) {
+					System.out.println(":: Field " + name);
+					new SignatureReader(signature).acceptType(new PrintSignature());
+					System.out.println();
+				}
+				return null;
+			}
+
+			@Override
+			public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
+					String[] exceptions) {
+				if (signature != null) {
+					System.out.println(":: Method " + name);
+					new SignatureReader(signature).acceptType(new PrintSignature());
+					System.out.println();
+				}
+				return null;
+			}
+
+		}, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+	}
 
 	public void visitFormalTypeParameter(String name) {
-		System.out.println("visitFormalTypeParameter(" + name +")");
+		System.out.println("visitFormalTypeParameter(" + name + ")");
 		super.visitFormalTypeParameter(name);
 	}
 
@@ -86,19 +134,8 @@ public class SigRd extends SignatureVisitor {
 		super.visitEnd();
 	}
 
-	public SigRd() {
+	public PrintSignature() {
 		super(Opcodes.ASM7);
 	}
 
-	public static void main(String[] args) {
-		SignatureReader sr = new SignatureReader("<T:Ljava/lang/Object;>Lbeans/Typed1<Ljava/lang/String;TT;>;");
-		sr.accept(new SigRd());
-		System.out.println("-----------");
-
-		SignatureReader sr1 = new SignatureReader("<T:Ljava/lang/Object;K:Ljava/lang/Object;V:Ljava/lang/Object;M::Ljava/util/Map<TK;TV;>;L::Ljava/util/List<+TV;>;S::Ljava/util/Set<-TV;>;>Ljava/lang/Object;");
-		sr1.accept(new SigRd());
-		System.out.println("-----------");
-		SignatureReader sr2 = new SignatureReader("Lbeans/Typed2<Lbeans/Bean1;Ljava/lang/String;Lbeans/Bean2;Ljava/util/HashMap<Ljava/lang/String;Lbeans/Bean2;>;Ljava/util/ArrayList<Lbeans/Bean2;>;Ljava/util/HashSet<Lbeans/Bean2;>;>;");
-		sr2.acceptType(new SigRd());
-	}
 }

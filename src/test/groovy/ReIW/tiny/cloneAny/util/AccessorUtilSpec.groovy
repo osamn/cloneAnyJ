@@ -1,7 +1,6 @@
-package ReIW.tiny.cloneAny
+package ReIW.tiny.cloneAny.util
 
 import spock.lang.Specification
-import spock.lang.Unroll
 
 class AccessorUtilSpec extends Specification {
 
