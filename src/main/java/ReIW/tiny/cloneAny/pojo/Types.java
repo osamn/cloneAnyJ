@@ -63,56 +63,6 @@ public final class Types {
 
 	}
 
-	private final static class TypeSignatureParser extends DefaultSignatureVisitor {
-
-		private final ArrayList<Slot> formalSlots = new ArrayList<>(5);
-		private final ArrayList<Slot> supersSlots = new ArrayList<>(1);
-
-		private final Stack<Slot> stack = new Stack<>();
-		private String typeParam;
-
-		private ArrayList<Slot> activeSlots = formalSlots;
-
-		@Override
-		public SignatureVisitor visitSuperclass() {
-			activeSlots = supersSlots;
-			typeParam = "@";
-			return super.visitSuperclass();
-		}
-
-		@Override
-		public void visitFormalTypeParameter(String name) {
-			typeParam = name;
-		}
-
-		@Override
-		public void visitClassType(String name) {
-			stack.push(new Slot(typeParam, name));
-		}
-
-		@Override
-		public SignatureVisitor visitTypeArgument(char wildcard) {
-			typeParam = String.valueOf(wildcard);
-			return super.visitTypeArgument(wildcard);
-		}
-
-		@Override
-		public void visitTypeVariable(String name) {
-			stack.peek().slotList.add(new Slot(name, null));
-		}
-
-		@Override
-		public void visitEnd() {
-			Slot slot = stack.pop();
-			if (stack.isEmpty()) {
-				activeSlots.add(slot);
-			} else {
-				stack.peek().slotList.add(slot);
-			}
-		}
-
-	}
-
 	private static final class TypeDefBuilder extends DefaultClassVisitor {
 
 		private TypeDef typeDef;
@@ -163,4 +113,54 @@ public final class Types {
 			return null;
 		}
 	}
+
+	private final static class TypeSignatureParser extends DefaultSignatureVisitor {
+
+		private final ArrayList<Slot> formalSlots = new ArrayList<>(5);
+		private final ArrayList<Slot> supersSlots = new ArrayList<>(1);
+
+		private final Stack<Slot> stack = new Stack<>();
+		private String typeParam;
+
+		private ArrayList<Slot> activeSlots = formalSlots;
+
+		@Override
+		public SignatureVisitor visitSuperclass() {
+			activeSlots = supersSlots;
+			typeParam = "@";
+			return super.visitSuperclass();
+		}
+
+		@Override
+		public void visitFormalTypeParameter(String name) {
+			typeParam = name;
+		}
+
+		@Override
+		public void visitClassType(String name) {
+			stack.push(new Slot(typeParam, name));
+		}
+
+		@Override
+		public SignatureVisitor visitTypeArgument(char wildcard) {
+			typeParam = String.valueOf(wildcard);
+			return super.visitTypeArgument(wildcard);
+		}
+
+		@Override
+		public void visitTypeVariable(String name) {
+			stack.peek().slotList.add(new Slot(name, null));
+		}
+
+		@Override
+		public void visitEnd() {
+			Slot slot = stack.pop();
+			if (stack.isEmpty()) {
+				activeSlots.add(slot);
+			} else {
+				stack.peek().slotList.add(slot);
+			}
+		}
+	}
+
 }
