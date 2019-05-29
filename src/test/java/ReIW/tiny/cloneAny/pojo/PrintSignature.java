@@ -45,7 +45,7 @@ public class PrintSignature extends SignatureVisitor {
 					String[] exceptions) {
 				if (signature != null) {
 					System.out.println(":: Method " + name);
-					new SignatureReader(signature).acceptType(new PrintSignature());
+					new SignatureReader(signature).accept(new PrintSignature());
 					System.out.println();
 				}
 				return null;

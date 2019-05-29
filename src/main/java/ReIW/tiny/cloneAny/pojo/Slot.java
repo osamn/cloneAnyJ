@@ -5,16 +5,16 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 
-public class Slot {
+final class Slot {
 
-	public Slot(String typeParam, String typeClass) {
+	Slot(String typeParam, String typeClass) {
 		this.typeParam = typeParam;
 		this.typeClass = typeClass;
 	}
 
-	public final String typeParam;
-	public final String typeClass;
-	public final ArrayList<Slot> slotList = new ArrayList<>(5);
+	final String typeParam;
+	final String typeClass;
+	final ArrayList<Slot> slotList = new ArrayList<>(5);
 
 	@Override
 	public String toString() {
@@ -28,7 +28,7 @@ public class Slot {
 		}
 	}
 
-	public void printTo(PrintWriter out, String indent) {
+	private void printTo(PrintWriter out, String indent) {
 		out.format("%sSlot [typeParam=%s, typeClass=%s]\n", indent, typeParam, typeClass);
 		indent += "  ";
 		for (Slot slot : slotList) {

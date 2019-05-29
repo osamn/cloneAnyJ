@@ -1,15 +1,20 @@
 package ReIW.tiny.cloneAny.pojo;
 
 import java.util.ArrayList;
+import java.util.List;
 
-class TypeDef {
+final class TypeDef {
 
-	final String superType;
+	final String name;
+	final String superName;
 	final TypeSlot slot;
-	final ArrayList<PartialEntry> access = new ArrayList<>();
+	final List<AccessEntry> access;
 
-	TypeDef(final String superType, final TypeSlot slot) {
-		this.superType = superType;
+	TypeDef(final String name ,final String superName, final TypeSlot slot) {
+		this.name = name;
+		this.superName = superName;
 		this.slot = slot;
+		access = new ArrayList<>();
 	}
+
 }

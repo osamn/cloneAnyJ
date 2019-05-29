@@ -6,9 +6,9 @@ import static ReIW.tiny.cloneAny.pojo.Types.ACC_FINAL_FIELD;
 import static ReIW.tiny.cloneAny.pojo.Types.ACC_PROP_GET;
 import static ReIW.tiny.cloneAny.pojo.Types.ACC_PROP_SET;
 
-class PartialEntry {
+class AccessEntry {
 
-	PartialEntry(final int elementType, final String name, final Slot slot, final String rel) {
+	AccessEntry(final int elementType, final String name, final Slot slot, final String rel) {
 		this.elementType = elementType;
 		this.name = name;
 		this.slot = slot;
@@ -23,6 +23,7 @@ class PartialEntry {
 	final boolean canGet;
 	final boolean canSet;
 	// getter setter name 今のところ対応してないけど BeanInfo で変わる場合もあるんで
+	// あと ctor の descriptor とそのパラメタ位置とかも
 	final String rel;
 
 }
