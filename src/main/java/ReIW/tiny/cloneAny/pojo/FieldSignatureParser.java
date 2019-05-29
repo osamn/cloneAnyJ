@@ -11,16 +11,6 @@ import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
 
 final class FieldSignatureParser extends DefaultSignatureVisitor {
 
-	static AccessEntry accept(final String name, final String descriptor, final String signature) {
-		if (signature == null) {
-			return new AccessEntry(Types.ACC_FIELD, name, new Slot("@", descriptor), null);
-		} else {
-			final FieldSignatureParser parser = new FieldSignatureParser();
-			new SignatureReader(signature).accept(parser);
-			return new AccessEntry(Types.ACC_FIELD, name, parser.slots.get(0), null);
-		}
-	}
-
 	static void accept(final String descriptor, final String signature, final Consumer<Slot> cons) {
 		if (signature == null) {
 			cons.accept(new Slot("@", descriptor));
