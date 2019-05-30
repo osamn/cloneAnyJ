@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
-public final class TypeSlot {
+final class TypeSlot {
 
 	final List<Slot> formalSlots;
 	final Slot superSlot;

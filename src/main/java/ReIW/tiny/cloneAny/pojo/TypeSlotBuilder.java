@@ -1,37 +1,45 @@
 package ReIW.tiny.cloneAny.pojo;
 
+import java.util.ArrayList;
 import java.util.Stack;
-import java.util.function.Consumer;
 
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
 import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
 
-final class FieldSignatureParser extends DefaultSignatureVisitor {
+final class TypeSlotBuilder extends DefaultSignatureVisitor {
 
-	static void parse(final String descriptor, final String signature, final Consumer<Slot> fieldCons) {
+	static TypeSlot createTypeSlot(final String signature) {
 		if (signature == null) {
-			fieldCons.accept(new Slot(null, descriptor));
+			return new TypeSlot(new ArrayList<Slot>(0), null);
 		} else {
-			final FieldSignatureParser parser = new FieldSignatureParser(fieldCons);
+			final TypeSlotBuilder parser = new TypeSlotBuilder();
 			new SignatureReader(signature).accept(parser);
+			return new TypeSlot(parser.formalSlots, parser.supersSlots.get(0));
 		}
 	}
 
-	private final Consumer<Slot> cons;
+	private final ArrayList<Slot> formalSlots = new ArrayList<>(5);
+	private final ArrayList<Slot> supersSlots = new ArrayList<>(1);
 
 	private final Stack<Slot> stack = new Stack<>();
 	private String typeParam;
+	private ArrayList<Slot> activeSlots;
 
-	private FieldSignatureParser(final Consumer<Slot> cons) {
-		this.cons = cons;
+	private TypeSlotBuilder() {
+		activeSlots = formalSlots;
+	}
+
+	@Override
+	public SignatureVisitor visitSuperclass() {
+		activeSlots = supersSlots;
+		return super.visitSuperclass();
 	}
 
 	@Override
 	public void visitFormalTypeParameter(String name) {
-		// FIXME これいらないようなきがする
-		throw new UnboundFormalTypeParameterException();
+		typeParam = name;
 	}
 
 	@Override
@@ -54,10 +62,9 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 	public void visitEnd() {
 		Slot slot = stack.pop();
 		if (stack.isEmpty()) {
-			cons.accept(slot);
+			activeSlots.add(slot);
 		} else {
 			stack.peek().slotList.add(slot);
 		}
 	}
-
 }

@@ -16,79 +16,71 @@ import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
 
 final class MethodSignatureParser extends DefaultSignatureVisitor {
 
-	static MethodVisitor acceptCtor(final String descriptor, final String signature, BiConsumer<String, Slot> cons) {
-		final Iterator<Slot> it;
-		if (signature == null) {
-			ArrayList<Slot> slots = new ArrayList<>();
-			for (Type t : Type.getArgumentTypes(descriptor)) {
-				slots.add(new Slot("@", t.getInternalName()));
-			}
-			it = slots.iterator();
-		} else {
-			final MethodSignatureParser parser = new MethodSignatureParser();
-			new SignatureReader(signature).accept(parser);
-			it = parser.params.iterator();
-		}
+	static MethodVisitor getParameterVisitor(final String descriptor, final String signature,
+			final BiConsumer<String, Slot> parametersCons) {
+		final ArrayList<Slot> slots = new ArrayList<>();
+		parseArgumentsAndReturn(descriptor, signature, slots::add, null);
+		final Iterator<Slot> it = slots.iterator();
 		return new DefaultMethodVisitor() {
 			@Override
 			public void visitParameter(String name, int access) {
-				cons.accept(name, it.next());
+				parametersCons.accept(name, it.next());
 			};
 		};
 	}
 
-	static void acceptGet(final String descriptor, final String signature, Consumer<Slot> cons) {
-		final Slot slot;
+	static void parseArgumentsAndReturn(final String descriptor, final String signature, final Consumer<Slot> argumentsCons,
+			final Consumer<Slot> returnCons) {
 		if (signature == null) {
-			slot = new Slot("@", Type.getReturnType(descriptor).getInternalName());
+			Type m = Type.getMethodType(descriptor);
+			for (Type t : m.getArgumentTypes()) {
+				argumentsCons.accept(new Slot(null, t.getInternalName()));
+			}
+			returnCons.accept(new Slot(null, m.getReturnType().getInternalName()));
 		} else {
-			final MethodSignatureParser parser = new MethodSignatureParser();
+			final MethodSignatureParser parser = new MethodSignatureParser(argumentsCons, returnCons);
 			new SignatureReader(signature).accept(parser);
-			slot = parser.returns.get(0);
 		}
-		cons.accept(slot);
 	}
 
-	static void acceptSet(final String descriptor, final String signature, Consumer<Slot> cons) {
-		final Slot slot;
-		if (signature == null) {
-			slot = new Slot("@", Type.getArgumentTypes(descriptor)[0].getInternalName());
-		} else {
-			final MethodSignatureParser parser = new MethodSignatureParser();
-			new SignatureReader(signature).accept(parser);
-			slot = parser.params.get(0);
-		}
-		cons.accept(slot);
-	}
-
-	private final ArrayList<Slot> params = new ArrayList<>(7);
-	private final ArrayList<Slot> returns = new ArrayList<>(1);
+	private final Consumer<Slot> arguments;
+	private final Consumer<Slot> returns;
 
 	private final Stack<Slot> stack = new Stack<>();
 
-	private String typeParam = "@";
-	private ArrayList<Slot> activeSlots;
+	private Consumer<Slot> cons;
+	private String typeParamName;
+
+	private MethodSignatureParser(Consumer<Slot> argumentsCons, Consumer<Slot> returnCons) {
+		this.arguments = argumentsCons;
+		this.returns = returnCons;
+	}
+
+	@Override
+	public void visitFormalTypeParameter(String name) {
+		throw new UnboundFormalTypeParameterException();
+	}
 
 	@Override
 	public SignatureVisitor visitParameterType() {
-		activeSlots = params;
+		cons = arguments;
 		return super.visitParameterType();
 	}
 
 	@Override
 	public SignatureVisitor visitReturnType() {
-		activeSlots = returns;
+		cons = returns;
 		return super.visitReturnType();
 	}
 
 	@Override
 	public void visitClassType(String name) {
-		stack.push(new Slot(typeParam, name));
+		stack.push(new Slot(typeParamName, name));
 	}
 
 	@Override
 	public SignatureVisitor visitTypeArgument(char wildcard) {
-		typeParam = String.valueOf(wildcard);
+		typeParamName = String.valueOf(wildcard);
 		return super.visitTypeArgument(wildcard);
 	}
 
@@ -101,7 +93,8 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 	public void visitEnd() {
 		Slot slot = stack.pop();
 		if (stack.isEmpty()) {
-			activeSlots.add(slot);
+			if (cons != null)
+				cons.accept(slot);
 		} else {
 			stack.peek().slotList.add(slot);
 		}
