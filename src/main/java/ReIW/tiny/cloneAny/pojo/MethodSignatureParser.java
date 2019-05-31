@@ -16,7 +16,7 @@ import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
 
 final class MethodSignatureParser extends DefaultSignatureVisitor {
 
-	static MethodVisitor getParameterVisitor(final String descriptor, final String signature,
+	static MethodVisitor parameterParserVisitor(final String descriptor, final String signature,
 			final BiConsumer<String, Slot> parametersCons) {
 		final ArrayList<Slot> slots = new ArrayList<>();
 		parseArgumentsAndReturn(descriptor, signature, slots::add, null);
@@ -29,8 +29,8 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 		};
 	}
 
-	static void parseArgumentsAndReturn(final String descriptor, final String signature, final Consumer<Slot> argumentsCons,
-			final Consumer<Slot> returnCons) {
+	static void parseArgumentsAndReturn(final String descriptor, final String signature,
+			final Consumer<Slot> argumentsCons, final Consumer<Slot> returnCons) {
 		if (signature == null) {
 			Type m = Type.getMethodType(descriptor);
 			for (Type t : m.getArgumentTypes()) {
@@ -68,6 +68,11 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 	}
 
 	@Override
+	public void visitBaseType(char descriptor) {
+		cons.accept(new Slot(null, String.valueOf(descriptor)));
+	}
+
+	@Override
 	public SignatureVisitor visitReturnType() {
 		cons = returns;
 		return super.visitReturnType();
@@ -86,15 +91,18 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitTypeVariable(String name) {
-		stack.peek().slotList.add(new Slot(name, null));
+		if (stack.isEmpty()) {
+			cons.accept(new Slot(name, null));
+		} else {
+			stack.peek().slotList.add(new Slot(name, null));
+		}
 	}
 
 	@Override
 	public void visitEnd() {
 		Slot slot = stack.pop();
 		if (stack.isEmpty()) {
-			if (cons != null)
-				cons.accept(slot);
+			cons.accept(slot);
 		} else {
 			stack.peek().slotList.add(slot);
 		}
