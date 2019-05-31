@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.List;
 
 final class Slot {
 
@@ -14,7 +15,7 @@ final class Slot {
 
 	final String typeParam;
 	final String typeClass;
-	final ArrayList<Slot> slotList = new ArrayList<>(5);
+	final List<Slot> slotList = new ArrayList<>(5);
 
 	@Override
 	public String toString() {

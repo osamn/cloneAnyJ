@@ -1,11 +1,12 @@
 package ReIW.tiny.cloneAny.pojo
 
-import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class FieldSignatureParserSpec extends Specification {
 
-	def "#descriptor, #signature "() {
+	@Unroll
+	def "parse(descriptor=#descriptor, signature=#signature)"() {
 		setup:
 		def slot
 		FieldSignatureParser.parse(descriptor, signature, {s -> slot = s })
