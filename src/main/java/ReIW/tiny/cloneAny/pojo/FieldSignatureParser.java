@@ -57,6 +57,7 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 		} else {
 			stack.peek().slotList.add(slot);
 		}
+		typeParamName = null;
 	}
 
 }

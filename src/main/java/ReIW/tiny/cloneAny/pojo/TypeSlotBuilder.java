@@ -33,8 +33,6 @@ final class TypeSlotBuilder extends DefaultSignatureVisitor {
 
 	@Override
 	public SignatureVisitor visitSuperclass() {
-		// 完全に切り替わるためいったんクリアする
-		typeParamName = null;
 		activeSlots = supersSlots;
 		return super.visitSuperclass();
 	}
@@ -68,5 +66,6 @@ final class TypeSlotBuilder extends DefaultSignatureVisitor {
 		} else {
 			stack.peek().slotList.add(slot);
 		}
+		typeParamName = null;
 	}
 }

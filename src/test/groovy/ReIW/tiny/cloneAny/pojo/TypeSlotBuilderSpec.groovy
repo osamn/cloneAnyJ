@@ -36,9 +36,11 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.formalSlots[0].typeClass == "java/lang/Object"
 		actual.formalSlots[1].typeParam == "L"
 		actual.formalSlots[1].typeClass == "java/util/List"
+		and:
 		actual.formalSlots[1].slotList.size()== 1
 		actual.formalSlots[1].slotList[0].typeParam == "T"
 		actual.formalSlots[1].slotList[0].typeClass == null
+		and:
 		actual.superSlot.typeParam == null
 		actual.superSlot.typeClass == "java/lang/Object"
 	}
@@ -49,7 +51,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 		then:
 		actual.formalSlots.size() == 0
-
+		and:
 		actual.superSlot.typeParam == null
 		actual.superSlot.typeClass == "java/util/HashMap"
 		actual.superSlot.slotList[0].typeParam == "="
@@ -60,21 +62,24 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.superSlot.slotList[1].slotList[0].typeClass == "java/lang/String"
 	}
 
-	def "createTypeSlot 型引数あり generic 実装 => class Foo implements List<String>"() {
+	def "createTypeSlot 型引数あり generic 実装 => class Foo implements List<String>, Serializable"() {
 		when:
-		def actual = TypeSlotBuilder.createTypeSlot("Ljava/lang/Object;Ljava/util/List<Ljava/lang/String;>;")
+		def actual = TypeSlotBuilder.createTypeSlot("Ljava/lang/Object;Ljava/util/List<Ljava/lang/String;>;Ljava/io/Serializable;")
 		println actual
 		
 		then:
 		actual.formalSlots.size() == 0
-
+		and:
 		actual.superSlot.typeParam == null
 		actual.superSlot.typeClass == "java/lang/Object"
-
+		and:
+		actual.interfaceSlot.size()== 2
 		actual.interfaceSlot[0].typeParam == null
 		actual.interfaceSlot[0].typeClass == "java/util/List"
 		actual.interfaceSlot[0].slotList[0].typeParam == "="
 		actual.interfaceSlot[0].slotList[0].typeClass == "java/lang/String"
+		actual.interfaceSlot[1].typeParam == null
+		actual.interfaceSlot[1].typeClass == "java/io/Serializable"
 	}
 
 	def "createTypeSlot 型引数あり generic 継承 => class Foo<T> extends ArrayList<T>"() {
@@ -85,7 +90,7 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.formalSlots.size() == 1
 		actual.formalSlots[0].typeParam == "T"
 		actual.formalSlots[0].typeClass == "java/lang/Object"
-
+		and:
 		actual.superSlot.typeParam == null
 		actual.superSlot.typeClass == "java/util/ArrayList"
 		actual.superSlot.slotList[0].typeParam == "T"
@@ -100,10 +105,10 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.formalSlots.size() == 1
 		actual.formalSlots[0].typeParam == "T"
 		actual.formalSlots[0].typeClass == "java/lang/Object"
-
+		and:
 		actual.superSlot.typeParam == null
 		actual.superSlot.typeClass == "java/lang/Object"
-		
+		and:
 		actual.interfaceSlot[0].typeParam == null
 		actual.interfaceSlot[0].typeClass == "java/util/List"
 		actual.interfaceSlot[0].slotList[0].typeParam == "T"

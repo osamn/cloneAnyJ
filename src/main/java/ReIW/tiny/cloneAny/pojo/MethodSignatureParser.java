@@ -106,6 +106,7 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 		} else {
 			stack.peek().slotList.add(slot);
 		}
+		typeParamName = null;
 	}
 
 }
