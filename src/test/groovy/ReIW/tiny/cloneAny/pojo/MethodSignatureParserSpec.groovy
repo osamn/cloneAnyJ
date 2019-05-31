@@ -4,13 +4,15 @@ import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class MethodSignatureParserTest extends Specification {
+class MethodSignatureParserSpec extends Specification {
 
 	@Unroll
 	def "parseArgumentsAndReturn 戻り値スロット (#descriptor, #signature)"() {
 		setup:
 		Slot slot
-		MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, {}, {s -> slot = s})
+		MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, {}, { s ->
+			slot = s
+		})
 
 		expect: "slot の値を検証"
 		slot.typeParam == param
@@ -33,8 +35,8 @@ class MethodSignatureParserTest extends Specification {
 		descriptor				| signature					|| param	| clazz
 		"()Ljava/lang/Integer;"	| null						|| null		| "java/lang/Integer"
 		null					| "(BTV1;)J" 				|| null 	| "J"
-		null					| "()TV1;"					|| "V1"		| null
-		null					| "()Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;" \
+		null					| "(Ljava/util/List<TT1;>;)TV1;"					|| "V1"		| null
+		null					| "(TV2;)Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;" \
 															|| null		| "java/util/List" // List<Map<T1,String>>
 
 		and:
@@ -54,7 +56,9 @@ class MethodSignatureParserTest extends Specification {
 	def "parseArgumentsAndReturn 単一引数スロット (#descriptor, #signature)"() {
 		setup:
 		Slot slot
-		MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, {s -> slot = s}, {})
+		MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, { s ->
+			slot = s
+		}, {})
 
 		expect: "slot の値を検証"
 		slot.typeParam == param
@@ -98,8 +102,10 @@ class MethodSignatureParserTest extends Specification {
 		def args = []
 
 		when:
-		MethodSignatureParser.parseArgumentsAndReturn(null, 
-			"(JTV1;Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;B)V", {s -> args << s}, {})
+		MethodSignatureParser.parseArgumentsAndReturn(null,
+				"(JTV1;Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;B)V", { s ->
+					args << s
+				}, {})
 
 		then:
 		args.size() == 4
@@ -130,9 +136,13 @@ class MethodSignatureParserTest extends Specification {
 		def retSlot
 
 		when:
-		MethodSignatureParser.parseArgumentsAndReturn("(JLjava/lang/Double;I)Ljava/lang/Boolean;", 
-			null, {s -> args << s}, { s -> retSlot = s})
-		
+		MethodSignatureParser.parseArgumentsAndReturn("(JLjava/lang/Double;I)Ljava/lang/Boolean;",
+				null, { s ->
+					args << s
+				}, { s ->
+					retSlot = s
+				})
+
 		then:
 		args.size() == 3
 		args[0].typeParam == null
@@ -143,15 +153,46 @@ class MethodSignatureParserTest extends Specification {
 		args[2].typeClass == "I"
 		retSlot.typeParam == null
 		retSlot.typeClass == "java/lang/Boolean"
-		
 	}
 
-	def "parseArgumentsAndReturn 型引数ありメソッド"() {
+	def "parseArgumentsAndReturn メソッド定義に方引数がある場合は例外 <X> X hoge() みたいなやつ"() {
 		when:
-		MethodSignatureParser.parseArgumentsAndReturn(null, 
-			"<X:Ljava/lang/Object;>()Ljava/util/Map<TV1;TX;>;", {}, {})
-		
+		MethodSignatureParser.parseArgumentsAndReturn(null,
+				"<X:Ljava/lang/Object;>()Ljava/util/Map<TV1;TX;>;", {}, {})
+
 		then:
 		thrown(UnboundFormalTypeParameterException)
+	}
+
+	def "parameterParserVisitor"() {
+		setup:
+		def param;
+		def visitor = MethodSignatureParser.parameterParserVisitor("(JLjava/lang/String;B)V", null, { name, slot ->
+			param = [key:name, val:slot]
+		})
+
+		when:
+		visitor.visitParameter("a", 0)
+
+		then:
+		param["key"]=="a"
+		param["val"].typeParam==null
+		param["val"].typeClass=="J"
+
+		when:
+		visitor.visitParameter("b", 0)
+
+		then:
+		param["key"]=="b"
+		param["val"].typeParam==null
+		param["val"].typeClass=="java/lang/String"
+
+		when:
+		visitor.visitParameter("c", 0)
+
+		then:
+		param["key"]=="c"
+		param["val"].typeParam==null
+		param["val"].typeClass=="B"
 	}
 }

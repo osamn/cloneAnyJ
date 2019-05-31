@@ -23,7 +23,7 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 	private final Consumer<Slot> cons;
 
 	private final Stack<Slot> stack = new Stack<>();
-	private String typeParam;
+	private String typeParamName;
 
 	private FieldSignatureParser(final Consumer<Slot> cons) {
 		this.cons = cons;
@@ -31,12 +31,12 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitClassType(String name) {
-		stack.push(new Slot(typeParam, name));
+		stack.push(new Slot(typeParamName, name));
 	}
 
 	@Override
 	public SignatureVisitor visitTypeArgument(char wildcard) {
-		typeParam = String.valueOf(wildcard);
+		typeParamName = String.valueOf(wildcard);
 		return super.visitTypeArgument(wildcard);
 	}
 

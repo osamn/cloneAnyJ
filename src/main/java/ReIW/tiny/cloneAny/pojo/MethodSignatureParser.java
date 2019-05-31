@@ -19,7 +19,7 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 	static MethodVisitor parameterParserVisitor(final String descriptor, final String signature,
 			final BiConsumer<String, Slot> parametersCons) {
 		final ArrayList<Slot> slots = new ArrayList<>();
-		parseArgumentsAndReturn(descriptor, signature, slots::add, null);
+		parseArgumentsAndReturn(descriptor, signature, slots::add, s -> {});
 		final Iterator<Slot> it = slots.iterator();
 		return new DefaultMethodVisitor() {
 			@Override
