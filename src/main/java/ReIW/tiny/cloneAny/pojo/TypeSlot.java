@@ -9,10 +9,12 @@ final class TypeSlot {
 
 	final List<Slot> formalSlots;
 	final Slot superSlot;
+	final List<Slot> interfaceSlot;
 
-	TypeSlot(List<Slot> formal, Slot superSlot) {
+	TypeSlot(List<Slot> formal, List<Slot> superSlot) {
 		this.formalSlots = formal;
-		this.superSlot = superSlot;
+		this.superSlot = superSlot.get(0);
+		this.interfaceSlot = superSlot.subList(1, superSlot.size());
 	}
 
 	@Override
@@ -23,6 +25,9 @@ final class TypeSlot {
 			}
 			out.println("== super ==");
 			out.print(superSlot);
+			for (Slot s : interfaceSlot) {
+				out.print(s);
+			}
 			return writer.toString();
 		} catch (IOException e) {
 			throw new RuntimeException("Unhandled", e);

@@ -16,7 +16,7 @@ final class TypeSlotBuilder extends DefaultSignatureVisitor {
 		} else {
 			final TypeSlotBuilder parser = new TypeSlotBuilder();
 			new SignatureReader(signature).accept(parser);
-			return new TypeSlot(parser.formalSlots, parser.supersSlots.get(0));
+			return new TypeSlot(parser.formalSlots, parser.supersSlots);
 		}
 	}
 

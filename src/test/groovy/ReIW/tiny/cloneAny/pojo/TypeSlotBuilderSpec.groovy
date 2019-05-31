@@ -49,6 +49,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 		then:
 		actual.formalSlots.size() == 0
+
 		actual.superSlot.typeParam == null
 		actual.superSlot.typeClass == "java/util/HashMap"
 		actual.superSlot.slotList[0].typeParam == "="
@@ -59,4 +60,54 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.superSlot.slotList[1].slotList[0].typeClass == "java/lang/String"
 	}
 
+	def "createTypeSlot 型引数あり generic 実装 => class Foo implements List<String>"() {
+		when:
+		def actual = TypeSlotBuilder.createTypeSlot("Ljava/lang/Object;Ljava/util/List<Ljava/lang/String;>;")
+		println actual
+		
+		then:
+		actual.formalSlots.size() == 0
+
+		actual.superSlot.typeParam == null
+		actual.superSlot.typeClass == "java/lang/Object"
+
+		actual.interfaceSlot[0].typeParam == null
+		actual.interfaceSlot[0].typeClass == "java/util/List"
+		actual.interfaceSlot[0].slotList[0].typeParam == "="
+		actual.interfaceSlot[0].slotList[0].typeClass == "java/lang/String"
+	}
+
+	def "createTypeSlot 型引数あり generic 継承 => class Foo<T> extends ArrayList<T>"() {
+		when:
+		def actual = TypeSlotBuilder.createTypeSlot("<T:Ljava/lang/Object;>Ljava/util/ArrayList<TT;>;")
+		
+		then:
+		actual.formalSlots.size() == 1
+		actual.formalSlots[0].typeParam == "T"
+		actual.formalSlots[0].typeClass == "java/lang/Object"
+
+		actual.superSlot.typeParam == null
+		actual.superSlot.typeClass == "java/util/ArrayList"
+		actual.superSlot.slotList[0].typeParam == "T"
+		actual.superSlot.slotList[0].typeClass == null
+	}
+
+	def "createTypeSlot 型引数あり generic 実装  => class Foo<T> implements List<T>"() {
+		when:
+		def actual = TypeSlotBuilder.createTypeSlot("<T:Ljava/lang/Object;>Ljava/lang/Object;Ljava/util/List<TT;>;")
+		
+		then:
+		actual.formalSlots.size() == 1
+		actual.formalSlots[0].typeParam == "T"
+		actual.formalSlots[0].typeClass == "java/lang/Object"
+
+		actual.superSlot.typeParam == null
+		actual.superSlot.typeClass == "java/lang/Object"
+		
+		actual.interfaceSlot[0].typeParam == null
+		actual.interfaceSlot[0].typeClass == "java/util/List"
+		actual.interfaceSlot[0].slotList[0].typeParam == "T"
+		actual.interfaceSlot[0].slotList[0].typeClass == null
+	}
+	
 }
