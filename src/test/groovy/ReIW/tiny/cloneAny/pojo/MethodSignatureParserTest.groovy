@@ -99,7 +99,7 @@ class MethodSignatureParserTest extends Specification {
 
 		when:
 		MethodSignatureParser.parseArgumentsAndReturn(null, 
-			"(JTV1;Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;B)V", {s -> args << s; println s}, {})
+			"(JTV1;Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;B)V", {s -> args << s}, {})
 
 		then:
 		args.size() == 4
