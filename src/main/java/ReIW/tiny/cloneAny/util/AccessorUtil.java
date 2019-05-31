@@ -39,20 +39,26 @@ public final class AccessorUtil {
 	// Bean の実装次第でエラーになったりするとおもうんで
 
 	public static boolean isGetter(String name, String descriptor) {
-		Type t = Type.getMethodType(descriptor);
-		if (t.getArgumentTypes().length != 0) {
-			return false;
+		if (name.startsWith("get") && name.length() > 3) {
+			final Type m = Type.getMethodType(descriptor);
+			return m.getArgumentTypes().length == 0 && m.getReturnType() != Type.VOID_TYPE;
 		}
-		return (name.startsWith("get") && !name.contentEquals("get") && t.getReturnType() != Type.VOID_TYPE)
-				|| (name.startsWith("is") && !name.contentEquals("is") && t.getReturnType() == Type.BOOLEAN_TYPE);
+		if (name.startsWith("is") && name.length() > 2) {
+			final Type m = Type.getMethodType(descriptor);
+			if (m.getArgumentTypes().length > 0) {
+				return false;
+			}
+			return m.getArgumentTypes().length == 0 && m.getReturnType() == Type.BOOLEAN_TYPE;
+		}
+		return false;
 	}
 
 	public static boolean isSetter(String name, String descriptor) {
-		Type t = Type.getMethodType(descriptor);
-		if (t.getArgumentTypes().length != 1) {
-			return false;
+		if (name.startsWith("set") && name.length() > 3) {
+			final Type m = Type.getMethodType(descriptor);
+			return m.getArgumentTypes().length == 1 && m.getReturnType() == Type.VOID_TYPE;
 		}
-		return name.startsWith("set") && !name.contentEquals("set") && t.getReturnType() == Type.VOID_TYPE;
+		return false;
 	}
 
 }
