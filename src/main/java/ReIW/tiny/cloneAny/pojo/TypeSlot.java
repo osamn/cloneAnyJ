@@ -18,12 +18,11 @@ final class TypeSlot {
 	@Override
 	public String toString() {
 		try (StringWriter writer = new StringWriter(); PrintWriter out = new PrintWriter(writer)) {
-			out.println("== formal ==");
 			for (Slot s : formalSlots) {
-				out.println(s);
+				out.print(s);
 			}
 			out.println("== super ==");
-			out.println(superSlot);
+			out.print(superSlot);
 			return writer.toString();
 		} catch (IOException e) {
 			throw new RuntimeException("Unhandled", e);

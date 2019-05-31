@@ -21,9 +21,7 @@ final class Slot {
 	public String toString() {
 		try (StringWriter writer = new StringWriter(); PrintWriter out = new PrintWriter(writer)) {
 			printTo(out, "");
-			// 最後の改行を取り除いてあげる
-			final String s = writer.toString();
-			return s.substring(0, s.length() - 1);
+			return writer.toString();
 		} catch (IOException e) {
 			throw new RuntimeException("Unhandled", e);
 		}
