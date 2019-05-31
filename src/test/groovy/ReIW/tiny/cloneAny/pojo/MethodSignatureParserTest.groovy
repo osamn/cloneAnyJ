@@ -95,33 +95,63 @@ class MethodSignatureParserTest extends Specification {
 
 	def "parseArgumentsAndReturn 複数引数 long,T1,List<Map<T1,String>>,boolean"() {
 		setup:
-		def slots = []
+		def args = []
 
 		when:
-		MethodSignatureParser.parseArgumentsAndReturn("", 
-			"(JTV1;Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;B)V", {s -> slots << s; println s}, {})
+		MethodSignatureParser.parseArgumentsAndReturn(null, 
+			"(JTV1;Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;B)V", {s -> args << s; println s}, {})
 
 		then:
-		slots.size() == 4
-		slots[0].typeParam == null
-		slots[0].typeClass == "J"
+		args.size() == 4
+		args[0].typeParam == null
+		args[0].typeClass == "J"
 
-		slots[1].typeParam == "V1"
-		slots[1].typeClass == null
+		args[1].typeParam == "V1"
+		args[1].typeClass == null
 
-		slots[2].typeParam == null
-		slots[2].typeClass == "java/util/List"
-		slots[2].slotList.size() == 1
-		slots[2].slotList[0].typeParam == "="
-		slots[2].slotList[0].typeClass == "java/util/Map"
-		slots[2].slotList[0].slotList.size() == 2
-		slots[2].slotList[0].slotList[0].typeParam == "T1"
-		slots[2].slotList[0].slotList[0].typeClass == null
-		slots[2].slotList[0].slotList[1].typeParam == "="
-		slots[2].slotList[0].slotList[1].typeClass == "java/lang/String"
+		args[2].typeParam == null
+		args[2].typeClass == "java/util/List"
+		args[2].slotList.size() == 1
+		args[2].slotList[0].typeParam == "="
+		args[2].slotList[0].typeClass == "java/util/Map"
+		args[2].slotList[0].slotList.size() == 2
+		args[2].slotList[0].slotList[0].typeParam == "T1"
+		args[2].slotList[0].slotList[0].typeClass == null
+		args[2].slotList[0].slotList[1].typeParam == "="
+		args[2].slotList[0].slotList[1].typeClass == "java/lang/String"
 
-		slots[3].typeParam == null
-		slots[3].typeClass == "B"
+		args[3].typeParam == null
+		args[3].typeClass == "B"
 	}
 
+	def "parseArgumentsAndReturn descriptor のみ"() {
+		setup:
+		def args = []
+		def retSlot
+
+		when:
+		MethodSignatureParser.parseArgumentsAndReturn("(JLjava/lang/Double;I)Ljava/lang/Boolean;", 
+			null, {s -> args << s}, { s -> retSlot = s})
+		
+		then:
+		args.size() == 3
+		args[0].typeParam == null
+		args[0].typeClass == "J"
+		args[1].typeParam == null
+		args[1].typeClass == "java/lang/Double"
+		args[2].typeParam == null
+		args[2].typeClass == "I"
+		retSlot.typeParam == null
+		retSlot.typeClass == "java/lang/Boolean"
+		
+	}
+
+	def "parseArgumentsAndReturn 型引数ありメソッド"() {
+		when:
+		MethodSignatureParser.parseArgumentsAndReturn(null, 
+			"<X:Ljava/lang/Object;>()Ljava/util/Map<TV1;TX;>;", {}, {})
+		
+		then:
+		thrown(UnboundFormalTypeParameterException)
+	}
 }
