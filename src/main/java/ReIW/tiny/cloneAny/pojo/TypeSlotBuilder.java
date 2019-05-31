@@ -24,7 +24,7 @@ final class TypeSlotBuilder extends DefaultSignatureVisitor {
 	private final ArrayList<Slot> supersSlots = new ArrayList<>(1);
 
 	private final Stack<Slot> stack = new Stack<>();
-	private String typeParam;
+	private String typeParamName;
 	private ArrayList<Slot> activeSlots;
 
 	private TypeSlotBuilder() {
@@ -33,23 +33,25 @@ final class TypeSlotBuilder extends DefaultSignatureVisitor {
 
 	@Override
 	public SignatureVisitor visitSuperclass() {
+		// 完全に切り替わるためいったんクリアする
+		typeParamName = null;
 		activeSlots = supersSlots;
 		return super.visitSuperclass();
 	}
 
 	@Override
 	public void visitFormalTypeParameter(String name) {
-		typeParam = name;
+		typeParamName = name;
 	}
 
 	@Override
 	public void visitClassType(String name) {
-		stack.push(new Slot(typeParam, name));
+		stack.push(new Slot(typeParamName, name));
 	}
 
 	@Override
 	public SignatureVisitor visitTypeArgument(char wildcard) {
-		typeParam = String.valueOf(wildcard);
+		typeParamName = String.valueOf(wildcard);
 		return super.visitTypeArgument(wildcard);
 	}
 
