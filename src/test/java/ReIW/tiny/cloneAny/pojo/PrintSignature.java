@@ -11,9 +11,12 @@ import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
 public class PrintSignature extends SignatureVisitor {
+	public static class Sample {
+		
+	}
 
 	public static void main(String[] args) throws Exception {
-		readSig(Typed1.class);
+		readSig(Sample.class);
 	}
 
 	public static void readSig(Class<?> clazz) throws IOException {
