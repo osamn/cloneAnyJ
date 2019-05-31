@@ -3,6 +3,7 @@ package ReIW.tiny.cloneAny.pojo;
 import java.util.Stack;
 import java.util.function.Consumer;
 
+import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
@@ -12,7 +13,7 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	static void parse(final String descriptor, final String signature, final Consumer<Slot> fieldCons) {
 		if (signature == null) {
-			fieldCons.accept(new Slot(null, descriptor));
+			fieldCons.accept(new Slot(null, Type.getType(descriptor).getInternalName()));
 		} else {
 			final FieldSignatureParser parser = new FieldSignatureParser(fieldCons);
 			new SignatureReader(signature).accept(parser);
@@ -29,12 +30,6 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 	}
 
 	@Override
-	public void visitFormalTypeParameter(String name) {
-		// FIXME これいらないようなきがする
-		throw new UnboundFormalTypeParameterException();
-	}
-
-	@Override
 	public void visitClassType(String name) {
 		stack.push(new Slot(typeParam, name));
 	}
@@ -47,7 +42,11 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitTypeVariable(String name) {
-		stack.peek().slotList.add(new Slot(name, null));
+		if (stack.isEmpty()) {
+			cons.accept(new Slot(name, null));
+		} else {
+			stack.peek().slotList.add(new Slot(name, null));
+		}
 	}
 
 	@Override
