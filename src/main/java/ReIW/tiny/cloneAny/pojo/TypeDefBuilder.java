@@ -29,22 +29,18 @@ final class TypeDefBuilder extends DefaultClassVisitor {
 	}
 
 	@Override
-	public void visit(int version, int access, String name, String signature, String superName,
-			String[] interfaces) {
+	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
 		typeDef = new TypeDef(name, superName, TypeSlotBuilder.createTypeSlot(signature));
 	}
 
 	@Override
 	public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
 		if ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_STATIC) == 0) {
-			if ((access & Opcodes.ACC_FINAL) == 0) {
-				// public で not final なインスタンスフィールドだけ
-				FieldSignatureParser.parse(descriptor, signature, slot -> {
-					typeDef.access.add(new AccessEntry(Types.ACC_FIELD, name, slot, null));
-				});
-			} else {
-				// final な場合は ctor のパラメタ候補だけどここでは何もしないよ
-			}
+			// public で not final なインスタンスフィールドだけ
+			int type = (access & Opcodes.ACC_FINAL) == 0 ? Types.ACC_FIELD : Types.ACC_FINAL_FIELD;
+			FieldSignatureParser.parse(descriptor, signature, slot -> {
+				typeDef.access.add(new AccessEntry(type, name, slot, null));
+			});
 		}
 		return null;
 	}
@@ -54,7 +50,7 @@ final class TypeDefBuilder extends DefaultClassVisitor {
 			final String signature, String[] exceptions) {
 		if ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_STATIC) == 0) {
 			if (name.contentEquals("<init>")) {
-				return MethodSignatureParser.getParameterVisitor(descriptor, signature, (paramName, slot) -> {
+				return MethodSignatureParser.parameterParserVisitor(descriptor, signature, (paramName, slot) -> {
 					typeDef.access.add(new AccessEntry(Types.ACC_CTOR_ARG, paramName, slot, descriptor));
 				});
 			} else {
