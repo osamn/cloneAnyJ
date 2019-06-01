@@ -6,6 +6,7 @@ import java.util.Stack;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
@@ -19,13 +20,36 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 	static MethodVisitor parameterParserVisitor(final String descriptor, final String signature,
 			final BiConsumer<String, Slot> parametersCons) {
 		final ArrayList<Slot> slots = new ArrayList<>();
-		parseArgumentsAndReturn(descriptor, signature, slots::add, s -> {});
+		parseArgumentsAndReturn(descriptor, signature, slots::add, s -> {
+		});
 		final Iterator<Slot> it = slots.iterator();
 		return new DefaultMethodVisitor() {
+
+			// こっちはコンパイルオプション指定しないと呼ばれないらしい
+			// You need to compile your class with the -parameters option to make javac
+			// include the parameter names.
+			// だってお
 			@Override
 			public void visitParameter(String name, int access) {
-				parametersCons.accept(name, it.next());
+				// parametersCons.accept(name, it.next());
 			};
+
+			// そうはいってもこっちも debug symbol がついてないと呼ばれないらしいけど
+			// まあ、ふつうはついてるよね
+			@Override
+			public void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end,
+					int index) {
+				if (!name.contentEquals("this")) {
+					parametersCons.accept(name, it.next());
+				}
+			}
+			
+			@Override
+			public void visitEnd() {
+				if (it.hasNext()) {
+					throw new UnboundMethodParameterNameException("No debug symbols.");
+				}
+			}
 		};
 	}
 
@@ -58,7 +82,7 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitFormalTypeParameter(String name) {
-		throw new UnboundFormalTypeParameterException();
+		throw new UnboundFormalTypeParameterException("Method should not have formal type parameter.");
 	}
 
 	@Override

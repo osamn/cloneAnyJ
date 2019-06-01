@@ -1,19 +1,19 @@
 package ReIW.tiny.cloneAny.pojo;
 
-import static ReIW.tiny.cloneAny.pojo.Types.ACC_CTOR_ARG;
-import static ReIW.tiny.cloneAny.pojo.Types.ACC_FIELD;
-import static ReIW.tiny.cloneAny.pojo.Types.ACC_FINAL_FIELD;
-import static ReIW.tiny.cloneAny.pojo.Types.ACC_PROP_GET;
-import static ReIW.tiny.cloneAny.pojo.Types.ACC_PROP_SET;
+final class AccessEntry {
 
-class AccessEntry {
+	static final int ACE_FIELD = 1;
+	static final int ACE_FINAL_FIELD = 2;
+	static final int ACE_CTOR_ARG = 3;
+	static final int ACE_PROP_GET = 4;
+	static final int ACE_PROP_SET = 5;
 
 	AccessEntry(final int elementType, final String name, final Slot slot, final String rel) {
 		this.elementType = elementType;
 		this.name = name;
 		this.slot = slot;
-		this.canGet = (elementType == ACC_FIELD || elementType == ACC_FINAL_FIELD || elementType == ACC_PROP_GET);
-		this.canSet = (elementType == ACC_FIELD || elementType == ACC_CTOR_ARG || elementType == ACC_PROP_SET);
+		this.canGet = (elementType == ACE_FIELD || elementType == ACE_FINAL_FIELD || elementType == ACE_PROP_GET);
+		this.canSet = (elementType == ACE_FIELD || elementType == ACE_CTOR_ARG || elementType == ACE_PROP_SET);
 		this.rel = rel;
 	}
 
@@ -23,7 +23,7 @@ class AccessEntry {
 	final boolean canGet;
 	final boolean canSet;
 	// getter setter name 今のところ対応してないけど BeanInfo で変わる場合もあるんで
-	// あと ctor の descriptor とそのパラメタ位置とかも
+	// あと ctor の descriptor とか
 	final String rel;
 
 }

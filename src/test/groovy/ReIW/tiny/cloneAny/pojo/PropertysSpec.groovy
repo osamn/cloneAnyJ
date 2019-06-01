@@ -1,14 +1,15 @@
-package ReIW.tiny.cloneAny.util
+package ReIW.tiny.cloneAny.pojo
 
+import ReIW.tiny.cloneAny.pojo.Propertys
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class AccessorUtilSpec extends Specification {
+class PropertysSpec extends Specification {
 
 	@Unroll
 	def "Property name from #methodName => #propName"() {
 		expect:
-		propName == AccessorUtil.getPropertyName(methodName)
+		propName == Propertys.getPropertyName(methodName)
 
 		where:
 		methodName	|| propName
@@ -30,7 +31,7 @@ class AccessorUtilSpec extends Specification {
 	@Unroll
 	def "Method #name#descriptor is getter or not => #expected"() {
 		expect:
-		expected == AccessorUtil.isGetter(name, descriptor)
+		expected == Propertys.isGetter(name, descriptor)
 
 		where:
 		expected	|| name			| descriptor
@@ -47,7 +48,7 @@ class AccessorUtilSpec extends Specification {
 	@Unroll
 	def "Method #name#descriptor is setter or not => #expected"() {
 		expect:
-		expected == AccessorUtil.isSetter(name, descriptor)
+		expected == Propertys.isSetter(name, descriptor)
 
 		where:
 		expected	|| name			| descriptor

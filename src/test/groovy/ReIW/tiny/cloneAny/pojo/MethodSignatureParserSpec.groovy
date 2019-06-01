@@ -172,7 +172,7 @@ class MethodSignatureParserSpec extends Specification {
 		})
 
 		when:
-		visitor.visitParameter("a", 0)
+		visitor.visitLocalVariable("a", null, null, null, null, 0)
 
 		then:
 		param["key"]=="a"
@@ -180,7 +180,7 @@ class MethodSignatureParserSpec extends Specification {
 		param["val"].typeClass=="J"
 
 		when:
-		visitor.visitParameter("b", 0)
+		visitor.visitLocalVariable("b", null, null, null, null, 0)
 
 		then:
 		param["key"]=="b"
@@ -188,7 +188,7 @@ class MethodSignatureParserSpec extends Specification {
 		param["val"].typeClass=="java/lang/String"
 
 		when:
-		visitor.visitParameter("c", 0)
+		visitor.visitLocalVariable("c", null, null, null, null, 0)
 
 		then:
 		param["key"]=="c"

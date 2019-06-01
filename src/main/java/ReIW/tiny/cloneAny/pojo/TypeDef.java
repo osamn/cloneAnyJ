@@ -7,13 +7,13 @@ final class TypeDef {
 
 	final String name;
 	final String superName;
-	final TypeSlot slot;
+	final TypeSlot typeSlot;
 	final List<AccessEntry> access;
 
-	TypeDef(final String name ,final String superName, final TypeSlot slot) {
+	TypeDef(final String name ,final String superName, final TypeSlot typeSlot) {
 		this.name = name;
 		this.superName = superName;
-		this.slot = slot;
+		this.typeSlot = typeSlot;
 		access = new ArrayList<>();
 	}
 
