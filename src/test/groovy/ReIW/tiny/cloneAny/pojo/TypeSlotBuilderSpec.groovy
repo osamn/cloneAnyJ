@@ -3,6 +3,10 @@ package ReIW.tiny.cloneAny.pojo
 import spock.lang.Specification
 
 class TypeSlotBuilderSpec extends Specification {
+	
+	// <? extends String> とか <? super String> は typeParam=="+", "-" になるけど
+	// typeParam=="=" と動きは同じなんでここではケアしてないよ
+	
 
 	def "createTypeSlot シグネチャが null"() {
 		when:
@@ -45,9 +49,9 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.superSlot.typeClass == "java/lang/Object"
 	}
 
-	def "createTypeSlot 型引数なし generic 継承 => class Foo extends HashMap<Integer, ArrayList<String>"() {
+	def "createTypeSlot 型引数なし generic 継承 共変 => class Foo extends HashMap<Integer, ArrayList<? super String>>"() {
 		when:
-		def actual = TypeSlotBuilder.createTypeSlot("Ljava/util/HashMap<Ljava/lang/Integer;Ljava/util/ArrayList<Ljava/lang/String;>;>;")
+		def actual = TypeSlotBuilder.createTypeSlot("Ljava/util/HashMap<Ljava/lang/Integer;Ljava/util/ArrayList<-Ljava/lang/String;>;>;")
 
 		then:
 		actual.formalSlots.size() == 0
@@ -58,14 +62,30 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.superSlot.slotList[0].typeClass == "java/lang/Integer"
 		actual.superSlot.slotList[1].typeParam == "="
 		actual.superSlot.slotList[1].typeClass == "java/util/ArrayList"
-		actual.superSlot.slotList[1].slotList[0].typeParam == "="
+		actual.superSlot.slotList[1].slotList[0].typeParam == "-"
 		actual.superSlot.slotList[1].slotList[0].typeClass == "java/lang/String"
+	}
+
+	def "createTypeSlot 型引数なし generic 実装 反変 => class Foo extends Set<ArrayList<? extends String>>"() {
+		when:
+		def actual = TypeSlotBuilder.createTypeSlot("Ljava/lang/Object;Ljava/util/Set<Ljava/util/ArrayList<+Ljava/lang/String;>;>;")
+
+		then:
+		actual.formalSlots.size() == 0
+		and:
+		actual.superSlot.typeParam == null
+		actual.superSlot.typeClass == "java/lang/Object"
+		actual.interfaceSlot[0].typeParam == null
+		actual.interfaceSlot[0].typeClass == "java/util/Set"
+		actual.interfaceSlot[0].slotList[0].typeParam == "="
+		actual.interfaceSlot[0].slotList[0].typeClass == "java/util/ArrayList"
+		actual.interfaceSlot[0].slotList[0].slotList[0].typeParam == "+"
+		actual.interfaceSlot[0].slotList[0].slotList[0].typeClass == "java/lang/String"
 	}
 
 	def "createTypeSlot 型引数あり generic 実装 => class Foo implements List<String>, Serializable"() {
 		when:
 		def actual = TypeSlotBuilder.createTypeSlot("Ljava/lang/Object;Ljava/util/List<Ljava/lang/String;>;Ljava/io/Serializable;")
-		println actual
 		
 		then:
 		actual.formalSlots.size() == 0
