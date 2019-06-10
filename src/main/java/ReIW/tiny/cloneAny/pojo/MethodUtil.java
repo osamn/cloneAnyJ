@@ -2,9 +2,9 @@ package ReIW.tiny.cloneAny.pojo;
 
 import org.objectweb.asm.Type;
 
-final class Propertys {
+final class MethodUtil {
 
-	private Propertys() {
+	private MethodUtil() {
 	}
 
 	static final String getPropertyName(String methodName) {

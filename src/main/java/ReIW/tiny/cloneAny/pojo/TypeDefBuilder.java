@@ -62,16 +62,16 @@ final class TypeDefBuilder extends DefaultClassVisitor {
 				});
 			} else {
 				try {
-					if (Propertys.isGetter(name, descriptor)) {
+					if (MethodUtil.isGetter(name, descriptor)) {
 						MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, slot -> {
 							// nop
 						}, slot -> {
-							final String propName = Propertys.getPropertyName(name);
+							final String propName = MethodUtil.getPropertyName(name);
 							typeDef.access.add(new AccessEntry(ACE_PROP_GET, propName, slot, name));
 						});
-					} else if (Propertys.isSetter(name, descriptor)) {
+					} else if (MethodUtil.isSetter(name, descriptor)) {
 						MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, slot -> {
-							final String propName = Propertys.getPropertyName(name);
+							final String propName = MethodUtil.getPropertyName(name);
 							typeDef.access.add(new AccessEntry(ACE_PROP_SET, propName, slot, name));
 						}, slot -> {
 							// nop
