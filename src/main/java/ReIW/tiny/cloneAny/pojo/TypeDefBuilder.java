@@ -42,7 +42,7 @@ final class TypeDefBuilder extends DefaultClassVisitor {
 
 	@Override
 	public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
-		if ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_STATIC) == 0) {
+		if (myOwn(access)) {
 			// public で not final なインスタンスフィールドだけ
 			int type = (access & Opcodes.ACC_FINAL) == 0 ? ACE_FIELD : ACE_FINAL_FIELD;
 			FieldSignatureParser.parse(descriptor, signature, slot -> {
@@ -55,22 +55,23 @@ final class TypeDefBuilder extends DefaultClassVisitor {
 	@Override
 	public MethodVisitor visitMethod(final int access, final String name, final String descriptor,
 			final String signature, String[] exceptions) {
-		if ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_STATIC) == 0) {
+		if (myOwn(access)) {
 			if (name.contentEquals("<init>")) {
 				return MethodSignatureParser.parameterParserVisitor(descriptor, signature, (paramName, slot) -> {
 					typeDef.access.add(new AccessEntry(ACE_CTOR_ARG, paramName, slot, descriptor));
 				});
 			} else {
-				final String propName = Propertys.getPropertyName(name);
 				try {
 					if (Propertys.isGetter(name, descriptor)) {
 						MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, slot -> {
 							// nop
 						}, slot -> {
+							final String propName = Propertys.getPropertyName(name);
 							typeDef.access.add(new AccessEntry(ACE_PROP_GET, propName, slot, name));
 						});
 					} else if (Propertys.isSetter(name, descriptor)) {
 						MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, slot -> {
+							final String propName = Propertys.getPropertyName(name);
 							typeDef.access.add(new AccessEntry(ACE_PROP_SET, propName, slot, name));
 						}, slot -> {
 							// nop
@@ -84,4 +85,13 @@ final class TypeDefBuilder extends DefaultClassVisitor {
 		}
 		return null;
 	}
+
+	private static boolean myOwn(int access) {
+		// public で
+		// instance で
+		// コンパイラが生成したものじゃない
+		return ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_STATIC) == 0
+				&& (access & Opcodes.ACC_SYNTHETIC) == 0);
+	}
+
 }

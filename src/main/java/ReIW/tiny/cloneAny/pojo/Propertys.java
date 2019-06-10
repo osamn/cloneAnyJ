@@ -45,9 +45,6 @@ final class Propertys {
 		}
 		if (name.startsWith("is") && name.length() > 2) {
 			final Type m = Type.getMethodType(descriptor);
-			if (m.getArgumentTypes().length > 0) {
-				return false;
-			}
 			return m.getArgumentTypes().length == 0 && m.getReturnType() == Type.BOOLEAN_TYPE;
 		}
 		return false;
