@@ -6,11 +6,11 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "PlainCtor public なコンストラクタの引数のみ access にはいる"() {
 		when:
-		def actual = TypeDefBuilder.createTypeDef(PlainCtor.class.getName())
+		def actual = new TypeDefBuilder().getTypeDef(TypeDefBuilder_PlainCtor.class.getName())
 		
 		then:
 		actual.name == "ReIW/tiny/cloneAny/pojo/PlainCtor"
-		actual.superName == "java/lang/Object"
+		actual.superType == null
 		actual.typeSlot == null;
 
 		actual.access.size()== 3
@@ -43,11 +43,11 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "TypedCtor<T> 型引数がちゃんとできてるかみてみる"() {
 		when:
-		def actual = TypeDefBuilder.createTypeDef(TypedCtor.class.getName())
+		def actual = new TypeDefBuilder().getTypeDef(TypeDefBuilder_TypedCtor.class.getName())
 		
 		then:
 		actual.name == "ReIW/tiny/cloneAny/pojo/TypedCtor"
-		actual.superName == "java/lang/Object"
+		actual.superType == null
 		actual.typeSlot.formalSlots[0].typeParam == "T";
 		actual.typeSlot.formalSlots[0].typeClass == "java/lang/Object";
 
@@ -73,11 +73,10 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "Fields<T,K> public なフィールドだけ access 追加される"() {
 		when:
-		def actual = TypeDefBuilder.createTypeDef(Fields.class.getName())
+		def actual = new TypeDefBuilder().getTypeDef(TypeDefBuilder_Fields.class.getName())
 		
 		then:
 		actual.name == "ReIW/tiny/cloneAny/pojo/Fields"
-		actual.superName == "java/lang/Object"
 		actual.typeSlot.formalSlots[0].typeParam == "T";
 		actual.typeSlot.formalSlots[0].typeClass == "java/lang/Object";
 		actual.typeSlot.formalSlots[1].typeParam == "K";
@@ -121,11 +120,11 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "Props<T> public な getter setter が access に追加される"() {
 		when:
-		def actual = TypeDefBuilder.createTypeDef(Props.class.getName())
+		def actual = new TypeDefBuilder().getTypeDef(TypeDefBuilder_Props.class.getName())
 		
 		then:
 		actual.name == "ReIW/tiny/cloneAny/pojo/Props"
-		actual.superName == "java/lang/Object"
+		actual.superType == null
 		actual.typeSlot.formalSlots[0].typeParam == "T";
 		actual.typeSlot.formalSlots[0].typeClass == "java/lang/Object";
 		actual.typeSlot.formalSlots[1].typeParam == "K";
@@ -169,7 +168,7 @@ class TypeDefBuilderSpec extends Specification {
 	
 	def "public じゃない class は例外"() {
 		when:
-		TypeDefBuilder.createTypeDef(InternalScope.class.getName())
+		new TypeDefBuilder().getTypeDef(TypeDefBuilder_InternalScope.class.getName())
 		
 		then:
 		thrown(UnsupportedOperationException)

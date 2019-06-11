@@ -1,6 +1,6 @@
 package ReIW.tiny.cloneAny.pojo;
 
-public class Fields<T, K> {
+public class TypeDefBuilder_Fields<T, K> {
 
 	public T t1;
 	public final K k1 = null;

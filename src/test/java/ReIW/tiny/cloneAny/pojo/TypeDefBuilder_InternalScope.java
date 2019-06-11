@@ -1,5 +1,5 @@
 package ReIW.tiny.cloneAny.pojo;
 
-class InternalScope {
+class TypeDefBuilder_InternalScope {
 
 }

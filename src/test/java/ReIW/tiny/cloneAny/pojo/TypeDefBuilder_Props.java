@@ -1,6 +1,6 @@
 package ReIW.tiny.cloneAny.pojo;
 
-public class Props<T, K> {
+public class TypeDefBuilder_Props<T, K> {
 
 	public void setFoo(T t) {
 	}

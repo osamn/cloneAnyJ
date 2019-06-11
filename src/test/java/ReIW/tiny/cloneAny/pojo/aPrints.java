@@ -1,5 +1,7 @@
 package ReIW.tiny.cloneAny.pojo;
 
+import java.util.List;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -10,23 +12,22 @@ import org.objectweb.asm.signature.SignatureVisitor;
 
 public class aPrints {
 
-	public static class Sample {
+	public static class Base<A, B, C, D, E> {
 
 	}
 
-	public static class Slots {
-		public static void main(String[] args) throws Exception {
-			printSlots(Sample.class);
-		}
+	public static class Sample<b extends List<? super Integer>, d > extends Base<CharSequence, b, Integer, d, Long> {
+
 	}
 
-	public static class Signatures {
-		public static void main(String[] args) throws Exception {
-			printSignatures(Sample.class);
-		}
+	public static void main(String[] argv) {
+		TypeDef def = TypeDefBuilder.createTypeDef(Sample.class.getName());
+		System.out.println(def.typeSlot);
+		System.out.println(def.superType.typeSlot);
+		
 	}
 
-	private static void printSlots(Class<?> clazz) throws Exception {
+	static void printSlots(Class<?> clazz) throws Exception {
 		new ClassReader(clazz.getName()).accept(new ClassVisitor(Opcodes.ASM7) {
 			@Override
 			public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
@@ -58,7 +59,7 @@ public class aPrints {
 
 	}
 
-	private static void printSignatures(Class<?> clazz) throws Exception {
+	static void printSignatures(Class<?> clazz) throws Exception {
 		new ClassReader(clazz.getName()).accept(new ClassVisitor(Opcodes.ASM7) {
 
 			@Override
