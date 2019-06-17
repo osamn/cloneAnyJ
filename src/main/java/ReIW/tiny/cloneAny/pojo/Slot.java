@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-final class Slot {
+public final class Slot {
 
-	final String typeParam;
-	final String typeClass;
-	final ArrayList<Slot> slotList = new ArrayList<>(5);
+	public final String typeParam;
+	public final String typeClass;
+	public final List<Slot> slotList = new ArrayList<>(5);
 
 	Slot(String typeParam, String typeClass) {
 		this.typeParam = typeParam;
@@ -54,9 +55,10 @@ final class Slot {
 	}
 
 	private void printTo(PrintWriter out, String indent) {
-		out.format("%sSlot [typeParam=%s, typeClass=%s]\n", indent, typeParam, typeClass);
+		out.format("%sSlot [typeParam=%s, typeClass=%s]", indent, typeParam, typeClass);
 		indent += "  ";
 		for (Slot slot : slotList) {
+			out.write('\n');
 			slot.printTo(out, indent);
 		}
 	}

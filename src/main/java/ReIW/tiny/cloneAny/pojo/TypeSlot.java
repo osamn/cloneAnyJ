@@ -20,14 +20,18 @@ final class TypeSlot {
 	@Override
 	public String toString() {
 		try (StringWriter writer = new StringWriter(); PrintWriter out = new PrintWriter(writer)) {
+			out.print("TypeSlot [");
 			for (Slot s : formalSlots) {
+				out.write('\n');
 				out.print(s);
 			}
-			out.println("== super ==");
+			out.println(":");
 			out.print(superSlot);
 			for (Slot s : interfaceSlot) {
+				out.write('\n');
 				out.print(s);
 			}
+			out.write(']');
 			return writer.toString();
 		} catch (IOException e) {
 			throw new RuntimeException("Unhandled", e);

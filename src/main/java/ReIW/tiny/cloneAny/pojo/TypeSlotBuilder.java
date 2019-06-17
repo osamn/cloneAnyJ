@@ -13,11 +13,10 @@ final class TypeSlotBuilder extends DefaultSignatureVisitor {
 	static TypeSlot createTypeSlot(final String signature) {
 		if (signature == null) {
 			return null;
-		} else {
-			final TypeSlotBuilder parser = new TypeSlotBuilder();
-			new SignatureReader(signature).accept(parser);
-			return new TypeSlot(parser.formalSlots, parser.supersSlots);
 		}
+		final TypeSlotBuilder parser = new TypeSlotBuilder();
+		new SignatureReader(signature).accept(parser);
+		return new TypeSlot(parser.formalSlots, parser.supersSlots);
 	}
 
 	private final ArrayList<Slot> formalSlots = new ArrayList<>(5);

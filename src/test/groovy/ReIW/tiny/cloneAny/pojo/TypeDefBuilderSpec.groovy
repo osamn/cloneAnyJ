@@ -6,10 +6,10 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "PlainCtor public なコンストラクタの引数のみ access にはいる"() {
 		when:
-		def actual = new TypeDefBuilder().getTypeDef(TypeDefBuilder_PlainCtor.class.getName())
-		
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_PlainCtor.class.getName())
+
 		then:
-		actual.name == "ReIW/tiny/cloneAny/pojo/PlainCtor"
+		actual.name == TypeDefBuilder_PlainCtor.class.getName().replace('.', '/')
 		actual.superType == null
 		actual.typeSlot == null;
 
@@ -38,15 +38,14 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[2].canSet == true
 		actual.access[2].canGet == false
 		actual.access[2].rel == "(J)V"
-
 	}
 
 	def "TypedCtor<T> 型引数がちゃんとできてるかみてみる"() {
 		when:
-		def actual = new TypeDefBuilder().getTypeDef(TypeDefBuilder_TypedCtor.class.getName())
-		
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_TypedCtor.class.getName())
+
 		then:
-		actual.name == "ReIW/tiny/cloneAny/pojo/TypedCtor"
+		actual.name == TypeDefBuilder_TypedCtor.class.getName().replace('.', '/')
 		actual.superType == null
 		actual.typeSlot.formalSlots[0].typeParam == "T";
 		actual.typeSlot.formalSlots[0].typeClass == "java/lang/Object";
@@ -68,15 +67,14 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[1].canSet == true
 		actual.access[1].canGet == false
 		actual.access[1].rel == "(Ljava/lang/Object;Ljava/lang/String;)V"
-
 	}
 
 	def "Fields<T,K> public なフィールドだけ access 追加される"() {
 		when:
-		def actual = new TypeDefBuilder().getTypeDef(TypeDefBuilder_Fields.class.getName())
-		
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Fields.class.getName())
+
 		then:
-		actual.name == "ReIW/tiny/cloneAny/pojo/Fields"
+		actual.name == TypeDefBuilder_Fields.class.getName().replace('.', '/')
 		actual.typeSlot.formalSlots[0].typeParam == "T";
 		actual.typeSlot.formalSlots[0].typeClass == "java/lang/Object";
 		actual.typeSlot.formalSlots[1].typeParam == "K";
@@ -115,15 +113,14 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[3].canSet == false
 		actual.access[3].canGet == true
 		actual.access[3].rel == null
-
 	}
 
 	def "Props<T> public な getter setter が access に追加される"() {
 		when:
-		def actual = new TypeDefBuilder().getTypeDef(TypeDefBuilder_Props.class.getName())
-		
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Props.class.getName())
+
 		then:
-		actual.name == "ReIW/tiny/cloneAny/pojo/Props"
+		actual.name == TypeDefBuilder_Props.class.getName().replace('.', '/')
 		actual.superType == null
 		actual.typeSlot.formalSlots[0].typeParam == "T";
 		actual.typeSlot.formalSlots[0].typeClass == "java/lang/Object";
@@ -163,14 +160,44 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[3].canSet == false
 		actual.access[3].canGet == true
 		actual.access[3].rel == "getLong"
-
 	}
-	
+
 	def "public じゃない class は例外"() {
 		when:
-		new TypeDefBuilder().getTypeDef(TypeDefBuilder_InternalScope.class.getName())
-		
+		TypeDefBuilder.createTypeDef(TypeDefBuilder_InternalScope.class.getName())
+
 		then:
 		thrown(UnsupportedOperationException)
+	}
+
+	def "継承したやつもいい感じに"() {
+		when:
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Extend2.class.getName())
+
+		//println actual.typeSlot
+		//println actual.superType.typeSlot
+		//println actual.superType.superType.typeSlot
+
+		then:
+		actual.superType != null
+		actual.superType.superType != null
+		actual.superType.superType.superType == null
+	}
+
+	def "generic じゃないもの"() {
+		when:
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Plain_Base.class.getName())
+
+		then:
+		actual.superType == null
+	}
+	
+	def "generic じゃないものを継承した generic じゃないもの"() {
+		when:
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Plain_Extend.class.getName())
+
+		then:
+		actual.superType != null
+		actual.superType.typeSlot == null
 	}
 }

@@ -17,11 +17,15 @@ import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
 
 final class MethodSignatureParser extends DefaultSignatureVisitor {
 
+	private static <T> void nop(T val) {
+	};
+
 	static MethodVisitor parameterParserVisitor(final String descriptor, final String signature,
 			final BiConsumer<String, Slot> parametersCons) {
+		// 引数Slotのリストを作成する
 		final ArrayList<Slot> slots = new ArrayList<>();
-		parseArgumentsAndReturn(descriptor, signature, slots::add, s -> {
-		});
+		parseArgumentsAndReturn(descriptor, signature, slots::add, MethodSignatureParser::nop);
+
 		final Iterator<Slot> it = slots.iterator();
 		return new DefaultMethodVisitor() {
 
@@ -43,7 +47,7 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 					parametersCons.accept(name, it.next());
 				}
 			}
-			
+
 			@Override
 			public void visitEnd() {
 				if (it.hasNext()) {
