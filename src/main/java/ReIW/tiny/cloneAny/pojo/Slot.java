@@ -10,12 +10,12 @@ public final class Slot {
 	public final String typeClass;
 	public final List<Slot> slotList = new ArrayList<>(5);
 
-	Slot(String typeParam, String typeClass) {
+	Slot(final String typeParam, final String typeClass) {
 		this.typeParam = typeParam;
 		this.typeClass = typeClass;
 	}
 
-	Slot rebind(Map<String, String> binds) {
+	Slot rebind(final Map<String, String> binds) {
 		if (slotList.size() == 0) {
 			// 子要素がない ＆＆
 			if (typeParam == null || typeParam.contentEquals("=") || typeParam.contentEquals("+")
@@ -51,7 +51,7 @@ public final class Slot {
 		return buf.toString();
 	}
 
-	private void printTo(StringBuilder buf, String indent) {
+	private void printTo(final StringBuilder buf, String indent) {
 		buf.append(String.format("%sSlot [typeParam=%s, typeClass=%s]", indent, typeParam, typeClass));
 		indent += "  ";
 		for (Slot slot : slotList) {
