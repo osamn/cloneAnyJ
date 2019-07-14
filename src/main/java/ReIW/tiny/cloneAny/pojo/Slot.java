@@ -1,8 +1,5 @@
 package ReIW.tiny.cloneAny.pojo;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,21 +17,24 @@ public final class Slot {
 
 	Slot rebind(Map<String, String> binds) {
 		if (slotList.size() == 0) {
-			if (typeParam == null) {
-				return this;
-			}
-			if (typeParam.contentEquals("=") || typeParam.contentEquals("+") || typeParam.contentEquals("-")) {
+			// 子要素がない ＆＆
+			if (typeParam == null || typeParam.contentEquals("=") || typeParam.contentEquals("+")
+					|| typeParam.contentEquals("-")) {
+				// 自身の型パラメタが解決済み
 				return this;
 			}
 		}
-		final Slot slot;
 		final String bound = binds.get(typeParam);
+		final Slot slot;
 		if (bound == null) {
+			// 自分の typeParam が再定義されていない
 			slot = new Slot(typeParam, typeClass);
 		} else if (bound.startsWith("T")) {
-			// re-bind parameter name
+			// 型パラメタ名の再定義
+			// see TypeDef#createBindMap
 			slot = new Slot(bound.substring(1), typeClass);
 		} else {
+			// 型パラメタに型引数をくっつける
 			// certain bind
 			slot = new Slot("=", bound);
 		}
@@ -46,20 +46,17 @@ public final class Slot {
 
 	@Override
 	public String toString() {
-		try (StringWriter writer = new StringWriter(); PrintWriter out = new PrintWriter(writer)) {
-			printTo(out, "");
-			return writer.toString();
-		} catch (IOException e) {
-			throw new RuntimeException("Unhandled", e);
-		}
+		final StringBuilder buf = new StringBuilder();
+		printTo(buf, "");
+		return buf.toString();
 	}
 
-	private void printTo(PrintWriter out, String indent) {
-		out.format("%sSlot [typeParam=%s, typeClass=%s]", indent, typeParam, typeClass);
+	private void printTo(StringBuilder buf, String indent) {
+		buf.append(String.format("%sSlot [typeParam=%s, typeClass=%s]", indent, typeParam, typeClass));
 		indent += "  ";
 		for (Slot slot : slotList) {
-			out.write('\n');
-			slot.printTo(out, indent);
+			buf.append('\n');
+			slot.printTo(buf, indent);
 		}
 	}
 

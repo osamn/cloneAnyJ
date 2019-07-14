@@ -24,12 +24,15 @@ public final class TypeDef {
 		this.typeSlot = typeSlot;
 	}
 
+	public Stream<AccessEntry> accessors() {
+		return access.stream();
+	}
+
 	public Stream<AccessEntry> accessors(final List<Slot> binds) {
 		final Stream.Builder<AccessEntry> builder = Stream.builder();
 		// TODO フィールドとかメソッドの戻りとか引数とかで直接 generic を指定しているタイプの場合
 		// public Some<String, Integer> some;
 		// みたいなやつをバインドされた状態の access に変換してストリームに返す
-
 		return builder.build();
 	}
 
@@ -53,10 +56,11 @@ public final class TypeDef {
 	private void pullAllUp() {
 		final Map<String, String> binds = createBindMap();
 		for (AccessEntry entry : superType.access) {
-			// ただしスーパークラスのコンストラクタ引数は除外しとく
-			if (entry.elementType != AccessEntry.ACE_CTOR_ARG) {
-				access.add(new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(binds), entry.rel));
+			if (entry.elementType == AccessEntry.ACE_CTOR_ARG) {
+				// ただしスーパークラスのコンストラクタ引数は除外しとく
+				continue;
 			}
+			access.add(new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(binds), entry.rel));
 		}
 	}
 
@@ -71,7 +75,12 @@ public final class TypeDef {
 				// で、それらを比べてなにが型パラメタにくっついたかを調べる
 				// それぞれの型パラメタの数とか並び順はコンパイルとおってるかぎり絶対一致してるはずだよ
 				if (thisSlot.typeClass == null) {
-					// re-map
+					// 型パラメタをリマップする。目印として 'T' をつける
+					// 以下より T で始まる型引数はありえないため T を目印にしてるよ
+					//// Object -> L
+					//// void -> V
+					//// primitive -> ZCBSIFJD
+					//// array -> [
 					map.put(baseSlot.typeParam, "T" + thisSlot.typeParam);
 				} else {
 					map.put(baseSlot.typeParam, thisSlot.typeClass);

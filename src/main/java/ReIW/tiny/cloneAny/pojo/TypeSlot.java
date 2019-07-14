@@ -1,8 +1,5 @@
 package ReIW.tiny.cloneAny.pojo;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 
 final class TypeSlot {
@@ -19,23 +16,20 @@ final class TypeSlot {
 
 	@Override
 	public String toString() {
-		try (StringWriter writer = new StringWriter(); PrintWriter out = new PrintWriter(writer)) {
-			out.print("TypeSlot [");
-			for (Slot s : formalSlots) {
-				out.write('\n');
-				out.print(s);
-			}
-			out.println(":");
-			out.print(superSlot);
-			for (Slot s : interfaceSlot) {
-				out.write('\n');
-				out.print(s);
-			}
-			out.write(']');
-			return writer.toString();
-		} catch (IOException e) {
-			throw new RuntimeException("Unhandled", e);
+		final StringBuilder buf = new StringBuilder();
+		buf.append("TypeSlot [");
+		for (Slot s : formalSlots) {
+			buf.append('\n');
+			buf.append(s.toString());
 		}
+		buf.append("::");
+		buf.append(superSlot.toString());
+		for (Slot s : interfaceSlot) {
+			buf.append('\n');
+			buf.append(s.toString());
+		}
+		buf.append(']');
+		return buf.toString();
 	}
 
 }
