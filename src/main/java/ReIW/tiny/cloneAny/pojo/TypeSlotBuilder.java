@@ -54,7 +54,8 @@ final class TypeSlotBuilder extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitTypeVariable(String name) {
-		stack.peek().slotList.add(new Slot(name, null));
+		// typeClass はバイトコードに合わせて java/lang/Object にしておく
+		stack.peek().slotList.add(new Slot(name, "java/lang/Object"));
 	}
 
 	@Override
