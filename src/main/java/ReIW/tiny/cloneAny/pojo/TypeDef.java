@@ -6,17 +6,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public final class TypeDef {
+final class TypeDef {
 
-	public final String name;
-	public final String superName;
+	final String name;
+	final String superName;
 
 	final TypeSlot typeSlot;
-	final List<AccessEntry> access = new ArrayList<AccessEntry>();
-
-	private TypeDef superType; // キャッシュする関係で構築時には初期化できないので complete まで遅延
+	final ArrayList<AccessEntry> access = new ArrayList<AccessEntry>();
 
 	private boolean completed;
+	private TypeDef superType; // キャッシュする関係で構築時には初期化できないので complete まで遅延
 
 	TypeDef(final String name, final String superName, final TypeSlot typeSlot) {
 		this.name = name;
@@ -24,15 +23,33 @@ public final class TypeDef {
 		this.typeSlot = typeSlot;
 	}
 
-	public Stream<AccessEntry> accessors() {
+	Stream<AccessEntry> accessors() {
 		return access.stream();
 	}
 
-	public Stream<AccessEntry> accessors(final List<Slot> binds) {
+	/**
+	 * 未解決の型パラメタを指定引数で解決したアクセサのストリームを作る.
+	 * 
+	 * フィールドとかメソッドの戻りとか引数とかで直接 generic を指定しているタイプのアクセサから引っ張ってきた TypeDef
+	 * のアクセサをとる場合はこっち
+	 * 
+	 * @param binds
+	 * @return
+	 */
+	Stream<AccessEntry> accessors(final List<Slot> binds) {
+		final HashMap<String, String> bounds = new HashMap<>();
+		for (int i = 0; i < binds.size(); i++) {
+			bounds.put(typeSlot.formalSlots.get(i).typeParam, binds.get(i).typeClass);
+		}
+
 		final Stream.Builder<AccessEntry> builder = Stream.builder();
-		// TODO フィールドとかメソッドの戻りとか引数とかで直接 generic を指定しているタイプの場合
-		// public Some<String, Integer> some;
-		// みたいなやつをバインドされた状態の access に変換してストリームに返す
+		for (AccessEntry entry : superType.access) {
+			if (entry.elementType == AccessEntry.ACE_CTOR_ARG) {
+				// ただしスーパークラスのコンストラクタ引数は除外しとく
+				continue;
+			}
+			builder.add(new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bounds), entry.rel));
+		}
 		return builder.build();
 	}
 
@@ -54,13 +71,13 @@ public final class TypeDef {
 	// スーパークラス上で公開されたアクセスエントリを自分の型引数をバインドして
 	// 自分のエントリとして追加する
 	private void pullAllUp() {
-		final Map<String, String> binds = createBindMap();
+		final Map<String, String> bounds = createBindMap();
 		for (AccessEntry entry : superType.access) {
 			if (entry.elementType == AccessEntry.ACE_CTOR_ARG) {
 				// ただしスーパークラスのコンストラクタ引数は除外しとく
 				continue;
 			}
-			access.add(new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(binds), entry.rel));
+			access.add(new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bounds), entry.rel));
 		}
 	}
 
