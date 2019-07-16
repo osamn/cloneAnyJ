@@ -1,6 +1,6 @@
-package ReIW.tiny.cloneAny.pojo
+package ReIW.tiny.cloneAny.utils
 
-import ReIW.tiny.cloneAny.pojo.MethodUtil
+import ReIW.tiny.cloneAny.utils.MethodUtil
 import spock.lang.Specification
 import spock.lang.Unroll
 

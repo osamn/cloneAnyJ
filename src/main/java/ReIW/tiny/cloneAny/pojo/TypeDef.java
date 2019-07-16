@@ -2,17 +2,19 @@ package ReIW.tiny.cloneAny.pojo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-final class TypeDef {
+public final class TypeDef {
 
-	final String name;
-	final String superName;
+	public final String name;
+	public final String superName;
 
 	final TypeSlot typeSlot;
-	final ArrayList<AccessEntry> access = new ArrayList<AccessEntry>();
+	final ArrayList<AccessEntry> access = new ArrayList<>();
+	final HashSet<String> ctors = new HashSet<>();
 
 	private boolean completed;
 	private TypeDef superType; // キャッシュする関係で構築時には初期化できないので complete まで遅延
@@ -22,8 +24,12 @@ final class TypeDef {
 		this.superName = superName;
 		this.typeSlot = typeSlot;
 	}
+	
+	public boolean hasDefaultCtor() {
+		return ctors.contains("()V");
+	}
 
-	Stream<AccessEntry> accessors() {
+	public Stream<AccessEntry> accessors() {
 		return access.stream();
 	}
 
@@ -36,21 +42,14 @@ final class TypeDef {
 	 * @param binds
 	 * @return
 	 */
-	Stream<AccessEntry> accessors(final List<Slot> binds) {
+	public Stream<AccessEntry> accessors(final List<Slot> binds) {
 		final HashMap<String, String> bounds = new HashMap<>();
 		for (int i = 0; i < binds.size(); i++) {
 			bounds.put(typeSlot.formalSlots.get(i).typeParam, binds.get(i).typeClass);
 		}
 
-		final Stream.Builder<AccessEntry> builder = Stream.builder();
-		for (AccessEntry entry : superType.access) {
-			if (entry.elementType == AccessEntry.ACE_CTOR_ARG) {
-				// ただしスーパークラスのコンストラクタ引数は除外しとく
-				continue;
-			}
-			builder.add(new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bounds), entry.rel));
-		}
-		return builder.build();
+		return access.stream()
+				.map((entry) -> new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bounds), entry.rel));
 	}
 
 	// complete から再帰的に継承元をたどることで

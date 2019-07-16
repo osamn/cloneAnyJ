@@ -1,21 +1,21 @@
 package ReIW.tiny.cloneAny.pojo;
 
-public final class AccessEntry {
+final class AccessEntry {
 
-	public static final int ACE_FIELD = 1;
-	public static final int ACE_FINAL_FIELD = 2;
-	public static final int ACE_CTOR_ARG = 3;
-	public static final int ACE_PROP_GET = 4;
-	public static final int ACE_PROP_SET = 5;
+	static final int ACE_FIELD = 1;
+	static final int ACE_FINAL_FIELD = 2;
+	static final int ACE_CTOR_ARG = 3;
+	static final int ACE_PROP_GET = 4;
+	static final int ACE_PROP_SET = 5;
 
-	public final int elementType;
-	public final String name; // property name
-	public final Slot slot;
-	public final boolean canGet;
-	public final boolean canSet;
+	final int elementType;
+	final String name; // property name
+	final Slot slot;
+	final boolean canGet;
+	final boolean canSet;
 	// getter setter name 今のところ対応してないけど BeanInfo で変わる場合もあるんで
 	// あと ctor の descriptor とか
-	public final String rel;
+	final String rel;
 
 	AccessEntry(final int elementType, final String name, final Slot slot, final String rel) {
 		this.elementType = elementType;

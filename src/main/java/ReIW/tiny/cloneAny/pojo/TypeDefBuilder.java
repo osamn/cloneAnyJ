@@ -16,12 +16,13 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
+import ReIW.tiny.cloneAny.utils.MethodUtil;
 
-final class TypeDefBuilder {
+public final class TypeDefBuilder {
 
 	private static WeakReference<TypeDefBuilder> cacheRef = new WeakReference<>(new TypeDefBuilder());
 
-	static TypeDef createTypeDef(final String className) {
+	public static TypeDef createTypeDef(final String className) {
 		if (className.contentEquals("java/lang/Object")) {
 			return null;
 		}
@@ -90,6 +91,7 @@ final class TypeDefBuilder {
 				final String signature, String[] exceptions) {
 			if (myOwn(access)) {
 				if (name.contentEquals("<init>")) {
+					typeDef.ctors.add(descriptor);
 					return MethodSignatureParser.parameterParserVisitor(descriptor, signature, (paramName, slot) -> {
 						typeDef.access.add(new AccessEntry(ACE_CTOR_ARG, paramName, slot, descriptor));
 					});

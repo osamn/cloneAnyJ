@@ -1,13 +1,13 @@
-package ReIW.tiny.cloneAny.pojo;
+package ReIW.tiny.cloneAny.utils;
 
 import org.objectweb.asm.Type;
 
-final class MethodUtil {
+public final class MethodUtil {
 
 	private MethodUtil() {
 	}
 
-	static final String getPropertyName(String methodName) {
+	public static final String getPropertyName(String methodName) {
 		int off;
 
 		if (methodName.startsWith("set") || methodName.startsWith("get")) {
@@ -38,7 +38,7 @@ final class MethodUtil {
 	// setter getter は indexed property には対応しないよ
 	// Bean の実装次第でエラーになったりするとおもうんで
 
-	static boolean isGetter(String name, String descriptor) {
+	public static boolean isGetter(String name, String descriptor) {
 		if (name.startsWith("get") && name.length() > 3) {
 			final Type m = Type.getMethodType(descriptor);
 			return m.getArgumentTypes().length == 0 && m.getReturnType() != Type.VOID_TYPE;
@@ -50,7 +50,7 @@ final class MethodUtil {
 		return false;
 	}
 
-	static boolean isSetter(String name, String descriptor) {
+	public static boolean isSetter(String name, String descriptor) {
 		if (name.startsWith("set") && name.length() > 3) {
 			final Type m = Type.getMethodType(descriptor);
 			return m.getArgumentTypes().length == 1 && m.getReturnType() == Type.VOID_TYPE;

@@ -1,7 +1,7 @@
 package ReIW.tiny.cloneAny;
 
 @SuppressWarnings("serial")
-public final class AssemblyException extends RuntimeException {
+public class AssemblyException extends RuntimeException {
 
 	public AssemblyException() {
 	}
