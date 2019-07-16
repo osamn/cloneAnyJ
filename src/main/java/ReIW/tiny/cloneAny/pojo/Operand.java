@@ -74,13 +74,18 @@ public interface Operand {
 		return new Builder(TypeDefBuilder.createTypeDef(lhs.getName()), TypeDefBuilder.createTypeDef(rhs.getName()));
 	}
 
+	public static Builder builder(final Slot lhs, final Slot rhs) {
+		return new Builder(TypeDefBuilder.createTypeDef(lhs.typeClass).bind(lhs.slotList),
+				TypeDefBuilder.createTypeDef(rhs.typeClass).bind(rhs.slotList));
+	}
+
 	public static class Builder {
-		private final TypeDef lhs;
-		private final TypeDef rhs;
+		private final TypeAccessDef lhs;
+		private final TypeAccessDef rhs;
 
 		private List<Ops> ctor;
 
-		private Builder(final TypeDef lhs, final TypeDef rhs) {
+		private Builder(final TypeAccessDef lhs, final TypeAccessDef rhs) {
 			this.lhs = lhs;
 			this.rhs = rhs;
 		}
@@ -89,8 +94,10 @@ public interface Operand {
 			Stream.Builder<Operand> builder = Stream.builder();
 			// clone か paste かを切り替える感じ
 			if (requireNew) {
+				// コンストラクタをストリームに
 				if (ctor == null) {
 					if (rhs.hasDefaultCtor()) {
+						// デフォルトコンストラクタで生成的な
 						builder.accept(new CtorOp("()V"));
 					} else {
 						throw new AbortCallException("No default constructor.");
@@ -121,7 +128,8 @@ public interface Operand {
 				}
 			}
 
-			opstream().forEach(op -> {
+			// コピー操作をストリームに
+			copyOps().forEach(op -> {
 				final AccessEntry src = op.lhs;
 				final AccessEntry dst = op.rhs;
 				// push prop value
@@ -136,7 +144,7 @@ public interface Operand {
 				default:
 					throw new IllegalStateException();
 				}
-				// convert stack top value to dst type
+				// convert stack top to dst type and push
 				builder.accept(new MoveOp(src.slot, dst.slot));
 				// set stack top value to dst property
 				switch (dst.elementType) {
@@ -150,10 +158,14 @@ public interface Operand {
 					throw new IllegalStateException();
 				}
 			});
+
 			return builder.build();
 		}
 
-		Stream<Ops> opstream() {
+		/**
+		 * コンストラクタを除いたコピー操作のストリーム ついでに this.ctor も計算しておく
+		 */
+		Stream<Ops> copyOps() {
 			// とりあえず getter 側のマップつくる
 			final Map<String, AccessEntry> getter = lhs.accessors().filter((acc) -> acc.canGet)
 					.collect(Collectors.toMap((acc) -> acc.name, (acc) -> acc));
@@ -182,6 +194,7 @@ public interface Operand {
 			return propOps.flatMap(list -> list.stream());
 		}
 
+		/** 一番確からしいコンストラクタをとる */
 		static List<Ops> findNearestConstructor(Stream<List<Ops>> ctorOps) {
 			final Optional<Map.Entry<Integer, List<List<Ops>>>> most = ctorOps
 					// コンストラクタの引数の数でグルーピングして
@@ -200,6 +213,7 @@ public interface Operand {
 			return null;
 		}
 
+		/** lhs -> rhs へのコピー操作 */
 		private static class Ops {
 			final AccessEntry lhs;
 			final AccessEntry rhs;

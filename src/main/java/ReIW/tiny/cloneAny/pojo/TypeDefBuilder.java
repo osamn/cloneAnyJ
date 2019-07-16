@@ -22,7 +22,7 @@ public final class TypeDefBuilder {
 
 	private static WeakReference<TypeDefBuilder> cacheRef = new WeakReference<>(new TypeDefBuilder());
 
-	public static TypeDef createTypeDef(final String className) {
+	static TypeDef createTypeDef(final String className) {
 		if (className.contentEquals("java/lang/Object")) {
 			return null;
 		}
@@ -37,10 +37,10 @@ public final class TypeDefBuilder {
 		return builder.computeIfAbsent(className);
 	}
 
-	private final ConcurrentHashMap<String, TypeDef> hive = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, TypeAccessDef> hive = new ConcurrentHashMap<>();
 
 	private TypeDef computeIfAbsent(final String className) {
-		TypeDef type = hive.computeIfAbsent(className, (final String src) -> {
+		TypeDef type = (TypeDef) hive.computeIfAbsent(className, (final String src) -> {
 			try {
 				final TypeDefCreator decl = new TypeDefCreator();
 				new ClassReader(src).accept(decl, 0);

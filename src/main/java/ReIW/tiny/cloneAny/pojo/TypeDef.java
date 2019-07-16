@@ -7,15 +7,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public final class TypeDef {
+final class TypeDef implements TypeAccessDef {
 
-	public final String name;
-	public final String superName;
+	final String name;
 
 	final TypeSlot typeSlot;
+
 	final ArrayList<AccessEntry> access = new ArrayList<>();
 	final HashSet<String> ctors = new HashSet<>();
 
+	private final String superName;
 	private boolean completed;
 	private TypeDef superType; // キャッシュする関係で構築時には初期化できないので complete まで遅延
 
@@ -24,32 +25,25 @@ public final class TypeDef {
 		this.superName = superName;
 		this.typeSlot = typeSlot;
 	}
-	
+
+	@Override
 	public boolean hasDefaultCtor() {
 		return ctors.contains("()V");
 	}
 
+	@Override
 	public Stream<AccessEntry> accessors() {
 		return access.stream();
 	}
 
 	/**
-	 * 未解決の型パラメタを指定引数で解決したアクセサのストリームを作る.
+	 * 未解決の型パラメタを指定引数で解決したアクセサのストリームを作るためのラッパをつくる.
 	 * 
 	 * フィールドとかメソッドの戻りとか引数とかで直接 generic を指定しているタイプのアクセサから引っ張ってきた TypeDef
 	 * のアクセサをとる場合はこっち
-	 * 
-	 * @param binds
-	 * @return
 	 */
-	public Stream<AccessEntry> accessors(final List<Slot> binds) {
-		final HashMap<String, String> bounds = new HashMap<>();
-		for (int i = 0; i < binds.size(); i++) {
-			bounds.put(typeSlot.formalSlots.get(i).typeParam, binds.get(i).typeClass);
-		}
-
-		return access.stream()
-				.map((entry) -> new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bounds), entry.rel));
+	public TypeAccessDef bind(final List<Slot> binds) {
+		return new BoundTypeAccessDef(binds);
 	}
 
 	// complete から再帰的に継承元をたどることで
@@ -58,7 +52,7 @@ public final class TypeDef {
 		if (completed) {
 			return;
 		}
-		superType = TypeDefBuilder.createTypeDef(superName);
+		superType = (TypeDef) TypeDefBuilder.createTypeDef(superName);
 		if (superType == null) {
 			return;
 		}
@@ -105,4 +99,32 @@ public final class TypeDef {
 		}
 		return map;
 	}
+
+	/*
+	 * 未解決の型パラメタを指定引数で解決したアクセサのストリームを作るためのラッパ
+	 */
+	private class BoundTypeAccessDef implements TypeAccessDef {
+
+		private final List<Slot> binds;
+
+		private BoundTypeAccessDef(final List<Slot> binds) {
+			this.binds = binds;
+		}
+
+		@Override
+		public boolean hasDefaultCtor() {
+			return TypeDef.this.hasDefaultCtor();
+		}
+
+		@Override
+		public Stream<AccessEntry> accessors() {
+			final HashMap<String, String> bindMap = new HashMap<>();
+			for (int i = 0; i < binds.size(); i++) {
+				bindMap.put(typeSlot.formalSlots.get(i).typeParam, binds.get(i).typeClass);
+			}
+			return TypeDef.this.accessors().map(
+					(entry) -> new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bindMap), entry.rel));
+		}
+	}
+
 }
