@@ -6,6 +6,7 @@ import org.junit.Test
 
 import spock.lang.Specification
 
+// TODO 未テスト
 class TypeDefSpec extends Specification {
 
 
