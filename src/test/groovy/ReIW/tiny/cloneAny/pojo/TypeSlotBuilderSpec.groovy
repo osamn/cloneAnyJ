@@ -43,7 +43,7 @@ class TypeSlotBuilderSpec extends Specification {
 		and:
 		actual.formalSlots[1].slotList.size()== 1
 		actual.formalSlots[1].slotList[0].typeParam == "T"
-		actual.formalSlots[1].slotList[0].typeClass == null
+		actual.formalSlots[1].slotList[0].typeClass == "java/lang/Object"
 		and:
 		actual.superSlot.typeParam == null
 		actual.superSlot.typeClass == "java/lang/Object"
@@ -114,7 +114,7 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.superSlot.typeParam == null
 		actual.superSlot.typeClass == "java/util/ArrayList"
 		actual.superSlot.slotList[0].typeParam == "T"
-		actual.superSlot.slotList[0].typeClass == null
+		actual.superSlot.slotList[0].typeClass == "java/lang/Object"
 	}
 
 	def "createTypeSlot 型引数あり generic 実装  => class Foo<T> implements List<T>"() {
@@ -132,7 +132,7 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.interfaceSlot[0].typeParam == null
 		actual.interfaceSlot[0].typeClass == "java/util/List"
 		actual.interfaceSlot[0].slotList[0].typeParam == "T"
-		actual.interfaceSlot[0].slotList[0].typeClass == null
+		actual.interfaceSlot[0].slotList[0].typeClass == "java/lang/Object"
 	}
 	
 }

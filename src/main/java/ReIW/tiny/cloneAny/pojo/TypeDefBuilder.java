@@ -80,7 +80,7 @@ public final class TypeDefBuilder {
 				// その場合、コンストラクタ引数に設定可能なものとしてあるかもね
 				int type = (access & Opcodes.ACC_FINAL) == 0 ? ACE_FIELD : ACE_FINAL_FIELD;
 				FieldSignatureParser.parse(descriptor, signature, slot -> {
-					typeDef.access.add(new AccessEntry(type, name, slot, null));
+					typeDef.access.add(new AccessEntry(type, name, slot, name));
 				});
 			}
 			return null;

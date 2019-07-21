@@ -80,29 +80,40 @@ public interface Operand {
 	}
 
 	public static class Builder {
-		private final TypeAccessDef lhs;
-		private final TypeAccessDef rhs;
-
-		private List<Ops> ctor;
+		// コピー元（値を供給する人）
+		private final TypeAccessDef provider;
+		// コピー先（値を消費する人）
+		private final TypeAccessDef consumer;
 
 		private Builder(final TypeAccessDef lhs, final TypeAccessDef rhs) {
-			this.lhs = lhs;
-			this.rhs = rhs;
+			this.provider = lhs;
+			this.consumer = rhs;
 		}
 
 		public Stream<Operand> operands(final boolean requireNew) {
-			Stream.Builder<Operand> builder = Stream.builder();
+			final Stream.Builder<Operand> builder = Stream.builder();
+			final List<List<Ops>> ctorList = new ArrayList<>();
+			// copy 操作を計算する
+			// ついでにコンストラクタのリストを copyOps ストリームの副作用として作ってもらう
+			// 終端操作を明示的にしないと ctorList が計算されないので注意
+			final List<Ops> copyOps = calcCopyOps(ctorList).collect(Collectors.toList());
+
+			// で対象とするコンストラクタを決定する
+			final List<Ops> ctor = findProbablyConstructor(ctorList);
+
 			// clone か paste かを切り替える感じ
 			if (requireNew) {
 				// コンストラクタをストリームに
 				if (ctor == null) {
-					if (rhs.hasDefaultCtor()) {
+					// 引数のあるコンストラクタがない場合
+					if (consumer.hasDefaultCtor()) {
 						// デフォルトコンストラクタで生成的な
 						builder.accept(new CtorOp("()V"));
 					} else {
 						throw new AbortCallException("No default constructor.");
 					}
 				} else {
+					// コンストラクタの引数のコピー操作をストリームに
 					for (Ops op : ctor) {
 						final AccessEntry src = op.lhs;
 						final AccessEntry dst = op.rhs;
@@ -123,13 +134,13 @@ public interface Operand {
 					}
 
 					final String desc = ctor.get(0).rhs.rel;
-					// コンストラクタ呼び出しを emmit するよ
+					// 最後にコンストラクタ呼び出しをストリームに流すよ
 					builder.accept(new CtorOp(desc));
 				}
 			}
 
 			// コピー操作をストリームに
-			copyOps().forEach(op -> {
+			copyOps.forEach(op -> {
 				final AccessEntry src = op.lhs;
 				final AccessEntry dst = op.rhs;
 				// push prop value
@@ -163,40 +174,49 @@ public interface Operand {
 		}
 
 		/**
-		 * コンストラクタを除いたコピー操作のストリーム ついでに this.ctor も計算しておく
+		 * コンストラクタを除いたコピー操作のストリームを計算する
+		 * 
+		 * 副作用としてコンストラクタ操作を ctorList に設定する
 		 */
-		Stream<Ops> copyOps() {
+		Stream<Ops> calcCopyOps(final List<List<Ops>> ctorList) {
 			// とりあえず getter 側のマップつくる
-			final Map<String, AccessEntry> getter = lhs.accessors().filter((acc) -> acc.canGet)
-					.collect(Collectors.toMap((acc) -> acc.name, (acc) -> acc));
-			final Map<String, List<Ops>> opsGroup = rhs.accessors().filter(acc -> acc.canSet)
-					// setter に対応する getter がある Ops だけのストリームにして
-					.map(acc -> new Ops(getter.get(acc.name), acc)).filter(ops -> ops.lhs != null)
+			// マップキーはプロパティ名
+			final Map<String, AccessEntry> getter = provider.accessors().filter(acc -> acc.canGet)
+					.collect(Collectors.toMap(acc -> acc.name, acc -> acc));
+			// Ops のマップを作る
+			// マップキーはコンストラクタをシグネチャでまとめたいので rel を使用する
+			final Map<String, List<Ops>> opsGroup = consumer.accessors().filter(acc -> acc.canSet)
+					// setter に対応する getter があるものだけにして
+					.filter(acc -> getter.containsKey(acc.name))
+					// getter -> setter で Ops を作って
+					.map(acc -> new Ops(getter.get(acc.name), acc))
 					// setter 側の rel でまとめ上げる
+					// ちな rel は下のどれか
+					//// コンストラクタ -> (...)V
+					//// アクセッサ -> set* get*
+					//// フィールド -> name と同じ
 					.collect(Collectors.groupingBy(op -> op.rhs.rel));
-			final List<List<Ops>> ctorOps = new ArrayList<>();
-			final Stream<List<Ops>> propOps = opsGroup.values().stream().filter(oplist -> {
-				if (oplist.get(0).rhs.rel.startsWith("(")) {
+
+			return opsGroup.entrySet().stream().filter(entry -> {
+				final String sig = entry.getKey();
+				if (sig.startsWith("(")) {
 					// コンストラクタの場合、メソッドシグネチャと get -> set をまとめた Ops の数が一致してるものだけ
-					// ctorOps にいれておく
-					final int argSize = (Type.getArgumentsAndReturnSizes(oplist.get(0).rhs.rel) >> 2)
-							- 1/* without this */;
-					if (argSize == oplist.size()) {
+					// ctorList にいれておく
+					final List<Ops> cc = entry.getValue();
+					final int argSize = (Type.getArgumentsAndReturnSizes(sig) >> 2) - 1/* without this */;
+					if (argSize == cc.size()) {
 						// exact matched constructor
-						ctorOps.add(oplist);
+						ctorList.add(cc);
 					}
-					// ストリームから取り除く
 					return false;
 				}
 				return true;
-			});
-			ctor = findNearestConstructor(ctorOps.stream());
-			return propOps.flatMap(list -> list.stream());
+			}).map(entry -> entry.getValue()).flatMap(list -> list.stream());
 		}
 
 		/** 一番確からしいコンストラクタをとる */
-		static List<Ops> findNearestConstructor(Stream<List<Ops>> ctorOps) {
-			final Optional<Map.Entry<Integer, List<List<Ops>>>> most = ctorOps
+		static List<Ops> findProbablyConstructor(List<List<Ops>> ctorOps) {
+			final Optional<Map.Entry<Integer, List<List<Ops>>>> most = ctorOps.stream()
 					// コンストラクタの引数の数でグルーピングして
 					.collect(Collectors.groupingBy(List::size)).entrySet().stream()
 					// 一番数が多いやつをとってくる

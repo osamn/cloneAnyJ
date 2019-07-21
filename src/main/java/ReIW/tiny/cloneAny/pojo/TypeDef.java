@@ -10,13 +10,13 @@ import java.util.stream.Stream;
 final class TypeDef implements TypeAccessDef {
 
 	final String name;
+	final String superName;
 
 	final TypeSlot typeSlot;
 
 	final ArrayList<AccessEntry> access = new ArrayList<>();
 	final HashSet<String> ctors = new HashSet<>();
 
-	private final String superName;
 	private boolean completed;
 	private TypeDef superType; // キャッシュする関係で構築時には初期化できないので complete まで遅延
 

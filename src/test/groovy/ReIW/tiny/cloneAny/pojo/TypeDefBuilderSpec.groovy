@@ -88,7 +88,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[0].slot.typeClass == null
 		actual.access[0].canSet == true
 		actual.access[0].canGet == true
-		actual.access[0].rel == null
+		actual.access[0].rel == "t1"
 
 		actual.access[1].elementType == AccessEntry.ACE_FINAL_FIELD;
 		actual.access[1].name == "k1"
@@ -96,7 +96,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[1].slot.typeClass == null
 		actual.access[1].canSet == false
 		actual.access[1].canGet == true
-		actual.access[1].rel == null
+		actual.access[1].rel == "k1"
 
 		actual.access[2].elementType == AccessEntry.ACE_FIELD;
 		actual.access[2].name == "ii"
@@ -104,7 +104,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[2].slot.typeClass == "I"
 		actual.access[2].canSet == true
 		actual.access[2].canGet == true
-		actual.access[2].rel == null
+		actual.access[2].rel == "ii"
 
 		actual.access[3].elementType == AccessEntry.ACE_FINAL_FIELD;
 		actual.access[3].name == "ss"
@@ -112,7 +112,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[3].slot.typeClass == "java/lang/String"
 		actual.access[3].canSet == false
 		actual.access[3].canGet == true
-		actual.access[3].rel == null
+		actual.access[3].rel == "ss"
 	}
 
 	def "Props<T> public な getter setter が access に追加される"() {
