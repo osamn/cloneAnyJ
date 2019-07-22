@@ -6,7 +6,7 @@ import spock.lang.Unroll
 
 class MethodSignatureParserSpec extends Specification {
 
-	@Unroll
+	//@Unroll
 	def "parseArgumentsAndReturn 戻り値スロット (#descriptor, #signature)"() {
 		setup:
 		Slot slot

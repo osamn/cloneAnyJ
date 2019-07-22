@@ -6,8 +6,9 @@ import org.junit.Test
 
 import spock.lang.Specification
 
-// TODO 未テスト
 class TypeDefSpec extends Specification {
 
-
+	def "bind で直接型パラメタ指定"() {
+		// TODO 未テスト
+	}
 }

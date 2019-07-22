@@ -5,7 +5,7 @@ import spock.lang.Unroll
 
 class FieldSignatureParserSpec extends Specification {
 
-	@Unroll
+	//@Unroll
 	def "parse(descriptor=#descriptor, signature=#signature)"() {
 		setup:
 		def slot

@@ -12,77 +12,107 @@ import org.objectweb.asm.Type;
 
 public interface Operand {
 
-	public static class LoadOp implements Operand {
+	static class Load implements Operand {
 		public final String name;
 		public final Slot slot;
 
-		private LoadOp(final String name, final Slot slot) {
+		private Load(final String name, final Slot slot) {
 			this.name = name;
 			this.slot = slot;
 		}
+
+		@Override
+		public String toString() {
+			return "load " + name;
+		}
 	}
 
-	public static class StoreOp implements Operand {
+	static class Store implements Operand {
 		public final String name;
 		public final Slot slot;
 
-		private StoreOp(final String name, final Slot slot) {
+		private Store(final String name, final Slot slot) {
 			this.name = name;
 			this.slot = slot;
 		}
+
+		@Override
+		public String toString() {
+			return "store " + name;
+		}
 	}
 
-	public static class MoveOp implements Operand {
+	static class Move implements Operand {
 		public final Slot src;
 		public final Slot dst;
 
-		private MoveOp(final Slot src, final Slot dst) {
+		private Move(final Slot src, final Slot dst) {
 			this.src = src;
 			this.dst = dst;
 		}
+
+		@Override
+		public String toString() {
+			return "move " + src.typeClass + " to " + dst.typeClass;
+		}
 	}
 
-	public static class CtorOp implements Operand {
+	static class Ctor implements Operand {
 		public final String descriptor;
 
-		private CtorOp(final String descriptor) {
+		private Ctor(final String descriptor) {
 			this.descriptor = descriptor;
 		}
-	}
 
-	public static class GetterOp implements Operand {
-		public final String name;
-		public final Slot slot;
-
-		private GetterOp(final String name, final Slot slot) {
-			this.name = name;
-			this.slot = slot;
+		@Override
+		public String toString() {
+			return "<init>" + descriptor;
 		}
 	}
 
-	public static class SetterOp implements Operand {
-		public final String name;
+	static class Get implements Operand {
+		public final String getter;
 		public final Slot slot;
 
-		private SetterOp(final String name, final Slot slot) {
-			this.name = name;
+		private Get(final String rel, final Slot slot) {
+			this.getter = rel;
 			this.slot = slot;
+		}
+
+		@Override
+		public String toString() {
+			return slot.typeClass + " " + getter;
 		}
 	}
 
-	public static Builder builder(final Class<?> lhs, final Class<?> rhs) {
+	static class Set implements Operand {
+		public final String setter;
+		public final Slot slot;
+
+		private Set(final String rel, final Slot slot) {
+			this.setter = rel;
+			this.slot = slot;
+		}
+
+		@Override
+		public String toString() {
+			return setter + "(" + slot.typeClass + ")";
+		}
+	}
+
+	static Builder builder(final Class<?> lhs, final Class<?> rhs) {
 		return new Builder(TypeDefBuilder.createTypeDef(lhs.getName()), TypeDefBuilder.createTypeDef(rhs.getName()));
 	}
 
-	public static Builder builder(final Slot lhs, final Slot rhs) {
+	static Builder builder(final Slot lhs, final Slot rhs) {
 		return new Builder(TypeDefBuilder.createTypeDef(lhs.typeClass).bind(lhs.slotList),
 				TypeDefBuilder.createTypeDef(rhs.typeClass).bind(rhs.slotList));
 	}
 
-	public static class Builder {
-		// コピー元（値を供給する人）
+	static class Builder {
+		// コピー元
 		private final TypeAccessDef provider;
-		// コピー先（値を消費する人）
+		// コピー先
 		private final TypeAccessDef consumer;
 
 		private Builder(final TypeAccessDef lhs, final TypeAccessDef rhs) {
@@ -108,7 +138,7 @@ public interface Operand {
 					// 引数のあるコンストラクタがない場合
 					if (consumer.hasDefaultCtor()) {
 						// デフォルトコンストラクタで生成的な
-						builder.accept(new CtorOp("()V"));
+						builder.accept(new Ctor("()V"));
 					} else {
 						throw new AbortCallException("No default constructor.");
 					}
@@ -121,21 +151,21 @@ public interface Operand {
 						switch (src.elementType) {
 						case AccessEntry.ACE_FIELD:
 						case AccessEntry.ACE_FINAL_FIELD:
-							builder.accept(new LoadOp(src.name, src.slot));
+							builder.accept(new Load(src.name, src.slot));
 							break;
 						case AccessEntry.ACE_PROP_GET:
-							builder.accept(new GetterOp(src.name, src.slot));
+							builder.accept(new Get(src.rel, src.slot));
 							break;
 						default:
 							throw new IllegalStateException();
 						}
 						// convert and push
-						builder.accept(new MoveOp(src.slot, dst.slot));
+						builder.accept(new Move(src.slot, dst.slot));
 					}
 
 					final String desc = ctor.get(0).rhs.rel;
 					// 最後にコンストラクタ呼び出しをストリームに流すよ
-					builder.accept(new CtorOp(desc));
+					builder.accept(new Ctor(desc));
 				}
 			}
 
@@ -143,27 +173,30 @@ public interface Operand {
 			copyOps.forEach(op -> {
 				final AccessEntry src = op.lhs;
 				final AccessEntry dst = op.rhs;
+
 				// push prop value
 				switch (src.elementType) {
 				case AccessEntry.ACE_FIELD:
 				case AccessEntry.ACE_FINAL_FIELD:
-					builder.accept(new LoadOp(src.name, src.slot));
+					builder.accept(new Load(src.name, src.slot));
 					break;
 				case AccessEntry.ACE_PROP_GET:
-					builder.accept(new GetterOp(src.name, src.slot));
+					builder.accept(new Get(src.rel, src.slot));
 					break;
 				default:
 					throw new IllegalStateException();
 				}
+
 				// convert stack top to dst type and push
-				builder.accept(new MoveOp(src.slot, dst.slot));
+				builder.accept(new Move(src.slot, dst.slot));
+
 				// set stack top value to dst property
 				switch (dst.elementType) {
 				case AccessEntry.ACE_FIELD:
-					builder.accept(new StoreOp(src.name, src.slot));
+					builder.accept(new Store(dst.name, dst.slot));
 					break;
 				case AccessEntry.ACE_PROP_SET:
-					builder.accept(new SetterOp(src.name, src.slot));
+					builder.accept(new Set(dst.rel, dst.slot));
 					break;
 				default:
 					throw new IllegalStateException();
@@ -178,7 +211,7 @@ public interface Operand {
 		 * 
 		 * 副作用としてコンストラクタ操作を ctorList に設定する
 		 */
-		Stream<Ops> calcCopyOps(final List<List<Ops>> ctorList) {
+		private Stream<Ops> calcCopyOps(final List<List<Ops>> ctorList) {
 			// とりあえず getter 側のマップつくる
 			// マップキーはプロパティ名
 			final Map<String, AccessEntry> getter = provider.accessors().filter(acc -> acc.canGet)
@@ -215,7 +248,7 @@ public interface Operand {
 		}
 
 		/** 一番確からしいコンストラクタをとる */
-		static List<Ops> findProbablyConstructor(List<List<Ops>> ctorOps) {
+		private static List<Ops> findProbablyConstructor(List<List<Ops>> ctorOps) {
 			final Optional<Map.Entry<Integer, List<List<Ops>>>> most = ctorOps.stream()
 					// コンストラクタの引数の数でグルーピングして
 					.collect(Collectors.groupingBy(List::size)).entrySet().stream()
