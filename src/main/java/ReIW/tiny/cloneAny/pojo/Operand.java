@@ -23,7 +23,7 @@ public interface Operand {
 
 		@Override
 		public String toString() {
-			return "load " + name;
+			return "load \"" + name + "\"";
 		}
 	}
 
@@ -38,7 +38,7 @@ public interface Operand {
 
 		@Override
 		public String toString() {
-			return "store " + name;
+			return "store \"" + name + "\"";
 		}
 	}
 
@@ -53,7 +53,37 @@ public interface Operand {
 
 		@Override
 		public String toString() {
-			return "move " + src.typeClass + " to " + dst.typeClass;
+			return "move " + src.typeClass + "->" + dst.typeClass;
+		}
+	}
+
+	static class Get implements Operand {
+		public final String rel;
+		public final Slot slot;
+
+		private Get(final String rel, final Slot slot) {
+			this.rel = rel;
+			this.slot = slot;
+		}
+
+		@Override
+		public String toString() {
+			return rel + ":" + slot.typeClass;
+		}
+	}
+
+	static class Set implements Operand {
+		public final String rel;
+		public final Slot slot;
+
+		private Set(final String rel, final Slot slot) {
+			this.rel = rel;
+			this.slot = slot;
+		}
+
+		@Override
+		public String toString() {
+			return rel + ":" + slot.typeClass;
 		}
 	}
 
@@ -67,36 +97,6 @@ public interface Operand {
 		@Override
 		public String toString() {
 			return "<init>" + descriptor;
-		}
-	}
-
-	static class Get implements Operand {
-		public final String getter;
-		public final Slot slot;
-
-		private Get(final String rel, final Slot slot) {
-			this.getter = rel;
-			this.slot = slot;
-		}
-
-		@Override
-		public String toString() {
-			return slot.typeClass + " " + getter;
-		}
-	}
-
-	static class Set implements Operand {
-		public final String setter;
-		public final Slot slot;
-
-		private Set(final String rel, final Slot slot) {
-			this.setter = rel;
-			this.slot = slot;
-		}
-
-		@Override
-		public String toString() {
-			return setter + "(" + slot.typeClass + ")";
 		}
 	}
 
