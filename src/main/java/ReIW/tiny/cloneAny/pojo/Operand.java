@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
 
-public interface Operand {
+interface Operand {
 
 	static class Load implements Operand {
 		public final String name;
