@@ -18,7 +18,7 @@ import org.objectweb.asm.Opcodes;
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 import ReIW.tiny.cloneAny.utils.MethodUtil;
 
-public final class TypeDefBuilder {
+final class TypeDefBuilder {
 
 	private static WeakReference<TypeDefBuilder> cacheRef = new WeakReference<>(new TypeDefBuilder());
 
