@@ -12,7 +12,7 @@ import org.objectweb.asm.Type;
 
 interface Operand {
 
-	static class Load implements Operand {
+	static final class Load implements Operand {
 		public final String name;
 		public final Slot slot;
 
@@ -27,7 +27,7 @@ interface Operand {
 		}
 	}
 
-	static class Store implements Operand {
+	static final class Store implements Operand {
 		public final String name;
 		public final Slot slot;
 
@@ -42,7 +42,7 @@ interface Operand {
 		}
 	}
 
-	static class Move implements Operand {
+	static final class Move implements Operand {
 		public final Slot src;
 		public final Slot dst;
 
@@ -57,7 +57,7 @@ interface Operand {
 		}
 	}
 
-	static class Get implements Operand {
+	static final class Get implements Operand {
 		public final String rel;
 		public final Slot slot;
 
@@ -72,7 +72,7 @@ interface Operand {
 		}
 	}
 
-	static class Set implements Operand {
+	static final class Set implements Operand {
 		public final String rel;
 		public final Slot slot;
 
@@ -87,7 +87,7 @@ interface Operand {
 		}
 	}
 
-	static class Ctor implements Operand {
+	static final class Ctor implements Operand {
 		public final String descriptor;
 
 		private Ctor(final String descriptor) {
@@ -109,7 +109,7 @@ interface Operand {
 				TypeDefBuilder.createTypeDef(rhs.typeClass).bind(rhs.slotList));
 	}
 
-	static class Builder {
+	static final class Builder {
 		// コピー元
 		private final TypeAccessDef provider;
 		// コピー先
@@ -267,7 +267,7 @@ interface Operand {
 		}
 
 		/** lhs -> rhs へのコピー操作 */
-		private static class Ops {
+		private static final class Ops {
 			final AccessEntry lhs;
 			final AccessEntry rhs;
 

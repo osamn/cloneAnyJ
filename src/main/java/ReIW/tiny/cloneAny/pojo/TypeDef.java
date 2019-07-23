@@ -103,7 +103,7 @@ final class TypeDef implements TypeAccessDef {
 	/*
 	 * 未解決の型パラメタを指定引数で解決したアクセサのストリームを作るためのラッパ
 	 */
-	private class BoundTypeAccessDef implements TypeAccessDef {
+	private final class BoundTypeAccessDef implements TypeAccessDef {
 
 		private final List<Slot> binds;
 
