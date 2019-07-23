@@ -55,7 +55,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[0].elementType == AccessEntry.ACE_CTOR_ARG
 		actual.access[0].name == "t1"
 		actual.access[0].slot.typeParam == "T"
-		actual.access[0].slot.typeClass == null
+		actual.access[0].slot.typeClass == "java/lang/Object"
 		actual.access[0].canSet == true
 		actual.access[0].canGet == false
 		actual.access[0].rel == "(Ljava/lang/Object;Ljava/lang/String;)V"
@@ -132,7 +132,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[0].elementType == AccessEntry.ACE_PROP_SET
 		actual.access[0].name == "foo"
 		actual.access[0].slot.typeParam == "T"
-		actual.access[0].slot.typeClass == null
+		actual.access[0].slot.typeClass == "java/lang/Object"
 		actual.access[0].canSet == true
 		actual.access[0].canGet == false
 		actual.access[0].rel == "setFoo"
@@ -140,7 +140,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[1].elementType == AccessEntry.ACE_PROP_GET
 		actual.access[1].name == "bar"
 		actual.access[1].slot.typeParam == "K"
-		actual.access[1].slot.typeClass == null
+		actual.access[1].slot.typeClass == "java/lang/Object"
 		actual.access[1].canSet == false
 		actual.access[1].canGet == true
 		actual.access[1].rel == "getBar"

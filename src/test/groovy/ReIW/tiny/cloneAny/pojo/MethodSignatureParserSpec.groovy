@@ -35,7 +35,8 @@ class MethodSignatureParserSpec extends Specification {
 		descriptor				| signature					|| param	| clazz
 		"()Ljava/lang/Integer;"	| null						|| null		| "java/lang/Integer"
 		null					| "(BTV1;)J" 				|| null 	| "J"
-		null					| "(Ljava/util/List<TT1;>;)TV1;"					|| "V1"		| null
+		null					| "(Ljava/util/List<TT1;>;)TV1;"	\
+															|| "V1"		| "java/lang/Object"
 		null					| "(TV2;)Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;" \
 															|| null		| "java/util/List" // List<Map<T1,String>>
 
@@ -45,14 +46,14 @@ class MethodSignatureParserSpec extends Specification {
 
 		and:
 		nestedNestedParam1 << [null, null, null, "T1"]
-		nestedNestedClass1 << [null, null, null, null]
+		nestedNestedClass1 << [null, null, null, "java/lang/Object"]
 
 		and:
 		nestedNestedParam2 << [null, null, null, "="]
 		nestedNestedClass2 << [null, null, null, "java/lang/String"]
 	}
 
-	@Unroll
+	//@Unroll
 	def "parseArgumentsAndReturn 単一引数スロット (#descriptor, #signature)"() {
 		setup:
 		Slot slot
@@ -80,7 +81,7 @@ class MethodSignatureParserSpec extends Specification {
 		where:
 		descriptor				| signature					|| param	| clazz
 		"(Ljava/lang/Integer;)V"| null						|| null		| "java/lang/Integer"
-		null					| "(TV1;)V"					|| "V1"		| null
+		null					| "(TV1;)V"					|| "V1"		| "java/lang/Object"
 		null					| "(Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;)V" \
 															|| null		| "java/util/List" // List<Map<T1,String>>
 
@@ -90,7 +91,7 @@ class MethodSignatureParserSpec extends Specification {
 
 		and:
 		nestedNestedParam1 << [null, null, "T1"]
-		nestedNestedClass1 << [null, null, null]
+		nestedNestedClass1 << [null, null, "java/lang/Object"]
 
 		and:
 		nestedNestedParam2 << [null, null, "="]
@@ -113,7 +114,7 @@ class MethodSignatureParserSpec extends Specification {
 		args[0].typeClass == "J"
 
 		args[1].typeParam == "V1"
-		args[1].typeClass == null
+		args[1].typeClass == "java/lang/Object"
 
 		args[2].typeParam == null
 		args[2].typeClass == "java/util/List"
@@ -122,7 +123,7 @@ class MethodSignatureParserSpec extends Specification {
 		args[2].slotList[0].typeClass == "java/util/Map"
 		args[2].slotList[0].slotList.size() == 2
 		args[2].slotList[0].slotList[0].typeParam == "T1"
-		args[2].slotList[0].slotList[0].typeClass == null
+		args[2].slotList[0].slotList[0].typeClass == "java/lang/Object"
 		args[2].slotList[0].slotList[1].typeParam == "="
 		args[2].slotList[0].slotList[1].typeClass == "java/lang/String"
 

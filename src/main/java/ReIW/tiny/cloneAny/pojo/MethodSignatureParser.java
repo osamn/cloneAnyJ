@@ -120,9 +120,9 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 	@Override
 	public void visitTypeVariable(String name) {
 		if (stack.isEmpty()) {
-			cons.accept(new Slot(name, null));
+			cons.accept(new Slot(name, "java/lang/Object"));
 		} else {
-			stack.peek().slotList.add(new Slot(name, null));
+			stack.peek().slotList.add(new Slot(name, "java/lang/Object"));
 		}
 	}
 
