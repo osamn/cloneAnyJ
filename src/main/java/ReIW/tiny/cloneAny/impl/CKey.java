@@ -4,8 +4,9 @@ import java.util.Objects;
 
 public class CKey {
 
-	private final Class<?> lhs;
-	private final Class<?> rhs;
+	public final Class<?> lhs;
+	public final Class<?> rhs;
+
 	private final int hashCode;
 
 	public CKey(final Class<?> lhs, final Class<?> rhs) {

@@ -34,7 +34,7 @@ public interface Ditto<Lhs, Rhs> {
 		}
 
 		private final Object compute(final CKey clazzKey) {
-			final Class<?> clazz = DittoClassBuilder.createClass(clazzKey);
+			final Class<?> clazz = new DittoClassBuilder().createClass(clazzKey);
 			try {
 				return clazz.getDeclaredConstructor().newInstance();
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException

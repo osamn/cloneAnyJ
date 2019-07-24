@@ -14,7 +14,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.ModuleVisitor;
 import org.objectweb.asm.TypePath;
 
-import static org.objectweb.asm.Opcodes.*;
+import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 
 public final class AssemblyDomain extends ClassLoader {
 
@@ -35,6 +35,8 @@ public final class AssemblyDomain extends ClassLoader {
 		return domainRef.get();
 	}
 
+	// これやってもキャッシュしてるオブジェクトとかあるとき GC で全部いなくなったりしないんで
+	// 実質的にはあんまりいみないようなきがす
 	public static AssemblyDomain setDefaultAssemblyDomain(final AssemblyDomain domain) {
 		return domainRef.getAndSet(domain);
 	}
@@ -82,13 +84,12 @@ public final class AssemblyDomain extends ClassLoader {
 		return inspector;
 	}
 
-	private final class ClassResolver extends ClassVisitor {
+	private final class ClassResolver extends DefaultClassVisitor {
 		private final ClassVisitor cv;
 		private final ClassWriter cw;
 		private String className;
 
 		private ClassResolver() {
-			super(ASM7);
 			this.cw = new ClassWriter(0);
 			this.cv = this.cw;
 		}
