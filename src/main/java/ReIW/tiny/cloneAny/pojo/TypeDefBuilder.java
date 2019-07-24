@@ -16,7 +16,6 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
-import ReIW.tiny.cloneAny.utils.MethodUtil;
 
 final class TypeDefBuilder {
 
@@ -97,16 +96,16 @@ final class TypeDefBuilder {
 					});
 				} else {
 					try {
-						if (MethodUtil.isGetter(name, descriptor)) {
+						if (PropertyUtil.isGetter(name, descriptor)) {
 							MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, slot -> {
 								// nop
 							}, slot -> {
-								final String propName = MethodUtil.getPropertyName(name);
+								final String propName = PropertyUtil.getPropertyName(name);
 								typeDef.access.add(new AccessEntry(ACE_PROP_GET, propName, slot, name));
 							});
-						} else if (MethodUtil.isSetter(name, descriptor)) {
+						} else if (PropertyUtil.isSetter(name, descriptor)) {
 							MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, slot -> {
-								final String propName = MethodUtil.getPropertyName(name);
+								final String propName = PropertyUtil.getPropertyName(name);
 								typeDef.access.add(new AccessEntry(ACE_PROP_SET, propName, slot, name));
 							}, slot -> {
 								// nop

@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny;
+package ReIW.tiny.cloneAny.core;
 
 import java.lang.reflect.Field;
 import java.security.AccessController;
@@ -35,11 +35,12 @@ public final class AssemblyDomain extends ClassLoader {
 		return domainRef.get();
 	}
 
-	public static void setDefaultAssemblyDomain(final AssemblyDomain domain) {
-		domainRef.set(domain);
+	public static AssemblyDomain setDefaultAssemblyDomain(final AssemblyDomain domain) {
+		return domainRef.getAndSet(domain);
 	}
 
 	public AssemblyDomain() {
+		super();
 	}
 
 	public AssemblyDomain(final ClassLoader parent) {
@@ -48,6 +49,15 @@ public final class AssemblyDomain extends ClassLoader {
 
 	public ClassVisitor getTerminalClassVisitor() {
 		return new ClassResolver();
+	}
+
+	public Class<?> forName(final String name) throws ClassNotFoundException {
+		final String clazzName = name.replace('/', '.'); // internal name の場合もあるためここで吸収しておく
+		final Class<?> clazz = findLoadedClass(clazzName);
+		if (clazz == null) {
+			throw new ClassNotFoundException(clazzName);
+		}
+		return clazz;
 	}
 
 	/** for Debug use only;-) */
@@ -132,13 +142,16 @@ public final class AssemblyDomain extends ClassLoader {
 
 		public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
 				String[] exceptions) {
+			if (AccessFlag.isFinal(access)) {
+				return null;
+			}
 			return cv.visitMethod(access, name, descriptor, signature, exceptions);
 		}
 
 		public void visitEnd() {
 			cv.visitEnd();
 			final byte[] b = cw.toByteArray();
-			Class<?> clazz = AssemblyDomain.this.defineClass(className, b, 0, b.length,
+			final Class<?> clazz = AssemblyDomain.this.defineClass(className, b, 0, b.length,
 					AssemblyDomain.class.getProtectionDomain());
 			AssemblyDomain.this.resolveClass(clazz);
 		}

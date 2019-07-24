@@ -1,6 +1,6 @@
 package ReIW.tiny.cloneAny.pojo;
 
-import ReIW.tiny.cloneAny.AssemblyException;
+import ReIW.tiny.cloneAny.core.AssemblyException;
 
 @SuppressWarnings("serial")
 public class AbortCallException extends AssemblyException {

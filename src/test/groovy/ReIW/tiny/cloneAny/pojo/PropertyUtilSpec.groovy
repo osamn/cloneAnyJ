@@ -1,15 +1,15 @@
-package ReIW.tiny.cloneAny.utils
+package ReIW.tiny.cloneAny.pojo
 
-import ReIW.tiny.cloneAny.utils.MethodUtil
+import ReIW.tiny.cloneAny.pojo.PropertyUtil
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class MethodUtilSpec extends Specification {
+class PropertyUtilSpec extends Specification {
 
 	@Unroll
 	def "Property name from #methodName => #propName"() {
 		expect:
-		propName == MethodUtil.getPropertyName(methodName)
+		propName == PropertyUtil.getPropertyName(methodName)
 
 		where:
 		methodName	|| propName
@@ -31,7 +31,7 @@ class MethodUtilSpec extends Specification {
 	@Unroll
 	def "Method #name#descriptor is getter or not => #expected"() {
 		expect:
-		expected == MethodUtil.isGetter(name, descriptor)
+		expected == PropertyUtil.isGetter(name, descriptor)
 
 		where:
 		expected	|| name			| descriptor
@@ -48,7 +48,7 @@ class MethodUtilSpec extends Specification {
 	@Unroll
 	def "Method #name#descriptor is setter or not => #expected"() {
 		expect:
-		expected == MethodUtil.isSetter(name, descriptor)
+		expected == PropertyUtil.isSetter(name, descriptor)
 
 		where:
 		expected	|| name			| descriptor
