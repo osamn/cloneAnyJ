@@ -2,10 +2,10 @@ package ReIW.tiny.cloneAny.impl;
 
 import java.util.Objects;
 
-public class CKey {
+public final class CKey {
 
-	public final Class<?> lhs;
-	public final Class<?> rhs;
+	final Class<?> lhs;
+	final Class<?> rhs;
 
 	private final int hashCode;
 
@@ -13,6 +13,11 @@ public class CKey {
 		this.lhs = lhs;
 		this.rhs = rhs;
 		hashCode = Objects.hash(lhs, rhs);
+	}
+
+	public String toSignature() {
+		// TODO lhs rhs からクラスの signature を作成する
+		return null;
 	}
 
 	@Override

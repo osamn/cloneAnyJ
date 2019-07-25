@@ -33,8 +33,8 @@ public interface Ditto<Lhs, Rhs> {
 			return (Ditto<L, R>) hive.computeIfAbsent(new CKey(lhs, rhs), this::compute);
 		}
 
-		private final Object compute(final CKey clazzKey) {
-			final Class<?> clazz = new DittoClassBuilder().createClass(clazzKey);
+		private final Object compute(final CKey key) {
+			final Class<?> clazz = new DittoClassBuilder(key).createClass();
 			try {
 				return clazz.getDeclaredConstructor().newInstance();
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException

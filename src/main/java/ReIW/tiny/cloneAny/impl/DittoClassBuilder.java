@@ -1,9 +1,11 @@
 package ReIW.tiny.cloneAny.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -16,47 +18,47 @@ import ReIW.tiny.cloneAny.pojo.Operand;
 
 public final class DittoClassBuilder {
 
-	private final AssemblyDomain domain;
+	private final List<Operand> ctorOps;
+	private final List<Operand> propOps;
+	private final String clazzName;
+	private final String signature;
 
-	public DittoClassBuilder() {
-		domain = AssemblyDomain.getDefaultAssemblyDomain();
+	public DittoClassBuilder(final CKey key) {
+		final Stream<Operand> ops = Operand.builder(key.lhs, key.rhs).operands(true);
+		ctorOps = new ArrayList<>();
+		propOps = ops.filter(new Predicate<Operand>() {
+			boolean hadCtor = false;
+
+			@Override
+			public boolean test(Operand t) {
+				if (!hadCtor) {
+					ctorOps.add(t);
+					if (t instanceof Operand.Ctor) {
+						hadCtor = true;
+					}
+					return false;
+				}
+				return true;
+			}
+		}).collect(Collectors.toList());
+		// 実体化するクラスの名前
+		clazzName = "$ditto." + key.toString();
+		// generic なシグネチャ文字列
+		signature = key.toSignature();
 	}
 
-	public Class<?> createClass(final CKey key) {
+	public Class<?> createClass() {
 		final AssemblyDomain domain = AssemblyDomain.getDefaultAssemblyDomain();
 		try {
-			loadClass(key);
-			return domain.forName(getDittoName(key));
+			loadConcreteDitto(domain);
+			return domain.forName(clazzName);
 		} catch (IOException | ClassNotFoundException e) {
 			throw new AssemblyException(e);
 		}
 	}
 
-	private void loadClass(final CKey key) throws IOException {
-		final Stream<Operand> ops = Operand.builder(key.lhs, key.rhs).operands(true);
-		final Map<String, List<Operand>> opGroup = ops.collect(Collectors.groupingBy(new Function<Operand, String>() {
-			private boolean ctor = true;
-
-			@Override
-			public String apply(Operand t) {
-				if (ctor) {
-					if (t instanceof Operand.Ctor) {
-						ctor = false;
-					}
-					return "ctor";
-				}
-				return "prop";
-			}
-
-		}));
-
-		final ClassVisitor cv = domain.getTerminalClassVisitor();
-		final ClassReader cr = new ClassReader(AbstractDitto.class.getName());
-
+	private void loadConcreteDitto(final AssemblyDomain domain) throws IOException {
 		// TODO びじたのチェーン作って accept する
 	}
 
-	private static String getDittoName(final CKey key) {
-		return "$ditto." + key.toString();
-	}
 }
