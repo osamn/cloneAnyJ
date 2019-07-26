@@ -33,7 +33,7 @@ class FieldSignatureParserSpec extends Specification {
 		descriptor				| signature					|| param	| clazz
 		"Ljava/lang/Integer;"	| null						|| null		| "java/lang/Integer"
 		"I"						| null 						|| null 	| "I"
-		""						| "TV1;"					|| "V1"		| null
+		""						| "TV1;"					|| "V1"		| "java/lang/Object"
 		""						| "Ljava/util/List<TV1;>;"	|| null 	| "java/util/List" // List<V1>
 		""						| "Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;" \
 															|| null		| "java/util/List" // List<Map<T1,String>>
@@ -41,11 +41,11 @@ class FieldSignatureParserSpec extends Specification {
 		// 横に並べるとみにくいのでパイプにしてみる
 		and:
 		nestedParam << [null, null, null, "V1", "="]
-		nestedClass << [null, null, null, null, "java/util/Map"]
+		nestedClass << [null, null, null, "java/lang/Object", "java/util/Map"]
 
 		and:
 		nestedNestedParam1 << [null, null, null, null, "T1"]
-		nestedNestedClass1 << [null, null, null, null, null]
+		nestedNestedClass1 << [null, null, null, null, "java/lang/Object"]
 
 		and:
 		nestedNestedParam2 << [null, null, null, null, "="]

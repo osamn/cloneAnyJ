@@ -85,7 +85,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[0].elementType == AccessEntry.ACE_FIELD;
 		actual.access[0].name == "t1"
 		actual.access[0].slot.typeParam == "T"
-		actual.access[0].slot.typeClass == null
+		actual.access[0].slot.typeClass == "java/lang/Object"
 		actual.access[0].canSet == true
 		actual.access[0].canGet == true
 		actual.access[0].rel == "t1"
@@ -93,7 +93,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[1].elementType == AccessEntry.ACE_FINAL_FIELD;
 		actual.access[1].name == "k1"
 		actual.access[1].slot.typeParam == "K"
-		actual.access[1].slot.typeClass == null
+		actual.access[1].slot.typeClass == "java/lang/Object"
 		actual.access[1].canSet == false
 		actual.access[1].canGet == true
 		actual.access[1].rel == "k1"
