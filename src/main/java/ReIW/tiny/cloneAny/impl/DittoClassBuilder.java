@@ -16,6 +16,13 @@ import ReIW.tiny.cloneAny.core.AssemblyDomain;
 import ReIW.tiny.cloneAny.core.AssemblyException;
 import ReIW.tiny.cloneAny.pojo.Operand;
 
+// generic な要素を持つ配列の場合、型パラメタが消えちゃうの
+// なので配列のスロットの型名から再度スロットをとって formal がのこってたらエラーにするとか
+// そんな感じにしないといかんかも
+
+
+
+
 public final class DittoClassBuilder {
 
 	private final List<Operand> ctorOps;

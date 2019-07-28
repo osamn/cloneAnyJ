@@ -101,12 +101,7 @@ public interface Operand {
 	}
 
 	static Builder builder(final Class<?> lhs, final Class<?> rhs) {
-		return new Builder(TypeDefBuilder.createTypeDef(lhs.getName()), TypeDefBuilder.createTypeDef(rhs.getName()));
-	}
-
-	static Builder builder(final Slot lhs, final Slot rhs) {
-		return new Builder(TypeDefBuilder.createTypeDef(lhs.typeClass).bind(lhs.slotList),
-				TypeDefBuilder.createTypeDef(rhs.typeClass).bind(rhs.slotList));
+		return new Builder(TypeDefBuilder.createTypeDef(lhs), TypeDefBuilder.createTypeDef(rhs));
 	}
 
 	static final class Builder {
@@ -212,18 +207,20 @@ public interface Operand {
 		 * 副作用としてコンストラクタ操作を ctorList に設定する
 		 */
 		private Stream<Ops> calcCopyOps(final List<List<Ops>> ctorList) {
+			// TODO マップの対応する
+			
 			// とりあえず getter 側のマップつくる
 			// マップキーはプロパティ名
-			final Map<String, AccessEntry> getter = provider.accessors().filter(acc -> acc.canGet)
-					.collect(Collectors.toMap(acc -> acc.name, acc -> acc));
+			final Map<String, AccessEntry> getters = provider.accessors().filter(acc -> acc.canGet)
+					.collect(Collectors.toMap(get -> get.name, get -> get));
 			// Ops のマップを作る
-			// マップキーはコンストラクタをシグネチャでまとめたいので rel を使用する
 			final Map<String, List<Ops>> opsGroup = consumer.accessors().filter(acc -> acc.canSet)
 					// setter に対応する getter があるものだけにして
-					.filter(acc -> getter.containsKey(acc.name))
+					.filter(setter -> getters.containsKey(setter.name))
 					// getter -> setter で Ops を作って
-					.map(acc -> new Ops(getter.get(acc.name), acc))
+					.map(setter -> new Ops(getters.get(setter.name), setter))
 					// setter 側の rel でまとめ上げる
+					// マップキーはコンストラクタをシグネチャでまとめたいので rel つかう
 					// ちな rel は下のどれか
 					//// コンストラクタ -> (...)V
 					//// アクセッサ -> set* get*
@@ -235,7 +232,8 @@ public interface Operand {
 				if (sig.startsWith("(")) {
 					// コンストラクタの場合、メソッドシグネチャと get -> set をまとめた Ops の数が一致してるものだけ
 					// ctorList にいれておく
-					final List<Ops> cc = entry.getValue();
+					final List<Ops> cc = entry.getValue().stream().filter(op -> !op.lhs.name.contentEquals("*"))
+							.collect(Collectors.toList());
 					final int argSize = (Type.getArgumentsAndReturnSizes(sig) >> 2) - 1/* without this */;
 					if (argSize == cc.size()) {
 						// exact matched constructor
