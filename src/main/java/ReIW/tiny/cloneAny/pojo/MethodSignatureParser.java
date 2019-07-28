@@ -17,7 +17,7 @@ import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
 
 final class MethodSignatureParser extends DefaultSignatureVisitor {
 
-	private static <T> void nop(T val) {
+	static <T> void nop(T val) {
 	};
 
 	static MethodVisitor parameterParserVisitor(final String descriptor, final String signature,

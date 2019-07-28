@@ -9,6 +9,4 @@ interface TypeAccessDef {
 
 	Stream<AccessEntry> accessors();
 
-	Stream<String> interfaceNames();
-
 }

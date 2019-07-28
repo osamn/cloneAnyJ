@@ -10,8 +10,8 @@ class TypeDefSpec extends Specification {
 
 	def "bind で直接型パラメタ指定"() {
 		setup:
-		def concrete = TypeDefBuilder.createTypeDef(TypeDef_BoundProp.class.getName())
-		def unbound = TypeDefBuilder.createTypeDef(TypeDef_Unbound.class.getName())
+		def concrete = TypeDefBuilder.createTypeDef(TypeDef_BoundProp.class)
+		def unbound = TypeDefBuilder.createTypeDef(TypeDef_Unbound.class)
 		def acclist = unbound.bind(concrete.access[0].slot.slotList).accessors().toList()
 		def acc1 = acclist[0]
 		def acc2 = acclist[1]

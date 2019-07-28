@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 final class TypeDef implements TypeAccessDef {
@@ -36,15 +37,6 @@ final class TypeDef implements TypeAccessDef {
 	public Stream<AccessEntry> accessors() {
 		return access.stream();
 	}
-
-	@Override
-	public Stream<String> interfaceNames() {
-		final Stream<String> declared = typeSlot == null ? Stream.empty()
-				: typeSlot.interfaceSlot.stream().map(slot -> slot.typeClass);
-		final Stream<String> parent = superType == null ? Stream.empty() : superType.interfaceNames();
-		return Stream.concat(declared, parent).distinct();
-	}
-
 
 	/**
 	 * 未解決の型パラメタを指定引数で解決したアクセサのストリームを作るためのラッパをつくる.
@@ -79,12 +71,19 @@ final class TypeDef implements TypeAccessDef {
 	// 自分のエントリとして追加する
 	private void pullAllUp() {
 		final Map<String, String> bounds = createBindMap();
+		final Set<String> uniq = new HashSet<>();
 		for (AccessEntry entry : superType.access) {
 			if (entry.elementType == AccessEntry.ACE_CTOR_ARG) {
 				// ただしスーパークラスのコンストラクタ引数は除外しとく
 				continue;
 			}
-			access.add(new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bounds), entry.rel));
+			// 同じエントリがないように name + rel で確認する
+			//// setFoo(String) setFoo(Integer) public Long foo とかそんなのあると最初のやつが取得されるので注意
+			// ほんとは同じ名前のアクセッサあったら例外にしようかなって思ったんだけど Map#isEmpty があるんで
+			// ここでも Map を確認しないといけなくなったりしそうで面倒なので
+			if (uniq.add(entry.name + entry.rel)) {
+				access.add(new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bounds), entry.rel));
+			}
 		}
 	}
 
@@ -138,11 +137,6 @@ final class TypeDef implements TypeAccessDef {
 			}
 			return TypeDef.this.accessors().map(
 					(entry) -> new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bindMap), entry.rel));
-		}
-
-		@Override
-		public Stream<String> interfaceNames() {
-			return TypeDef.this.interfaceNames();
 		}
 
 	}

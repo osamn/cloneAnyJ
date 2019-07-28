@@ -8,12 +8,16 @@ import static ReIW.tiny.cloneAny.pojo.AccessEntry.ACE_PROP_SET;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 
@@ -22,7 +26,18 @@ final class TypeDefBuilder {
 	// いつまでも hive 抱えててもいかんので GC で回収されるように弱参照をもっておく
 	private static WeakReference<TypeDefBuilder> cacheRef = new WeakReference<>(new TypeDefBuilder());
 
+	// TypeDef#complete で super を作るときに使う
+	// なんで className は internalName になってるよ
 	static TypeDef createTypeDef(final String className) {
+		try {
+			final Class<?> clazz = Class.forName(className.replace('/', '.'));
+			return createTypeDef(clazz);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	static TypeDef createTypeDef(final Class<?> clazz) {
 		TypeDefBuilder builder;
 		synchronized (TypeDefBuilder.class) {
 			builder = cacheRef.get();
@@ -31,16 +46,17 @@ final class TypeDefBuilder {
 				cacheRef = new WeakReference<>(builder);
 			}
 		}
-		return builder.compute(className);
+		return builder.compute(clazz);
 	}
 
-	private final ConcurrentHashMap<String, TypeAccessDef> hive = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Class<?>, TypeAccessDef> hive = new ConcurrentHashMap<>();
 
-	private TypeDef compute(final String className) {
-		TypeDef type = (TypeDef) hive.computeIfAbsent(className, (final String src) -> {
+	private TypeDef compute(final Class<?> clazz) {
+		TypeDef type = (TypeDef) hive.computeIfAbsent(clazz, (final Class<?> src) -> {
+			final String cnm = Type.getInternalName(src);
 			try {
-				final TypeDefCreator decl = new TypeDefCreator();
-				new ClassReader(src).accept(decl, 0);
+				final TypeDefCreator decl = new TypeDefCreator(Map.class.isAssignableFrom(clazz));
+				new ClassReader(cnm).accept(decl, 0);
 				return decl.typeDef;
 			} catch (IOException e) {
 				// まあ、これはありえないから適当に
@@ -56,7 +72,10 @@ final class TypeDefBuilder {
 
 	private static class TypeDefCreator extends DefaultClassVisitor {
 
-		private TypeDefCreator() {
+		private final boolean instanceOfMap;
+
+		private TypeDefCreator(boolean instanceOfMap) {
+			this.instanceOfMap = instanceOfMap;
 		}
 
 		private TypeDef typeDef;
@@ -83,7 +102,7 @@ final class TypeDefBuilder {
 			}
 			return null;
 		}
-		
+
 		@Override
 		public MethodVisitor visitMethod(final int access, final String name, final String descriptor,
 				final String signature, String[] exceptions) {
@@ -93,22 +112,37 @@ final class TypeDefBuilder {
 					return MethodSignatureParser.parameterParserVisitor(descriptor, signature, (paramName, slot) -> {
 						typeDef.access.add(new AccessEntry(ACE_CTOR_ARG, paramName, slot, descriptor));
 					});
+				} else if (name.contentEquals("get")) {
+					if (instanceOfMap) {
+						MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, MethodSignatureParser::nop,
+								slot -> {
+									typeDef.access.add(new AccessEntry(ACE_PROP_GET, "*", slot, name));
+								});
+					}
+				} else if (name.contentEquals("put")) {
+					if (instanceOfMap) {
+						final List<Slot> params = new ArrayList<>();
+						MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, slot -> {
+							params.add(slot);
+						}, MethodSignatureParser::nop);
+						if (params.size() == 2) {
+							// 引数が２つの put なんで追加する
+							typeDef.access.add(new AccessEntry(ACE_PROP_SET, "*", params.get(1), name));
+						}
+					}
 				} else {
 					try {
 						if (PropertyUtil.isGetter(name, descriptor)) {
-							MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, slot -> {
-								// nop
-							}, slot -> {
-								final String propName = PropertyUtil.getPropertyName(name);
-								typeDef.access.add(new AccessEntry(ACE_PROP_GET, propName, slot, name));
-							});
+							MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature,
+									MethodSignatureParser::nop, slot -> {
+										final String propName = PropertyUtil.getPropertyName(name);
+										typeDef.access.add(new AccessEntry(ACE_PROP_GET, propName, slot, name));
+									});
 						} else if (PropertyUtil.isSetter(name, descriptor)) {
 							MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, slot -> {
 								final String propName = PropertyUtil.getPropertyName(name);
 								typeDef.access.add(new AccessEntry(ACE_PROP_SET, propName, slot, name));
-							}, slot -> {
-								// nop
-							});
+							}, MethodSignatureParser::nop);
 						}
 					} catch (UnboundFormalTypeParameterException e) {
 						// プロパティっぽいけど、メソッド自体に型パラメタがあるので無視する
@@ -123,11 +157,10 @@ final class TypeDefBuilder {
 	}
 
 	private static boolean myOwn(int access) {
-		// public で
-		// instance で
-		// コンパイラが生成したものじゃない
-		return ((access & Opcodes.ACC_PUBLIC) != 0 && (access & Opcodes.ACC_STATIC) == 0
-				&& (access & Opcodes.ACC_SYNTHETIC) == 0);
+		return ((access & Opcodes.ACC_PUBLIC) != 0 // public で
+				&& (access & Opcodes.ACC_STATIC) == 0 // instance で
+				&& (access & Opcodes.ACC_ABSTRACT) == 0 // not abstract で
+				&& (access & Opcodes.ACC_SYNTHETIC) == 0); // コンパイラが生成したものじゃない
 	}
 
 }

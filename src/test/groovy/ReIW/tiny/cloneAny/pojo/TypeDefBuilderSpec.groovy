@@ -6,7 +6,7 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "PlainCtor public なコンストラクタの引数のみ access にはいる"() {
 		when:
-		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_PlainCtor.class.getName())
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_PlainCtor.class)
 
 		then:
 		actual.name == TypeDefBuilder_PlainCtor.class.getName().replace('.', '/')
@@ -42,7 +42,7 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "TypedCtor<T> 型引数がちゃんとできてるかみてみる"() {
 		when:
-		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_TypedCtor.class.getName())
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_TypedCtor.class)
 
 		then:
 		actual.name == TypeDefBuilder_TypedCtor.class.getName().replace('.', '/')
@@ -71,7 +71,7 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "Fields<T,K> public なフィールドだけ access 追加される"() {
 		when:
-		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Fields.class.getName())
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Fields.class)
 
 		then:
 		actual.name == TypeDefBuilder_Fields.class.getName().replace('.', '/')
@@ -117,7 +117,7 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "Props<T> public な getter setter が access に追加される"() {
 		when:
-		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Props.class.getName())
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Props.class)
 
 		then:
 		actual.name == TypeDefBuilder_Props.class.getName().replace('.', '/')
@@ -164,7 +164,7 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "public じゃない class は例外"() {
 		when:
-		TypeDefBuilder.createTypeDef(TypeDefBuilder_InternalScope.class.getName())
+		TypeDefBuilder.createTypeDef(TypeDefBuilder_InternalScope.class)
 
 		then:
 		thrown(UnsupportedOperationException)
@@ -172,7 +172,7 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "継承したやつもいい感じに"() {
 		when:
-		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Extend2.class.getName())
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Extend2.class)
 
 		//println actual.typeSlot
 		//println actual.superType.typeSlot
@@ -186,7 +186,7 @@ class TypeDefBuilderSpec extends Specification {
 
 	def "generic じゃないもの"() {
 		when:
-		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Plain_Base.class.getName())
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Plain_Base.class)
 
 		then:
 		actual.superType == null
@@ -194,7 +194,7 @@ class TypeDefBuilderSpec extends Specification {
 	
 	def "generic じゃないものを継承した generic じゃないもの"() {
 		when:
-		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Plain_Extend.class.getName())
+		def actual = TypeDefBuilder.createTypeDef(TypeDefBuilder_Plain_Extend.class)
 
 		then:
 		actual.superType != null
