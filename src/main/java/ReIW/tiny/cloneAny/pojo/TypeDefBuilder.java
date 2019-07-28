@@ -126,8 +126,11 @@ final class TypeDefBuilder {
 							params.add(slot);
 						}, MethodSignatureParser::nop);
 						if (params.size() == 2) {
-							// 引数が２つの put なんで追加する
-							typeDef.access.add(new AccessEntry(ACE_PROP_SET, "*", params.get(1), name));
+							// put は引数が２つなんで、引数を子供にもつ Slot を作って追加する
+							final Slot val = params.get(1);
+							final Slot put = new Slot(null, val.typeClass /* bind まえなんで java/lang/Object 固定になる */);
+							put.slotList.addAll(params);
+							typeDef.access.add(new AccessEntry(ACE_PROP_SET, "*", put, name));
 						}
 					}
 				} else {
