@@ -207,20 +207,35 @@ public interface Operand {
 		 * 副作用としてコンストラクタ操作を ctorList に設定する
 		 */
 		private Stream<Ops> calcCopyOps(final List<List<Ops>> ctorList) {
-			// TODO マップの対応する
-			
 			// とりあえず getter 側のマップつくる
 			// マップキーはプロパティ名
 			final Map<String, AccessEntry> getters = provider.accessors().filter(acc -> acc.canGet)
 					.collect(Collectors.toMap(get -> get.name, get -> get));
+
 			// Ops のマップを作る
+			// マップキーはコンストラクタをシグネチャでまとめたいので rel つかう
 			final Map<String, List<Ops>> opsGroup = consumer.accessors().filter(acc -> acc.canSet)
-					// setter に対応する getter があるものだけにして
-					.filter(setter -> getters.containsKey(setter.name))
+					// setter に対応する getter がある
+					// または getter に "*" がある場合は Ops を作る
+					.filter(set -> getters.containsKey(set.name) || getters.containsKey("*"))
 					// getter -> setter で Ops を作って
-					.map(setter -> new Ops(getters.get(setter.name), setter))
+					.flatMap(set -> {
+						if (set.name.contentEquals("*")) {
+							// "*" はある場合は必ずストリームの最後のはずなので
+							// rest of all name/* -> *
+							final Stream.Builder<Ops> rest = Stream.builder();
+							getters.values().forEach(acc -> rest.accept(new Ops(acc, set)));
+							getters.clear();
+							return rest.build();
+						} else if (getters.containsKey("*")) {
+							// * -> name
+							return Stream.of(new Ops(getters.get("*"), set));
+						} else {
+							// name -> name
+							return Stream.of(new Ops(getters.remove(set.name), set));
+						}
+					})
 					// setter 側の rel でまとめ上げる
-					// マップキーはコンストラクタをシグネチャでまとめたいので rel つかう
 					// ちな rel は下のどれか
 					//// コンストラクタ -> (...)V
 					//// アクセッサ -> set* get*

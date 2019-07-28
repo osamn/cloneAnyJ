@@ -135,12 +135,12 @@ final class TypeDefBuilder {
 								MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature,
 										slot -> params.add(slot), slot -> result.add(slot));
 								// map は <K,V> なんで特殊なスロットを作る
-								// slot(val_type)
-								// +- slot(key_type)
+								// slot(key_type)
+								// +- slot(val_type)
 								final Slot key = params.get(0);
 								final Slot val = result.get(0);
-								final Slot slot = new Slot(val.typeParam, val.typeClass);
-								slot.slotList.add(key);
+								final Slot slot = new Slot(key.typeParam, key.typeClass);
+								slot.slotList.add(val);
 
 								// Map#put(K)
 								typeDef.access.add(new AccessEntry(ACE_PROP_SET, "*", slot, "put"));
