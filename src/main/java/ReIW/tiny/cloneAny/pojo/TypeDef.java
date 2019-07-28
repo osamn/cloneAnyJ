@@ -12,6 +12,7 @@ final class TypeDef implements TypeAccessDef {
 	final String name;
 	final String superName;
 
+	// 自身が signature を持たない場合は null
 	final TypeSlot typeSlot;
 
 	final ArrayList<AccessEntry> access = new ArrayList<>();
@@ -36,6 +37,15 @@ final class TypeDef implements TypeAccessDef {
 		return access.stream();
 	}
 
+	@Override
+	public Stream<String> interfaceNames() {
+		final Stream<String> declared = typeSlot == null ? Stream.empty()
+				: typeSlot.interfaceSlot.stream().map(slot -> slot.typeClass);
+		final Stream<String> parent = superType == null ? Stream.empty() : superType.interfaceNames();
+		return Stream.concat(declared, parent).distinct();
+	}
+
+
 	/**
 	 * 未解決の型パラメタを指定引数で解決したアクセサのストリームを作るためのラッパをつくる.
 	 * 
@@ -49,13 +59,17 @@ final class TypeDef implements TypeAccessDef {
 	// complete から再帰的に継承元をたどることで
 	// 結果として継承階層上のすべての AccessEntry が含まれる形になる
 	void complete() {
+		// 何回も呼ばれる可能性もあるのでガードしとく
 		if (completed) {
 			return;
 		}
-		superType = (TypeDef) TypeDefBuilder.createTypeDef(superName);
-		if (superType == null) {
+		// 親が Object.class だったら継承階層のルートまでたどってるので終了する
+		if (superName.contentEquals("java/lang/Object")) {
+			completed = true;
 			return;
 		}
+		// 親のアクセサを自分に持ってくる
+		superType = (TypeDef) TypeDefBuilder.createTypeDef(superName);
 		superType.complete();
 		pullAllUp();
 		completed = true;
@@ -125,6 +139,12 @@ final class TypeDef implements TypeAccessDef {
 			return TypeDef.this.accessors().map(
 					(entry) -> new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bindMap), entry.rel));
 		}
+
+		@Override
+		public Stream<String> interfaceNames() {
+			return TypeDef.this.interfaceNames();
+		}
+
 	}
 
 }

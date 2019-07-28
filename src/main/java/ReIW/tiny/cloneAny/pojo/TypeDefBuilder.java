@@ -19,12 +19,10 @@ import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 
 final class TypeDefBuilder {
 
+	// いつまでも hive 抱えててもいかんので GC で回収されるように弱参照をもっておく
 	private static WeakReference<TypeDefBuilder> cacheRef = new WeakReference<>(new TypeDefBuilder());
 
 	static TypeDef createTypeDef(final String className) {
-		if (className.contentEquals("java/lang/Object")) {
-			return null;
-		}
 		TypeDefBuilder builder;
 		synchronized (TypeDefBuilder.class) {
 			builder = cacheRef.get();
@@ -33,19 +31,20 @@ final class TypeDefBuilder {
 				cacheRef = new WeakReference<>(builder);
 			}
 		}
-		return builder.computeIfAbsent(className);
+		return builder.compute(className);
 	}
 
 	private final ConcurrentHashMap<String, TypeAccessDef> hive = new ConcurrentHashMap<>();
 
-	private TypeDef computeIfAbsent(final String className) {
+	private TypeDef compute(final String className) {
 		TypeDef type = (TypeDef) hive.computeIfAbsent(className, (final String src) -> {
 			try {
 				final TypeDefCreator decl = new TypeDefCreator();
 				new ClassReader(src).accept(decl, 0);
 				return decl.typeDef;
 			} catch (IOException e) {
-				throw new RuntimeException("Unhandled", e);
+				// まあ、これはありえないから適当に
+				throw new RuntimeException(e);
 			}
 		});
 		// TypeDef#complete は super の TypeDef をとるんで computeIfAbsent の中でやると
@@ -77,14 +76,14 @@ final class TypeDefBuilder {
 			if (myOwn(access)) {
 				// final なものは読み取り専用になるよ
 				// その場合、コンストラクタ引数に設定可能なものとしてあるかもね
-				int type = (access & Opcodes.ACC_FINAL) == 0 ? ACE_FIELD : ACE_FINAL_FIELD;
+				final int type = (access & Opcodes.ACC_FINAL) == 0 ? ACE_FIELD : ACE_FINAL_FIELD;
 				FieldSignatureParser.parse(descriptor, signature, slot -> {
 					typeDef.access.add(new AccessEntry(type, name, slot, name));
 				});
 			}
 			return null;
 		}
-
+		
 		@Override
 		public MethodVisitor visitMethod(final int access, final String name, final String descriptor,
 				final String signature, String[] exceptions) {
@@ -111,9 +110,10 @@ final class TypeDefBuilder {
 								// nop
 							});
 						}
-
 					} catch (UnboundFormalTypeParameterException e) {
-						// 型引数が定義されてるので無視する
+						// プロパティっぽいけど、メソッド自体に型パラメタがあるので無視する
+						// public <X> X getHoge()
+						// みたいなやつ
 					}
 				}
 			}
