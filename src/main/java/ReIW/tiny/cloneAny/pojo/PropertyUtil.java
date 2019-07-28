@@ -7,7 +7,7 @@ public final class PropertyUtil {
 	private PropertyUtil() {
 	}
 
-	public static final String getPropertyName(String methodName) {
+	public static final String getPropertyName(final String methodName) {
 		int off;
 
 		if (methodName.startsWith("set") || methodName.startsWith("get")) {
@@ -35,10 +35,7 @@ public final class PropertyUtil {
 		return buf.toString();
 	}
 
-	// setter getter は indexed property には対応しないよ
-	// Bean の実装次第でエラーになったりするとおもうんで
-
-	public static boolean isGetter(String name, String descriptor) {
+	public static boolean isGetter(final String name, final String descriptor) {
 		if (name.startsWith("get") && name.length() > 3) {
 			final Type m = Type.getMethodType(descriptor);
 			return m.getArgumentTypes().length == 0 && m.getReturnType() != Type.VOID_TYPE;
@@ -50,10 +47,26 @@ public final class PropertyUtil {
 		return false;
 	}
 
-	public static boolean isSetter(String name, String descriptor) {
+	public static boolean isSetter(final String name, final String descriptor) {
 		if (name.startsWith("set") && name.length() > 3) {
 			final Type m = Type.getMethodType(descriptor);
 			return m.getArgumentTypes().length == 1 && m.getReturnType() == Type.VOID_TYPE;
+		}
+		return false;
+	}
+
+	public static boolean isMapGet(final String name, final String descriptor) {
+		if (name.contentEquals("get")) {
+			final Type m = Type.getMethodType(descriptor);
+			return m.getArgumentTypes().length == 1 && m.getReturnType() != Type.VOID_TYPE;
+		}
+		return false;
+	}
+
+	public static boolean isMapPut(final String name, final String descriptor) {
+		if (name.contentEquals("put")) {
+			final Type m = Type.getMethodType(descriptor);
+			return m.getArgumentTypes().length == 2 && m.getReturnType() != Type.VOID_TYPE;
 		}
 		return false;
 	}
