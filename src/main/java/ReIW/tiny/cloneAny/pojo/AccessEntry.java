@@ -9,11 +9,11 @@ final class AccessEntry {
 	static final int ACE_PROP_SET = 5;
 
 	final int elementType;
-	final String name; // property name
+	final String name;
 	final Slot slot;
 	final boolean canGet;
 	final boolean canSet;
-	// getter setter name 今のところ対応してないけど BeanInfo で変わる場合もあるんで
+	// getter setter の実エントリ名（今のところ対応してないけど BeanInfo で変わる場合もあるんで）
 	// あと ctor の descriptor とか
 	final String rel;
 
@@ -25,7 +25,7 @@ final class AccessEntry {
 		this.canSet = (elementType == ACE_FIELD || elementType == ACE_CTOR_ARG || elementType == ACE_PROP_SET);
 		this.rel = rel;
 	}
-	
+
 	@Override
 	public String toString() {
 		final String type;
@@ -46,6 +46,6 @@ final class AccessEntry {
 			type = "FIELD";
 			break;
 		}
-		return "AccessEntry [" + type + ", name=" + name +", rel=" + rel + ", " + slot + "]";
+		return "AccessEntry [" + type + ", name=" + name + ", rel=" + rel + ", " + slot + "]";
 	}
 }
