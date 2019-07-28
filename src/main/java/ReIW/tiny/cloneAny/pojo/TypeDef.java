@@ -35,7 +35,13 @@ final class TypeDef implements TypeAccessDef {
 
 	@Override
 	public Stream<AccessEntry> accessors() {
-		return access.stream();
+		return access.stream().filter(acc -> {
+			// マップの get/put はキーが String の場合のみアクセサとみなす
+			if (acc.name.contentEquals("*")) {
+				return acc.slot.slotList.get(0).typeClass.contentEquals("java/lang/String");
+			}
+			return true;
+		});
 	}
 
 	/**

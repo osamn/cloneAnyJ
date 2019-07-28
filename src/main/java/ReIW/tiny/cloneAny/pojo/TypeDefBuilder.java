@@ -112,27 +112,6 @@ final class TypeDefBuilder {
 					return MethodSignatureParser.parameterParserVisitor(descriptor, signature, (paramName, slot) -> {
 						typeDef.access.add(new AccessEntry(ACE_CTOR_ARG, paramName, slot, descriptor));
 					});
-				} else if (name.contentEquals("get")) {
-					if (instanceOfMap) {
-						MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, MethodSignatureParser::nop,
-								slot -> {
-									typeDef.access.add(new AccessEntry(ACE_PROP_GET, "*", slot, name));
-								});
-					}
-				} else if (name.contentEquals("put")) {
-					if (instanceOfMap) {
-						final List<Slot> params = new ArrayList<>();
-						MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature, slot -> {
-							params.add(slot);
-						}, MethodSignatureParser::nop);
-						if (params.size() == 2) {
-							// put は引数が２つなんで、引数を子供にもつ Slot を作って追加する
-							final Slot val = params.get(1);
-							final Slot put = new Slot(null, val.typeClass /* bind まえなんで java/lang/Object 固定になる */);
-							put.slotList.addAll(params);
-							typeDef.access.add(new AccessEntry(ACE_PROP_SET, "*", put, name));
-						}
-					}
 				} else {
 					try {
 						if (PropertyUtil.isGetter(name, descriptor)) {
@@ -146,6 +125,28 @@ final class TypeDefBuilder {
 								final String propName = PropertyUtil.getPropertyName(name);
 								typeDef.access.add(new AccessEntry(ACE_PROP_SET, propName, slot, name));
 							}, MethodSignatureParser::nop);
+						} else if (instanceOfMap) {
+							if (PropertyUtil.isMapPut(name, descriptor)) {
+								// Map#put あったら Map#get もあるよねってことで
+								// get の明示的な判定はしない
+
+								final List<Slot> params = new ArrayList<>();
+								final List<Slot> result = new ArrayList<>();
+								MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature,
+										slot -> params.add(slot), slot -> result.add(slot));
+								// map は <K,V> なんで特殊なスロットを作る
+								// slot(val_type)
+								// +- slot(key_type)
+								final Slot key = params.get(0);
+								final Slot val = result.get(0);
+								final Slot slot = new Slot(val.typeParam, val.typeClass);
+								slot.slotList.add(key);
+
+								// Map#put(K)
+								typeDef.access.add(new AccessEntry(ACE_PROP_SET, "*", slot, "put"));
+								// Map#get(Object) だけど、キーの型を持っておきたいので同じスロットで追加
+								typeDef.access.add(new AccessEntry(ACE_PROP_GET, "*", slot, "get"));
+							}
 						}
 					} catch (UnboundFormalTypeParameterException e) {
 						// プロパティっぽいけど、メソッド自体に型パラメタがあるので無視する
