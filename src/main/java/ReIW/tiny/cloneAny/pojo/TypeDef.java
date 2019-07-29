@@ -40,7 +40,7 @@ final class TypeDef implements TypeAccessDef {
 		final Stream.Builder<AccessEntry> prop = Stream.builder();
 		access.forEach(acc -> {
 			if (acc.name.contentEquals("*")) {
-				if (acc.slot.typeClass.contentEquals("java/lang/String")) {
+				if (acc.slot.slotList.get(0).typeClass.contentEquals("java/lang/String")) {
 					// マップの get/put はキーが String の場合のみアクセサとみなす
 					maps.accept(acc);
 				}
@@ -91,9 +91,6 @@ final class TypeDef implements TypeAccessDef {
 				continue;
 			}
 			// 同じエントリがないように name + rel で確認する
-			//// setFoo(String) setFoo(Integer) public Long foo とかそんなのあると最初のやつが取得されるので注意
-			// ほんとは同じ名前のアクセッサあったら例外にしようかなって思ったんだけど Map#isEmpty があるんで
-			// ここでも Map を確認しないといけなくなったりしそうで面倒なので
 			if (uniq.add(entry.name + entry.rel)) {
 				access.add(new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bounds), entry.rel));
 			}

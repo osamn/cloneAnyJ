@@ -135,12 +135,12 @@ final class TypeDefBuilder {
 								MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature,
 										slot -> params.add(slot), slot -> result.add(slot));
 								// map は <K,V> なんで特殊なスロットを作る
-								// slot(key_type)
-								// +- slot(val_type)
+								// slot(val_type)
+								// +- slot(key_type)
 								final Slot key = params.get(0);
 								final Slot val = result.get(0);
-								final Slot slot = new Slot(key.typeParam, key.typeClass);
-								slot.slotList.add(val);
+								final Slot slot = new Slot(val.typeParam, val.typeClass);
+								slot.slotList.add(key);
 
 								// Map#put(K)
 								typeDef.access.add(new AccessEntry(ACE_PROP_SET, "*", slot, "put"));
@@ -163,7 +163,7 @@ final class TypeDefBuilder {
 	private static boolean myOwn(int access) {
 		return ((access & Opcodes.ACC_PUBLIC) != 0 // public で
 				&& (access & Opcodes.ACC_STATIC) == 0 // instance で
-				&& (access & Opcodes.ACC_ABSTRACT) == 0 // not abstract で
+				&& (access & Opcodes.ACC_ABSTRACT) == 0 // concrete で
 				&& (access & Opcodes.ACC_SYNTHETIC) == 0); // コンパイラが生成したものじゃない
 	}
 
