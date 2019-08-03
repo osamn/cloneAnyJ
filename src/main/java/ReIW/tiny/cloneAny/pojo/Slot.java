@@ -4,11 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.objectweb.asm.Type;
+
 public final class Slot {
 
 	public final String typeParam;
 	public final String typeClass;
 	public final List<Slot> slotList = new ArrayList<>(5);
+
+	Slot(final String typeParam) {
+		this(typeParam, Type.getDescriptor(Object.class));
+	}
 
 	Slot(final String typeParam, final String typeClass) {
 		this.typeParam = typeParam;

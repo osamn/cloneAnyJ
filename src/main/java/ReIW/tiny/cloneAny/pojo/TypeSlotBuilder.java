@@ -3,6 +3,7 @@ package ReIW.tiny.cloneAny.pojo;
 import java.util.ArrayList;
 import java.util.Stack;
 
+import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
@@ -43,7 +44,7 @@ final class TypeSlotBuilder extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitClassType(String name) {
-		stack.push(new Slot(typeParamName, name));
+		stack.push(new Slot(typeParamName, Type.getObjectType(name).getDescriptor()));
 	}
 
 	@Override
@@ -54,8 +55,7 @@ final class TypeSlotBuilder extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitTypeVariable(String name) {
-		// typeClass はバイトコードに合わせて java/lang/Object にしておく
-		stack.peek().slotList.add(new Slot(name, "java/lang/Object"));
+		stack.peek().slotList.add(new Slot(name));
 	}
 
 	@Override

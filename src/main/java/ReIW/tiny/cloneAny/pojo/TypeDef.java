@@ -8,8 +8,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.objectweb.asm.Type;
+
 final class TypeDef implements TypeAccessDef {
 
+	// name superName は internalName なので注意
 	final String name;
 	final String superName;
 
@@ -40,8 +43,8 @@ final class TypeDef implements TypeAccessDef {
 		final Stream.Builder<AccessEntry> prop = Stream.builder();
 		access.forEach(acc -> {
 			if (acc.name.contentEquals("*")) {
-				if (acc.slot.slotList.get(0).typeClass.contentEquals("java/lang/String")) {
-					// マップの get/put はキーが String の場合のみアクセサとみなす
+				// マップの get/put の場合
+				if (isAccessibleMapEntry(acc.slot)) {
 					maps.accept(acc);
 				}
 			} else {
@@ -49,6 +52,15 @@ final class TypeDef implements TypeAccessDef {
 			}
 		});
 		return Stream.concat(prop.build(), maps.build());
+	}
+
+	/** java.util.Map<K,V> をアクセサとして抽出対象にするのは K が String の時だけとする */
+	private static boolean isAccessibleMapEntry(Slot slot) {
+		// Map のスロットはちょっと特殊
+		// slot(val_type)
+		// +- slot(key_type)
+		// see TypeDefBuilder.TypeDefCreator#visitMethod
+		return slot.slotList.get(0).typeClass.contentEquals(Type.getDescriptor(String.class));
 	}
 
 	/**
@@ -91,6 +103,7 @@ final class TypeDef implements TypeAccessDef {
 				continue;
 			}
 			// 同じエントリがないように name + rel で確認する
+			// override したときとか同じエントリが階層上位にあったりするので
 			if (uniq.add(entry.name + entry.rel)) {
 				access.add(new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bounds), entry.rel));
 			}

@@ -17,8 +17,8 @@ class TypeDefSpec extends Specification {
 		def acc2 = acclist[1]
 		
 		expect:
-		acc1.slot.typeClass == "java/lang/Integer"
-		acc2.slot.typeClass == "java/lang/String"
+		acc1.slot.typeClass == "Ljava/lang/Integer;"
+		acc2.slot.typeClass == "Ljava/lang/String;"
 		
 	}
 }

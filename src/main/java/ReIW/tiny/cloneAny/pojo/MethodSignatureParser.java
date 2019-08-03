@@ -62,9 +62,9 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 		if (signature == null) {
 			Type m = Type.getMethodType(descriptor);
 			for (Type t : m.getArgumentTypes()) {
-				argumentsCons.accept(new Slot(null, t.getInternalName()));
+				argumentsCons.accept(new Slot(null, t.getDescriptor()));
 			}
-			returnCons.accept(new Slot(null, m.getReturnType().getInternalName()));
+			returnCons.accept(new Slot(null, m.getReturnType().getDescriptor()));
 		} else {
 			final MethodSignatureParser parser = new MethodSignatureParser(argumentsCons, returnCons);
 			new SignatureReader(signature).accept(parser);
@@ -108,7 +108,7 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitClassType(String name) {
-		stack.push(new Slot(typeParamName, name));
+		stack.push(new Slot(typeParamName, Type.getObjectType(name).getDescriptor()));
 	}
 
 	@Override
@@ -120,9 +120,9 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 	@Override
 	public void visitTypeVariable(String name) {
 		if (stack.isEmpty()) {
-			cons.accept(new Slot(name, "java/lang/Object"));
+			cons.accept(new Slot(name));
 		} else {
-			stack.peek().slotList.add(new Slot(name, "java/lang/Object"));
+			stack.peek().slotList.add(new Slot(name));
 		}
 	}
 

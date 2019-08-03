@@ -13,7 +13,7 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	static void parse(final String descriptor, final String signature, final Consumer<Slot> fieldCons) {
 		if (signature == null) {
-			fieldCons.accept(new Slot(null, Type.getType(descriptor).getInternalName()));
+			fieldCons.accept(new Slot(null, descriptor));
 		} else {
 			final FieldSignatureParser parser = new FieldSignatureParser(fieldCons);
 			new SignatureReader(signature).accept(parser);
@@ -31,7 +31,8 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitClassType(String name) {
-		stack.push(new Slot(typeParamName, name));
+		// generic は primitive がないので getObjectType でおけ
+		stack.push(new Slot(typeParamName, Type.getObjectType(name).getDescriptor()));
 	}
 
 	@Override
@@ -43,9 +44,9 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 	@Override
 	public void visitTypeVariable(String name) {
 		if (stack.isEmpty()) {
-			cons.accept(new Slot(name, "java/lang/Object"));
+			cons.accept(new Slot(name));
 		} else {
-			stack.peek().slotList.add(new Slot(name, "java/lang/Object"));
+			stack.peek().slotList.add(new Slot(name));
 		}
 	}
 

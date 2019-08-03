@@ -23,11 +23,11 @@ class TypeSlotBuilderSpec extends Specification {
 		then:
 		actual.formalSlots.size() == 2
 		actual.formalSlots[0].typeParam == "A"
-		actual.formalSlots[0].typeClass == "java/lang/Object"
+		actual.formalSlots[0].typeClass == "Ljava/lang/Object;"
 		actual.formalSlots[1].typeParam == "B"
-		actual.formalSlots[1].typeClass == "java/lang/Object"
+		actual.formalSlots[1].typeClass == "Ljava/lang/Object;"
 		actual.superSlot.typeParam == null
-		actual.superSlot.typeClass == "java/lang/Object"
+		actual.superSlot.typeClass == "Ljava/lang/Object;"
 	}
 
 	def "createTypeSlot 型引数あり  => class Foo<T,L extends List<T>>"() {
@@ -37,16 +37,16 @@ class TypeSlotBuilderSpec extends Specification {
 		then:
 		actual.formalSlots.size() == 2
 		actual.formalSlots[0].typeParam == "T"
-		actual.formalSlots[0].typeClass == "java/lang/Object"
+		actual.formalSlots[0].typeClass == "Ljava/lang/Object;"
 		actual.formalSlots[1].typeParam == "L"
-		actual.formalSlots[1].typeClass == "java/util/List"
+		actual.formalSlots[1].typeClass == "Ljava/util/List;"
 		and:
 		actual.formalSlots[1].slotList.size()== 1
 		actual.formalSlots[1].slotList[0].typeParam == "T"
-		actual.formalSlots[1].slotList[0].typeClass == "java/lang/Object"
+		actual.formalSlots[1].slotList[0].typeClass == "Ljava/lang/Object;"
 		and:
 		actual.superSlot.typeParam == null
-		actual.superSlot.typeClass == "java/lang/Object"
+		actual.superSlot.typeClass == "Ljava/lang/Object;"
 	}
 
 	def "createTypeSlot 型引数なし generic 継承 共変 => class Foo extends HashMap<Integer, ArrayList<? super String>>"() {
@@ -57,13 +57,13 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.formalSlots.size() == 0
 		and:
 		actual.superSlot.typeParam == null
-		actual.superSlot.typeClass == "java/util/HashMap"
+		actual.superSlot.typeClass == "Ljava/util/HashMap;"
 		actual.superSlot.slotList[0].typeParam == "="
-		actual.superSlot.slotList[0].typeClass == "java/lang/Integer"
+		actual.superSlot.slotList[0].typeClass == "Ljava/lang/Integer;"
 		actual.superSlot.slotList[1].typeParam == "="
-		actual.superSlot.slotList[1].typeClass == "java/util/ArrayList"
+		actual.superSlot.slotList[1].typeClass == "Ljava/util/ArrayList;"
 		actual.superSlot.slotList[1].slotList[0].typeParam == "-"
-		actual.superSlot.slotList[1].slotList[0].typeClass == "java/lang/String"
+		actual.superSlot.slotList[1].slotList[0].typeClass == "Ljava/lang/String;"
 	}
 
 	def "createTypeSlot 型引数なし generic 実装 反変 => class Foo extends Set<ArrayList<? extends String>>"() {
@@ -74,13 +74,13 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.formalSlots.size() == 0
 		and:
 		actual.superSlot.typeParam == null
-		actual.superSlot.typeClass == "java/lang/Object"
+		actual.superSlot.typeClass == "Ljava/lang/Object;"
 		actual.interfaceSlot[0].typeParam == null
-		actual.interfaceSlot[0].typeClass == "java/util/Set"
+		actual.interfaceSlot[0].typeClass == "Ljava/util/Set;"
 		actual.interfaceSlot[0].slotList[0].typeParam == "="
-		actual.interfaceSlot[0].slotList[0].typeClass == "java/util/ArrayList"
+		actual.interfaceSlot[0].slotList[0].typeClass == "Ljava/util/ArrayList;"
 		actual.interfaceSlot[0].slotList[0].slotList[0].typeParam == "+"
-		actual.interfaceSlot[0].slotList[0].slotList[0].typeClass == "java/lang/String"
+		actual.interfaceSlot[0].slotList[0].slotList[0].typeClass == "Ljava/lang/String;"
 	}
 
 	def "createTypeSlot 型引数あり generic 実装 => class Foo implements List<String>, Serializable"() {
@@ -91,15 +91,15 @@ class TypeSlotBuilderSpec extends Specification {
 		actual.formalSlots.size() == 0
 		and:
 		actual.superSlot.typeParam == null
-		actual.superSlot.typeClass == "java/lang/Object"
+		actual.superSlot.typeClass == "Ljava/lang/Object;"
 		and:
 		actual.interfaceSlot.size()== 2
 		actual.interfaceSlot[0].typeParam == null
-		actual.interfaceSlot[0].typeClass == "java/util/List"
+		actual.interfaceSlot[0].typeClass == "Ljava/util/List;"
 		actual.interfaceSlot[0].slotList[0].typeParam == "="
-		actual.interfaceSlot[0].slotList[0].typeClass == "java/lang/String"
+		actual.interfaceSlot[0].slotList[0].typeClass == "Ljava/lang/String;"
 		actual.interfaceSlot[1].typeParam == null
-		actual.interfaceSlot[1].typeClass == "java/io/Serializable"
+		actual.interfaceSlot[1].typeClass == "Ljava/io/Serializable;"
 	}
 
 	def "createTypeSlot 型引数あり generic 継承 => class Foo<T> extends ArrayList<T>"() {
@@ -109,12 +109,12 @@ class TypeSlotBuilderSpec extends Specification {
 		then:
 		actual.formalSlots.size() == 1
 		actual.formalSlots[0].typeParam == "T"
-		actual.formalSlots[0].typeClass == "java/lang/Object"
+		actual.formalSlots[0].typeClass == "Ljava/lang/Object;"
 		and:
 		actual.superSlot.typeParam == null
-		actual.superSlot.typeClass == "java/util/ArrayList"
+		actual.superSlot.typeClass == "Ljava/util/ArrayList;"
 		actual.superSlot.slotList[0].typeParam == "T"
-		actual.superSlot.slotList[0].typeClass == "java/lang/Object"
+		actual.superSlot.slotList[0].typeClass == "Ljava/lang/Object;"
 	}
 
 	def "createTypeSlot 型引数あり generic 実装  => class Foo<T> implements List<T>"() {
@@ -124,15 +124,15 @@ class TypeSlotBuilderSpec extends Specification {
 		then:
 		actual.formalSlots.size() == 1
 		actual.formalSlots[0].typeParam == "T"
-		actual.formalSlots[0].typeClass == "java/lang/Object"
+		actual.formalSlots[0].typeClass == "Ljava/lang/Object;"
 		and:
 		actual.superSlot.typeParam == null
-		actual.superSlot.typeClass == "java/lang/Object"
+		actual.superSlot.typeClass == "Ljava/lang/Object;"
 		and:
 		actual.interfaceSlot[0].typeParam == null
-		actual.interfaceSlot[0].typeClass == "java/util/List"
+		actual.interfaceSlot[0].typeClass == "Ljava/util/List;"
 		actual.interfaceSlot[0].slotList[0].typeParam == "T"
-		actual.interfaceSlot[0].slotList[0].typeClass == "java/lang/Object"
+		actual.interfaceSlot[0].slotList[0].typeClass == "Ljava/lang/Object;"
 	}
 	
 }

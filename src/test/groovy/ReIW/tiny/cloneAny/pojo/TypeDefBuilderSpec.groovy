@@ -18,7 +18,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[0].elementType == AccessEntry.ACE_CTOR_ARG
 		actual.access[0].name == "ii"
 		actual.access[0].slot.typeParam == null
-		actual.access[0].slot.typeClass == "java/lang/Integer"
+		actual.access[0].slot.typeClass == "Ljava/lang/Integer;"
 		actual.access[0].canSet == true
 		actual.access[0].canGet == false
 		actual.access[0].rel == "(Ljava/lang/Integer;Ljava/lang/String;)V"
@@ -26,7 +26,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[1].elementType == AccessEntry.ACE_CTOR_ARG
 		actual.access[1].name == "ss"
 		actual.access[1].slot.typeParam == null
-		actual.access[1].slot.typeClass == "java/lang/String"
+		actual.access[1].slot.typeClass == "Ljava/lang/String;"
 		actual.access[1].canSet == true
 		actual.access[1].canGet == false
 		actual.access[1].rel == "(Ljava/lang/Integer;Ljava/lang/String;)V"
@@ -48,14 +48,14 @@ class TypeDefBuilderSpec extends Specification {
 		actual.name == TypeDefBuilder_TypedCtor.class.getName().replace('.', '/')
 		actual.superType == null
 		actual.typeSlot.formalSlots[0].typeParam == "T";
-		actual.typeSlot.formalSlots[0].typeClass == "java/lang/Object";
+		actual.typeSlot.formalSlots[0].typeClass == "Ljava/lang/Object;";
 
 		actual.access.size()== 2
 
 		actual.access[0].elementType == AccessEntry.ACE_CTOR_ARG
 		actual.access[0].name == "t1"
 		actual.access[0].slot.typeParam == "T"
-		actual.access[0].slot.typeClass == "java/lang/Object"
+		actual.access[0].slot.typeClass == "Ljava/lang/Object;"
 		actual.access[0].canSet == true
 		actual.access[0].canGet == false
 		actual.access[0].rel == "(Ljava/lang/Object;Ljava/lang/String;)V"
@@ -63,7 +63,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[1].elementType == AccessEntry.ACE_CTOR_ARG
 		actual.access[1].name == "str1"
 		actual.access[1].slot.typeParam == null
-		actual.access[1].slot.typeClass == "java/lang/String"
+		actual.access[1].slot.typeClass == "Ljava/lang/String;"
 		actual.access[1].canSet == true
 		actual.access[1].canGet == false
 		actual.access[1].rel == "(Ljava/lang/Object;Ljava/lang/String;)V"
@@ -76,16 +76,16 @@ class TypeDefBuilderSpec extends Specification {
 		then:
 		actual.name == TypeDefBuilder_Fields.class.getName().replace('.', '/')
 		actual.typeSlot.formalSlots[0].typeParam == "T";
-		actual.typeSlot.formalSlots[0].typeClass == "java/lang/Object";
+		actual.typeSlot.formalSlots[0].typeClass == "Ljava/lang/Object;";
 		actual.typeSlot.formalSlots[1].typeParam == "K";
-		actual.typeSlot.formalSlots[1].typeClass == "java/lang/Object";
+		actual.typeSlot.formalSlots[1].typeClass == "Ljava/lang/Object;";
 
 		actual.access.size()== 4
 
 		actual.access[0].elementType == AccessEntry.ACE_FIELD;
 		actual.access[0].name == "t1"
 		actual.access[0].slot.typeParam == "T"
-		actual.access[0].slot.typeClass == "java/lang/Object"
+		actual.access[0].slot.typeClass == "Ljava/lang/Object;"
 		actual.access[0].canSet == true
 		actual.access[0].canGet == true
 		actual.access[0].rel == "t1"
@@ -93,7 +93,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[1].elementType == AccessEntry.ACE_FINAL_FIELD;
 		actual.access[1].name == "k1"
 		actual.access[1].slot.typeParam == "K"
-		actual.access[1].slot.typeClass == "java/lang/Object"
+		actual.access[1].slot.typeClass == "Ljava/lang/Object;"
 		actual.access[1].canSet == false
 		actual.access[1].canGet == true
 		actual.access[1].rel == "k1"
@@ -109,7 +109,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[3].elementType == AccessEntry.ACE_FINAL_FIELD;
 		actual.access[3].name == "ss"
 		actual.access[3].slot.typeParam == null
-		actual.access[3].slot.typeClass == "java/lang/String"
+		actual.access[3].slot.typeClass == "Ljava/lang/String;"
 		actual.access[3].canSet == false
 		actual.access[3].canGet == true
 		actual.access[3].rel == "ss"
@@ -123,16 +123,16 @@ class TypeDefBuilderSpec extends Specification {
 		actual.name == TypeDefBuilder_Props.class.getName().replace('.', '/')
 		actual.superType == null
 		actual.typeSlot.formalSlots[0].typeParam == "T";
-		actual.typeSlot.formalSlots[0].typeClass == "java/lang/Object";
+		actual.typeSlot.formalSlots[0].typeClass == "Ljava/lang/Object;";
 		actual.typeSlot.formalSlots[1].typeParam == "K";
-		actual.typeSlot.formalSlots[1].typeClass == "java/lang/Object";
+		actual.typeSlot.formalSlots[1].typeClass == "Ljava/lang/Object;";
 
 		actual.access.size()== 4
 
 		actual.access[0].elementType == AccessEntry.ACE_PROP_SET
 		actual.access[0].name == "foo"
 		actual.access[0].slot.typeParam == "T"
-		actual.access[0].slot.typeClass == "java/lang/Object"
+		actual.access[0].slot.typeClass == "Ljava/lang/Object;"
 		actual.access[0].canSet == true
 		actual.access[0].canGet == false
 		actual.access[0].rel == "setFoo"
@@ -140,7 +140,7 @@ class TypeDefBuilderSpec extends Specification {
 		actual.access[1].elementType == AccessEntry.ACE_PROP_GET
 		actual.access[1].name == "bar"
 		actual.access[1].slot.typeParam == "K"
-		actual.access[1].slot.typeClass == "java/lang/Object"
+		actual.access[1].slot.typeClass == "Ljava/lang/Object;"
 		actual.access[1].canSet == false
 		actual.access[1].canGet == true
 		actual.access[1].rel == "getBar"

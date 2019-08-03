@@ -5,7 +5,7 @@ import spock.lang.Unroll
 
 class FieldSignatureParserSpec extends Specification {
 
-	//@Unroll
+	// @Unroll
 	def "parse(descriptor=#descriptor, signature=#signature)"() {
 		setup:
 		def slot
@@ -31,24 +31,24 @@ class FieldSignatureParserSpec extends Specification {
 
 		where:
 		descriptor				| signature					|| param	| clazz
-		"Ljava/lang/Integer;"	| null						|| null		| "java/lang/Integer"
+		"Ljava/lang/Integer;"	| null						|| null		| "Ljava/lang/Integer;"
 		"I"						| null 						|| null 	| "I"
-		""						| "TV1;"					|| "V1"		| "java/lang/Object"
-		""						| "Ljava/util/List<TV1;>;"	|| null 	| "java/util/List" // List<V1>
+		""						| "TV1;"					|| "V1"		| "Ljava/lang/Object;"
+		""						| "Ljava/util/List<TV1;>;"	|| null 	| "Ljava/util/List;" // List<V1>
 		""						| "Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;" \
-															|| null		| "java/util/List" // List<Map<T1,String>>
+															|| null		| "Ljava/util/List;" // List<Map<T1,String>>
 
 		// 横に並べるとみにくいのでパイプにしてみる
 		and:
 		nestedParam << [null, null, null, "V1", "="]
-		nestedClass << [null, null, null, "java/lang/Object", "java/util/Map"]
+		nestedClass << [null, null, null, "Ljava/lang/Object;", "Ljava/util/Map;"]
 
 		and:
 		nestedNestedParam1 << [null, null, null, null, "T1"]
-		nestedNestedClass1 << [null, null, null, null, "java/lang/Object"]
+		nestedNestedClass1 << [null, null, null, null, "Ljava/lang/Object;"]
 
 		and:
 		nestedNestedParam2 << [null, null, null, null, "="]
-		nestedNestedClass2 << [null, null, null, null, "java/lang/String"]
+		nestedNestedClass2 << [null, null, null, null, "Ljava/lang/String;"]
 	}
 }

@@ -33,24 +33,24 @@ class MethodSignatureParserSpec extends Specification {
 
 		where:
 		descriptor				| signature					|| param	| clazz
-		"()Ljava/lang/Integer;"	| null						|| null		| "java/lang/Integer"
+		"()Ljava/lang/Integer;"	| null						|| null		| "Ljava/lang/Integer;"
 		null					| "(BTV1;)J" 				|| null 	| "J"
 		null					| "(Ljava/util/List<TT1;>;)TV1;"	\
-															|| "V1"		| "java/lang/Object"
+															|| "V1"		| "Ljava/lang/Object;"
 		null					| "(TV2;)Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;" \
-															|| null		| "java/util/List" // List<Map<T1,String>>
+															|| null		| "Ljava/util/List;" // List<Map<T1,String>>
 
 		and:
 		nestedParam << [null, null, null, "="]
-		nestedClass << [null, null, null, "java/util/Map"]
+		nestedClass << [null, null, null, "Ljava/util/Map;"]
 
 		and:
 		nestedNestedParam1 << [null, null, null, "T1"]
-		nestedNestedClass1 << [null, null, null, "java/lang/Object"]
+		nestedNestedClass1 << [null, null, null, "Ljava/lang/Object;"]
 
 		and:
 		nestedNestedParam2 << [null, null, null, "="]
-		nestedNestedClass2 << [null, null, null, "java/lang/String"]
+		nestedNestedClass2 << [null, null, null, "Ljava/lang/String;"]
 	}
 
 	//@Unroll
@@ -80,22 +80,22 @@ class MethodSignatureParserSpec extends Specification {
 
 		where:
 		descriptor				| signature					|| param	| clazz
-		"(Ljava/lang/Integer;)V"| null						|| null		| "java/lang/Integer"
-		null					| "(TV1;)V"					|| "V1"		| "java/lang/Object"
+		"(Ljava/lang/Integer;)V"| null						|| null		| "Ljava/lang/Integer;"
+		null					| "(TV1;)V"					|| "V1"		| "Ljava/lang/Object;"
 		null					| "(Ljava/util/List<Ljava/util/Map<TT1;Ljava/lang/String;>;>;)V" \
-															|| null		| "java/util/List" // List<Map<T1,String>>
+															|| null		| "Ljava/util/List;" // List<Map<T1,String>>
 
 		and:
 		nestedParam << [null, null, "="]
-		nestedClass << [null, null, "java/util/Map"]
+		nestedClass << [null, null, "Ljava/util/Map;"]
 
 		and:
 		nestedNestedParam1 << [null, null, "T1"]
-		nestedNestedClass1 << [null, null, "java/lang/Object"]
+		nestedNestedClass1 << [null, null, "Ljava/lang/Object;"]
 
 		and:
 		nestedNestedParam2 << [null, null, "="]
-		nestedNestedClass2 << [null, null, "java/lang/String"]
+		nestedNestedClass2 << [null, null, "Ljava/lang/String;"]
 	}
 
 	def "parseArgumentsAndReturn 複数引数 long,T1,List<Map<T1,String>>,boolean"() {
@@ -114,18 +114,18 @@ class MethodSignatureParserSpec extends Specification {
 		args[0].typeClass == "J"
 
 		args[1].typeParam == "V1"
-		args[1].typeClass == "java/lang/Object"
+		args[1].typeClass == "Ljava/lang/Object;"
 
 		args[2].typeParam == null
-		args[2].typeClass == "java/util/List"
+		args[2].typeClass == "Ljava/util/List;"
 		args[2].slotList.size() == 1
 		args[2].slotList[0].typeParam == "="
-		args[2].slotList[0].typeClass == "java/util/Map"
+		args[2].slotList[0].typeClass == "Ljava/util/Map;"
 		args[2].slotList[0].slotList.size() == 2
 		args[2].slotList[0].slotList[0].typeParam == "T1"
-		args[2].slotList[0].slotList[0].typeClass == "java/lang/Object"
+		args[2].slotList[0].slotList[0].typeClass == "Ljava/lang/Object;"
 		args[2].slotList[0].slotList[1].typeParam == "="
-		args[2].slotList[0].slotList[1].typeClass == "java/lang/String"
+		args[2].slotList[0].slotList[1].typeClass == "Ljava/lang/String;"
 
 		args[3].typeParam == null
 		args[3].typeClass == "B"
@@ -149,11 +149,11 @@ class MethodSignatureParserSpec extends Specification {
 		args[0].typeParam == null
 		args[0].typeClass == "J"
 		args[1].typeParam == null
-		args[1].typeClass == "java/lang/Double"
+		args[1].typeClass == "Ljava/lang/Double;"
 		args[2].typeParam == null
 		args[2].typeClass == "I"
 		retSlot.typeParam == null
-		retSlot.typeClass == "java/lang/Boolean"
+		retSlot.typeClass == "Ljava/lang/Boolean;"
 	}
 
 	def "parseArgumentsAndReturn メソッド定義に方引数がある場合は例外 <X> X hoge() みたいなやつ"() {
@@ -186,7 +186,7 @@ class MethodSignatureParserSpec extends Specification {
 		then:
 		param["key"]=="b"
 		param["val"].typeParam==null
-		param["val"].typeClass=="java/lang/String"
+		param["val"].typeClass=="Ljava/lang/String;"
 
 		when:
 		visitor.visitLocalVariable("c", null, null, null, null, 0)
