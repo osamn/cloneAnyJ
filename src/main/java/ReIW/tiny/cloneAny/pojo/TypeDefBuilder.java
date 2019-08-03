@@ -112,6 +112,9 @@ final class TypeDefBuilder {
 					return MethodSignatureParser.parameterParserVisitor(descriptor, signature, (paramName, slot) -> {
 						typeDef.access.add(new AccessEntry(ACE_CTOR_ARG, paramName, slot, descriptor));
 					});
+				} else if (instanceOfMap && name.contentEquals("isEmpty") && descriptor.contentEquals("()Z")) {
+					// Map#isEmpty は無視するよ
+					// Map -> Map の場合に rhs の Map に empty のエントリが追加されていやなので
 				} else {
 					try {
 						if (PropertyUtil.isGetter(name, descriptor)) {

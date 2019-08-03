@@ -16,11 +16,11 @@ public interface Operand {
 	/** インスタンスフィールドのロード */
 	static final class Load implements Operand {
 		public final String name;
-		public final String clazz;
+		public final int size;
 
 		private Load(final String name, final String clazz) {
 			this.name = name;
-			this.clazz = clazz;
+			this.size = Type.getType(clazz).getSize();
 		}
 
 		@Override
@@ -29,32 +29,14 @@ public interface Operand {
 		}
 	}
 
-	/** プロパティ取得 */
-	static final class Get implements Operand {
-		public final String name;
-		public final String rel;
-		public final String clazz;
-
-		private Get(final String name, final String rel, final String clazz) {
-			this.name = name;
-			this.rel = rel;
-			this.clazz = clazz;
-		}
-
-		@Override
-		public String toString() {
-			return "Get " + rel + " \"" + name + "\"";
-		}
-	}
-
 	/** インスタンスフィールドに設定 */
 	static final class Store implements Operand {
 		public final String name;
-		public final String clazz;
+		public final int size;
 
 		private Store(final String name, final String clazz) {
 			this.name = name;
-			this.clazz = clazz;
+			this.size = Type.getType(clazz).getSize();
 		}
 
 		@Override
@@ -63,21 +45,69 @@ public interface Operand {
 		}
 	}
 
-	/** プロパティ設定 */
-	static final class Set implements Operand {
-		public final String name;
+	/** プロパティ取得 */
+	static final class PropGet implements Operand {
+//		public final String name;
 		public final String rel;
-		public final String clazz;
+		public final int size;
 
-		private Set(final String name, final String rel, final String clazz) {
-			this.name = name;
+		private PropGet(final String rel, final String clazz) {
+//			this.name = name;
 			this.rel = rel;
-			this.clazz = clazz;
+			this.size = Type.getType(clazz).getSize();
 		}
 
 		@Override
 		public String toString() {
-			return "Set " + rel + " \"" + name + "\"";
+			return "Prop#" + rel;
+		}
+	}
+
+	/** プロパティ設定 */
+	static final class PropSet implements Operand {
+//		public final String name;
+		public final String rel;
+		public final int size;
+
+		private PropSet(final String rel, final String clazz) {
+//			this.name = name;
+			this.rel = rel;
+			this.size = Type.getType(clazz).getSize();
+		}
+
+		@Override
+		public String toString() {
+			return "Prop#" + rel;
+		}
+	}
+
+	/** Map#get */
+	static final class MapGet implements Operand {
+		public final String name;
+
+		private MapGet(final String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String toString() {
+			return "Map#get \"" + name + "\"";
+		}
+	}
+
+	// map の場合 get も put も Object が対象になるんで size ==1 固定なんで持たなくてもいいよね
+
+	/** Map#put */
+	static final class MapPut implements Operand {
+		public final String name;
+
+		private MapPut(final String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String toString() {
+			return "Map#put \"" + name + "\"";
 		}
 	}
 
@@ -156,9 +186,8 @@ public interface Operand {
 					// 終端操作を明示的にしないと ctorList が計算されないので注意
 					.collect(Collectors.toList());
 
-			// コンストラクタ呼び出しオペランドのストリームを作る
+			// 必要に応じてコンストラクタ呼び出しオペランドのストリームを作る
 			final Stream<Operand> ctor;
-			// requireNew によって clone か paste かを切り替える感じ
 			if (requireNew) {
 				// 対象とするコンストラクタを決定して
 				final List<Ops> exactCtor = findProbablyConstructor(ctorList);
@@ -185,10 +214,10 @@ public interface Operand {
 			return Stream.concat(ctor, copy);
 		}
 
-		// push
 		// load/get
 		// push
 		// load/get
+		// push
 		// ...
 		// ctor
 		private Stream<Operand> buildCtorStream(final List<Ops> ctor) {
@@ -199,12 +228,6 @@ public interface Operand {
 				final AccessEntry src = op.lhs;
 				final AccessEntry dst = op.rhs;
 
-				// まずは変換可能かみるため push オペランドを配置
-				//// コンストラクタ引数の場合は必ず設定可能じゃないと
-				//// 実行時に不正なバイトコードで叱られると思う
-				//// なんで bytecode 生成時に変換不可だったらエラーにできるように目印つけとく
-				builder.accept(new Push(src.slot, dst.slot));
-
 				// push prop value
 				switch (src.elementType) {
 				case AccessEntry.ACE_FIELD:
@@ -212,11 +235,19 @@ public interface Operand {
 					builder.accept(new Load(src.name, src.slot.typeClass));
 					break;
 				case AccessEntry.ACE_PROP_GET:
-					builder.accept(new Get(src.name, src.rel, src.slot.typeClass));
+					if (src.name.contentEquals("*")) {
+						// Map 関連はプロパティ名持ってないので相手側の名前を使う
+						builder.accept(new MapGet(dst.name));
+					} else {
+						builder.accept(new PropGet(src.rel, src.slot.typeClass));
+					}
 					break;
 				default:
 					throw new IllegalStateException();
 				}
+
+				// push オペランドを配置
+				builder.accept(new Push(src.slot, dst.slot));
 			}
 
 			final String desc = ctor.get(0).rhs.rel;
@@ -226,8 +257,8 @@ public interface Operand {
 			return builder.build();
 		}
 
-		// move
 		// load/get
+		// move
 		// store/set
 		// ...
 		private Stream<Operand> buildCopyStream(final List<Ops> ops) {
@@ -238,10 +269,6 @@ public interface Operand {
 				final AccessEntry src = op.lhs;
 				final AccessEntry dst = op.rhs;
 
-				// まずは move オペランドを
-				// 変換可能かみるため
-				builder.accept(new Move(src.slot, dst.slot));
-
 				// push prop value
 				switch (src.elementType) {
 				case AccessEntry.ACE_FIELD:
@@ -249,11 +276,19 @@ public interface Operand {
 					builder.accept(new Load(src.name, src.slot.typeClass));
 					break;
 				case AccessEntry.ACE_PROP_GET:
-					builder.accept(new Get(src.name, src.rel, src.slot.typeClass));
+					if (src.name.contentEquals("*")) {
+						// Map 関連はプロパティ名持ってないので相手側の名前を使う
+						builder.accept(new MapGet(dst.name));
+					} else {
+						builder.accept(new PropGet(src.rel, src.slot.typeClass));
+					}
 					break;
 				default:
 					throw new IllegalStateException();
 				}
+
+				// move
+				builder.accept(new Move(src.slot, dst.slot));
 
 				// set stack top value to dst property
 				switch (dst.elementType) {
@@ -261,7 +296,12 @@ public interface Operand {
 					builder.accept(new Store(dst.name, dst.slot.typeClass));
 					break;
 				case AccessEntry.ACE_PROP_SET:
-					builder.accept(new Set(dst.name, dst.rel, dst.slot.typeClass));
+					if (dst.name.contentEquals("*")) {
+						// Map 関連はプロパティ名持ってないので相手側の名前を使う
+						builder.accept(new MapPut(src.name));
+					} else {
+						builder.accept(new PropSet(dst.rel, dst.slot.typeClass));
+					}
 					break;
 				default:
 					throw new IllegalStateException();
