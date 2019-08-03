@@ -6,7 +6,7 @@ import spock.lang.Unroll
 
 class PropertyUtilSpec extends Specification {
 
-	@Unroll
+	// @Unroll
 	def "Property name from #methodName => #propName"() {
 		expect:
 		propName == PropertyUtil.getPropertyName(methodName)
@@ -28,7 +28,7 @@ class PropertyUtilSpec extends Specification {
 		"fooBar"	|| null
 	}
 
-	@Unroll
+	// @Unroll
 	def "Method #name#descriptor is getter or not => #expected"() {
 		expect:
 		expected == PropertyUtil.isGetter(name, descriptor)
@@ -45,7 +45,7 @@ class PropertyUtilSpec extends Specification {
 		false		|| "fooBar"		| "()Ljava/lang/Object;"
 	}
 
-	@Unroll
+	// @Unroll
 	def "Method #name#descriptor is setter or not => #expected"() {
 		expect:
 		expected == PropertyUtil.isSetter(name, descriptor)
