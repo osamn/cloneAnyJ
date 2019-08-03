@@ -50,11 +50,6 @@ public final class Slot {
 		return slot;
 	}
 	
-	public String toSignature() {
-		// TODO シグネチャの文字列表現作ってみる
-		return null;
-	}
-
 	@Override
 	public String toString() {
 		final StringBuilder buf = new StringBuilder();

@@ -15,11 +15,6 @@ public final class CKey {
 		hashCode = Objects.hash(lhs, rhs);
 	}
 
-	public String toSignature() {
-		// TODO lhs rhs からクラスの signature を作成する
-		return null;
-	}
-
 	@Override
 	public int hashCode() {
 		return hashCode;
