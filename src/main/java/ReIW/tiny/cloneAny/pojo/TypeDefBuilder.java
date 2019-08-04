@@ -20,6 +20,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
+import ReIW.tiny.cloneAny.core.AccessFlag;
 
 final class TypeDefBuilder {
 
@@ -164,10 +165,10 @@ final class TypeDefBuilder {
 	}
 
 	private static boolean myOwn(int access) {
-		return ((access & Opcodes.ACC_PUBLIC) != 0 // public で
-				&& (access & Opcodes.ACC_STATIC) == 0 // instance で
-				&& (access & Opcodes.ACC_ABSTRACT) == 0 // concrete で
-				&& (access & Opcodes.ACC_SYNTHETIC) == 0); // コンパイラが生成したものじゃない
+		return AccessFlag.isPublic(access) // public で
+				&& !AccessFlag.isStatic(access) // instance で
+				&& !AccessFlag.isAbstract(access) // concrete で
+				&& !AccessFlag.isSynthetic(access); // コンパイラが生成したものじゃない
 	}
 
 }

@@ -3,7 +3,28 @@ package ReIW.tiny.cloneAny.core;
 import org.objectweb.asm.Opcodes;
 
 public final class AccessFlag {
-	private AccessFlag() {
+	private int access;
+
+	private AccessFlag(final int access) {
+		this.access = access;
+	}
+
+	public static AccessFlag with(final int access) {
+		return new AccessFlag(access);
+	}
+
+	public AccessFlag set(final int flag) {
+		access = access | flag;
+		return this;
+	}
+
+	public AccessFlag unset(final int flag) {
+		access = access & ~flag;
+		return this;
+	}
+
+	public int value() {
+		return access;
 	}
 
 	public static boolean isAbstract(int access) {

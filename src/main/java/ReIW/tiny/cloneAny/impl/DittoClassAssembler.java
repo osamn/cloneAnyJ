@@ -25,7 +25,7 @@ public final class DittoClassAssembler {
 
 	public DittoClassAssembler(final CKey key) {
 		// 実体化するクラスの名前
-		clazzName = "ditto/" + key.getInternalClassName();
+		clazzName = "$ditto$/" + key.getInternalName();
 		// AbstractDitto に埋め込む情報
 		lhsName = key.lhs.getName();
 		rhsName = key.rhs.getName();
@@ -46,13 +46,12 @@ public final class DittoClassAssembler {
 	private void loadConcreteDitto(final AssemblyDomain domain) throws IOException {
 		final Stream<Operand> ops = builder.operands(true);
 		final ClassReader cr = new ClassReader(AbstractDitto.class.getName());
-		final ClassVisitor cv0 = new ConcreteDittoVisitor(clazzName,
+		final ClassVisitor cv0 = new ConcreteDittoClassVisitor(clazzName,
 				// remove trace
 				domain.getTerminalClassVisitor(new TraceClassVisitor(new PrintWriter(System.out))));
-		final ClassVisitor cv1 = new ConcreteGetLhsClassVisitor(lhsName, cv0);
-		final ClassVisitor cv2 = new ConcreteGetRhsClassVisitor(rhsName, cv1);
-		final ClassVisitor cv3 = new ConcreteCopyOrCloneVisitor(ops, cv2);
-		cr.accept(cv3, 0);
+		final ClassVisitor cv1 = new ImplementClassNameGetterVisitor(lhsName, rhsName, cv0);
+		final ClassVisitor cv = new ImplementCopyOrCloneVisitor(ops, cv1);
+		cr.accept(cv, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES | ClassReader.SKIP_CODE);
 	}
 
 }

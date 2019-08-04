@@ -1,7 +1,5 @@
 package ReIW.tiny.cloneAny.impl;
 
-import static org.objectweb.asm.Opcodes.ACC_ABSTRACT;
-import static org.objectweb.asm.Opcodes.ACC_SYNTHETIC;
 import static org.objectweb.asm.Opcodes.ALOAD;
 import static org.objectweb.asm.Opcodes.ARETURN;
 
@@ -14,10 +12,10 @@ import org.objectweb.asm.MethodVisitor;
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 import ReIW.tiny.cloneAny.pojo.Operand;
 
-public class ConcreteCopyOrCloneVisitor extends DefaultClassVisitor {
+public class ImplementCopyOrCloneVisitor extends DefaultClassVisitor {
 	private final Stream<Operand> ops;
 
-	ConcreteCopyOrCloneVisitor(final Stream<Operand> ops, final ClassVisitor cv) {
+	ImplementCopyOrCloneVisitor(final Stream<Operand> ops, final ClassVisitor cv) {
 		super(cv);
 		this.ops = ops;
 	}
@@ -26,8 +24,7 @@ public class ConcreteCopyOrCloneVisitor extends DefaultClassVisitor {
 	public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
 			String[] exceptions) {
 		if (name.contentEquals("copyOrClone")) {
-			final MethodVisitor mv = super.visitMethod(access & ~ACC_ABSTRACT | ACC_SYNTHETIC, name, descriptor,
-					null, exceptions);
+			final MethodVisitor mv = super.visitMethod(access, name, descriptor, null, exceptions);
 			mv.visitCode();
 			ops.forEach(op -> {
 				emitOperand(mv, op);
@@ -37,8 +34,9 @@ public class ConcreteCopyOrCloneVisitor extends DefaultClassVisitor {
 			mv.visitEnd();
 			mv.visitMaxs(1, 3);
 			return null;
+		} else {
+			return super.visitMethod(access, name, descriptor, signature, exceptions);
 		}
-		return super.visitMethod(access, name, descriptor, signature, exceptions);
 	}
 
 	private void emitOperand(final MethodVisitor mv, final Operand op) {

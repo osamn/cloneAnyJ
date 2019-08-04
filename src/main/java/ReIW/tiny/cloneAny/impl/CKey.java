@@ -47,9 +47,9 @@ public final class CKey {
 		return true;
 	}
 	
-	String getInternalClassName() {
+	String getInternalName() {
 		
-		return "$ditto/"+lhs.getName().replace('.', '_') + "$" + rhs.getName().replace('.', '_');
+		return lhs.getName().replace('.', '_') + "$" + rhs.getName().replace('.', '_');
 	}
 
 }
