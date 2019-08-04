@@ -21,7 +21,7 @@ final class TypeSlotBuilder extends DefaultSignatureVisitor {
 	}
 
 	private final ArrayList<Slot> formalSlots = new ArrayList<>(5);
-	private final ArrayList<Slot> supersSlots = new ArrayList<>(1);
+	private final ArrayList<Slot> supersSlots = new ArrayList<>(3);
 
 	private final Stack<Slot> stack = new Stack<>();
 	private String typeParamName;
