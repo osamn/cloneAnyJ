@@ -46,10 +46,10 @@ public final class CKey {
 			return false;
 		return true;
 	}
-
-	// クラス名として使うよ
-	@Override
-	public String toString() {
-		return lhs.getName().replace('.', '_') + "." + rhs.getName().replace('.', '_');
+	
+	String getInternalClassName() {
+		
+		return "$ditto/"+lhs.getName().replace('.', '_') + "$" + rhs.getName().replace('.', '_');
 	}
+
 }

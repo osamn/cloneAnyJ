@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import ReIW.tiny.cloneAny.core.AssemblyException;
 import ReIW.tiny.cloneAny.impl.CKey;
-import ReIW.tiny.cloneAny.impl.DittoClassBuilder;
+import ReIW.tiny.cloneAny.impl.DittoClassAssembler;
 
 public interface Ditto<Lhs, Rhs> {
 
@@ -34,7 +34,7 @@ public interface Ditto<Lhs, Rhs> {
 		}
 
 		private final Object compute(final CKey key) {
-			final Class<?> clazz = new DittoClassBuilder(key).createClass();
+			final Class<?> clazz = new DittoClassAssembler(key).createClass();
 			try {
 				return clazz.getDeclaredConstructor().newInstance();
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException

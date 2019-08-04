@@ -8,4 +8,8 @@ public class DefaultClassVisitor extends ClassVisitor {
 	public DefaultClassVisitor() {
 		super(Opcodes.ASM7);
 	}
+	
+	public DefaultClassVisitor(final ClassVisitor cv) {
+		super(Opcodes.ASM7, cv);
+	}
 }

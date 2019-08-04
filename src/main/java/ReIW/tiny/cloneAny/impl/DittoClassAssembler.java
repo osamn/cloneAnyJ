@@ -1,16 +1,12 @@
 package ReIW.tiny.cloneAny.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.io.PrintWriter;
 import java.util.stream.Stream;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.util.TraceClassVisitor;
 
 import ReIW.tiny.cloneAny.core.AssemblyDomain;
 import ReIW.tiny.cloneAny.core.AssemblyException;
@@ -20,38 +16,21 @@ import ReIW.tiny.cloneAny.pojo.Operand;
 // なので配列のスロットの型名から再度スロットをとって formal がのこってたらエラーにするとか
 // そんな感じにしないといかんかも
 
+public final class DittoClassAssembler {
 
-
-
-public final class DittoClassBuilder {
-
-	private final List<Operand> ctorOps;
-	private final List<Operand> propOps;
+	private final Operand.Builder builder;
 	private final String clazzName;
-	private final String signature;
+	private final String lhsName;
+	private final String rhsName;
 
-	public DittoClassBuilder(final CKey key) {
-		final Stream<Operand> ops = Operand.builder(key.lhs, key.rhs).operands(true);
-		ctorOps = new ArrayList<>();
-		propOps = ops.filter(new Predicate<Operand>() {
-			boolean hadCtor = false;
-
-			@Override
-			public boolean test(Operand t) {
-				if (!hadCtor) {
-					ctorOps.add(t);
-					if (t instanceof Operand.Ctor) {
-						hadCtor = true;
-					}
-					return false;
-				}
-				return true;
-			}
-		}).collect(Collectors.toList());
+	public DittoClassAssembler(final CKey key) {
 		// 実体化するクラスの名前
-		clazzName = "$ditto." + key.toString();
-		// generic なシグネチャ文字列
-		signature = key.toSignature();
+		clazzName = "ditto/" + key.getInternalClassName();
+		// AbstractDitto に埋め込む情報
+		lhsName = key.lhs.getName();
+		rhsName = key.rhs.getName();
+		// オペランドの元
+		builder = Operand.builder(key.lhs, key.rhs);
 	}
 
 	public Class<?> createClass() {
@@ -65,7 +44,15 @@ public final class DittoClassBuilder {
 	}
 
 	private void loadConcreteDitto(final AssemblyDomain domain) throws IOException {
-		// TODO びじたのチェーン作って accept する
+		final Stream<Operand> ops = builder.operands(true);
+		final ClassReader cr = new ClassReader(AbstractDitto.class.getName());
+		final ClassVisitor cv0 = new ConcreteDittoVisitor(clazzName,
+				// remove trace
+				domain.getTerminalClassVisitor(new TraceClassVisitor(new PrintWriter(System.out))));
+		final ClassVisitor cv1 = new ConcreteGetLhsClassVisitor(lhsName, cv0);
+		final ClassVisitor cv2 = new ConcreteGetRhsClassVisitor(rhsName, cv1);
+		final ClassVisitor cv3 = new ConcreteCopyOrCloneVisitor(ops, cv2);
+		cr.accept(cv3, 0);
 	}
 
 }
