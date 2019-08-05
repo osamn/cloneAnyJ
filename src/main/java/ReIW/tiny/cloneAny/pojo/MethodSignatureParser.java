@@ -26,24 +26,24 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 		final ArrayList<Slot> slots = new ArrayList<>();
 		parseArgumentsAndReturn(descriptor, signature, slots::add, MethodSignatureParser::nop);
 
+		// visitLocalVariable で使うため引数の個数をとっておく
+		final int argSize = Type.getArgumentsAndReturnSizes(descriptor) >> 2;
+
 		final Iterator<Slot> it = slots.iterator();
 		return new DefaultMethodVisitor() {
 
-			// こっちはコンパイルオプション指定しないと呼ばれないらしい
-			// You need to compile your class with the -parameters option to make javac
-			// include the parameter names.
-			// だってお
-			@Override
-			public void visitParameter(String name, int access) {
-				// parametersCons.accept(name, it.next());
-			};
+			/*
+			 * You need to compile your class with the -parameters option to make javac
+			 * include the parameter names. ということでコンパイルオプション依存らしいので使えない
+			 */
+			// public void visitParameter(String name, int access)
 
-			// そうはいってもこっちも debug symbol がついてないと呼ばれないらしいけど
-			// まあ、ふつうはついてるよね
 			@Override
 			public void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end,
 					int index) {
-				if (!name.contentEquals("this")) {
+				// this(0) を除いた引数だけ処理する
+				// ガードしないと引数じゃないローカル変数まで処理しちゃうので
+				if (0 < index && index < argSize) {
 					parametersCons.accept(name, it.next());
 				}
 			}
@@ -51,12 +51,18 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 			@Override
 			public void visitEnd() {
 				if (it.hasNext()) {
+					// 対象が残っている
+					// -> visitLocalVariable が呼ばれていない
+					// -> debug 情報がついていない
+					// なのでコンストラクタパラメタに名前でマッチングできない
+					// なのでエラーにしておく
 					throw new UnboundMethodParameterNameException("No debug symbols.");
 				}
 			}
 		};
 	}
 
+	/** 引数と戻り値の slot を作る */
 	static void parseArgumentsAndReturn(final String descriptor, final String signature,
 			final Consumer<Slot> argumentsCons, final Consumer<Slot> returnCons) {
 		if (signature == null) {
