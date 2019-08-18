@@ -13,8 +13,8 @@ import org.objectweb.asm.Type;
 final class TypeDef implements TypeAccessDef {
 
 	// name superName は internalName なので注意
-	final String name;
-	final String superName;
+	private final String name;
+	private final String superName;
 
 	// 自身が signature を持たない場合は null
 	final TypeSlot typeSlot;
@@ -34,6 +34,11 @@ final class TypeDef implements TypeAccessDef {
 	@Override
 	public boolean hasDefaultCtor() {
 		return ctors.contains("()V");
+	}
+
+	@Override
+	public String getInternalName() {
+		return name;
 	}
 
 	@Override
@@ -150,6 +155,11 @@ final class TypeDef implements TypeAccessDef {
 		@Override
 		public boolean hasDefaultCtor() {
 			return TypeDef.this.hasDefaultCtor();
+		}
+
+		@Override
+		public String getInternalName() {
+			return TypeDef.this.getInternalName();
 		}
 
 		@Override

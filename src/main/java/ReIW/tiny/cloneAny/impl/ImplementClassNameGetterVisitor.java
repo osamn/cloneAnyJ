@@ -7,15 +7,15 @@ import org.objectweb.asm.MethodVisitor;
 
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 
-public class ImplementClassNameGetterVisitor extends DefaultClassVisitor {
+final class ImplementClassNameGetterVisitor extends DefaultClassVisitor {
 
 	private final String lhs;
 	private final String rhs;
 
 	ImplementClassNameGetterVisitor(final String lhs, final String rhs, final ClassVisitor cv) {
 		super(cv);
-		this.lhs = lhs;
-		this.rhs = rhs;
+		this.lhs = lhs.replace('/', '.');
+		this.rhs = rhs.replace('/', '.');
 	}
 
 	@Override

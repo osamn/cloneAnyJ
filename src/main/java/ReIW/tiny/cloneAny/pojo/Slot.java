@@ -3,13 +3,18 @@ package ReIW.tiny.cloneAny.pojo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.objectweb.asm.Type;
 
 public final class Slot {
 
+	public static Slot fromClass(final Class<?> clazz) {
+		return new Slot("=", Type.getDescriptor(clazz));
+	}
+
 	public final String typeParam;
-	public final String typeClass;
+	public final String typeClass; // descriptor 文字列が入るはず
 	public final List<Slot> slotList = new ArrayList<>(5);
 
 	Slot(final String typeParam) {
@@ -49,21 +54,43 @@ public final class Slot {
 		}
 		return slot;
 	}
-	
+
 	@Override
-	public String toString() {
-		final StringBuilder buf = new StringBuilder();
-		printTo(buf, "");
-		return buf.toString();
+	public int hashCode() {
+		// slotList は構築後に追加されるため hashCode は使用する時点で再計算が必要
+		return Objects.hash(typeParam, typeClass, slotList);
 	}
 
-	private void printTo(final StringBuilder buf, String indent) {
-		buf.append(String.format("%sSlot [typeParam=%s, typeClass=%s]", indent, typeParam, typeClass));
-		indent += "  ";
-		for (Slot slot : slotList) {
-			buf.append('\n');
-			slot.printTo(buf, indent);
-		}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Slot other = (Slot) obj;
+		if (slotList == null) {
+			if (other.slotList != null)
+				return false;
+		} else if (!slotList.equals(other.slotList))
+			return false;
+		if (typeClass == null) {
+			if (other.typeClass != null)
+				return false;
+		} else if (!typeClass.equals(other.typeClass))
+			return false;
+		if (typeParam == null) {
+			if (other.typeParam != null)
+				return false;
+		} else if (!typeParam.equals(other.typeParam))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "Slot [typeParam=" + typeParam + ", typeClass=" + typeClass + ", slotList=" + slotList + "]";
 	}
 
 }

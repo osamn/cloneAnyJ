@@ -4,18 +4,22 @@ import ReIW.tiny.cloneAny.Ditto;
 
 public abstract class AbstractDitto<L, R> implements Ditto<L, R> {
 
+	protected AbstractDitto() {
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public final R clone(L lhs) {
 		return (R) copyOrClone(lhs, null);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public final void copyTo(L lhs, R rhs) {
+	public final R copyTo(L lhs, R rhs) {
 		if (lhs == null || rhs == null) {
-			throw new NullPointerException("Copy \"" + getLhsClass() + "\" to \"" + getRhsClass() + "\" fail.");
+			throw new IllegalArgumentException("lhs:" + getLhsClass() + " or rhs:" + getRhsClass() + " is null.");
 		}
-		copyOrClone(lhs, rhs);
+		return (R) copyOrClone(lhs, rhs);
 	}
 
 	protected abstract String getLhsClass();

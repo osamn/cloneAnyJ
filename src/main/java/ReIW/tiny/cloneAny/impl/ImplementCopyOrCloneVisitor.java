@@ -12,7 +12,7 @@ import org.objectweb.asm.MethodVisitor;
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 import ReIW.tiny.cloneAny.pojo.Operand;
 
-public class ImplementCopyOrCloneVisitor extends DefaultClassVisitor {
+final class ImplementCopyOrCloneVisitor extends DefaultClassVisitor {
 	private final Stream<Operand> ops;
 
 	ImplementCopyOrCloneVisitor(final Stream<Operand> ops, final ClassVisitor cv) {

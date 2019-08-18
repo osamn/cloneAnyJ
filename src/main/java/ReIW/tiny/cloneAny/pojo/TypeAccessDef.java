@@ -7,6 +7,8 @@ interface TypeAccessDef {
 
 	boolean hasDefaultCtor();
 
+	String getInternalName();
+
 	Stream<AccessEntry> accessors();
 
 }

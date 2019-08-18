@@ -1,9 +1,9 @@
 package ReIW.tiny.cloneAny.core;
 
-import java.lang.reflect.Field;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
@@ -49,10 +49,6 @@ public final class AssemblyDomain extends ClassLoader {
 		super(parent);
 	}
 
-	public ClassVisitor getTerminalClassVisitor() {
-		return new ClassResolver();
-	}
-
 	public Class<?> forName(final String name) throws ClassNotFoundException {
 		final String clazzName = name.replace('/', '.'); // internal name の場合もあるためここで吸収しておく
 		final Class<?> clazz = findLoadedClass(clazzName);
@@ -62,36 +58,24 @@ public final class AssemblyDomain extends ClassLoader {
 		return clazz;
 	}
 
-	/** for Debug use only;-) */
-	public ClassVisitor getTerminalClassVisitor(final ClassVisitor inspector) {
-		// ClassVisitor チェーンの一番最後に ClassResolver を連結
-		// わざわざ reflection でやるまでもないし、本来 test 側でやった方がいいよね
-		// まあ使い勝手をみて削除するかも
-		try {
-			final Field f = ClassVisitor.class.getDeclaredField("cv");
-			f.setAccessible(true);
-
-			ClassVisitor cv = inspector;
-			ClassVisitor fcv = (ClassVisitor) f.get(cv);
-			while (fcv != null) {
-				cv = fcv;
-				fcv = (ClassVisitor) f.get(cv);
-			}
-			f.set(cv, getTerminalClassVisitor());
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			throw new AssemblyException(e);
-		}
-		return inspector;
+	public ClassVisitor getTerminalClassVisitor() {
+		return new ClassResolver(null);
 	}
 
-	private final class ClassResolver extends DefaultClassVisitor {
+	public ClassVisitor getTerminalClassVisitor(Consumer<byte[]> cons) {
+		return new ClassResolver(cons);
+	}
+
+	public final class ClassResolver extends DefaultClassVisitor {
 		private final ClassVisitor cv;
 		private final ClassWriter cw;
+		private final Consumer<byte[]> cons;
 		private String className;
 
-		private ClassResolver() {
+		private ClassResolver(Consumer<byte[]> cons) {
 			this.cw = new ClassWriter(0);
 			this.cv = this.cw;
+			this.cons = cons;
 		}
 
 		public void visit(int version, int access, String name, String signature, String superName,
@@ -152,6 +136,9 @@ public final class AssemblyDomain extends ClassLoader {
 		public void visitEnd() {
 			cv.visitEnd();
 			final byte[] b = cw.toByteArray();
+			if (cons != null) {
+				cons.accept(b);
+			}
 			final Class<?> clazz = AssemblyDomain.this.defineClass(className, b, 0, b.length,
 					AssemblyDomain.class.getProtectionDomain());
 			AssemblyDomain.this.resolveClass(clazz);
