@@ -18,7 +18,7 @@ import ReIW.tiny.cloneAny.core.AssemblyException;
 
 public final class DittoClassAssembler {
 
-	private final Operand.Builder builder;
+	private final OperandStreamBuilder builder;
 	private final String clazzName;
 	private final String lhsName;
 	private final String rhsName;
@@ -33,7 +33,7 @@ public final class DittoClassAssembler {
 		lhsName = Type.getType(key.lhs.typeClass).getInternalName();
 		rhsName = Type.getType(key.rhs.typeClass).getInternalName();
 		// オペランドの元
-		builder = Operand.builder(key.lhs, key.rhs);
+		builder = OperandStreamBuilder.builder(key.lhs, key.rhs);
 	}
 
 	Class<?> createClass() {

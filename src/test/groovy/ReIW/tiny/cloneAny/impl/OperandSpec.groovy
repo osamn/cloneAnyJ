@@ -1,17 +1,13 @@
-package ReIW.tiny.cloneAny.pojo
+package ReIW.tiny.cloneAny.impl
 
-import static org.junit.jupiter.api.Assertions.*
-
-import org.junit.jupiter.api.Test
-
-import ReIW.tiny.cloneAny.impl.Operand
+import ReIW.tiny.cloneAny.pojo.AbortCallException
 import spock.lang.Specification
 
 class OperandSpec extends Specification{
 
 	def "コンストラクタで注入"() {
 		setup:
-		def ops = Operand.builder(Operand_Lhs.class, Operand_Rhs_Ctor.class)
+		def ops = OperandStreamBuilder.builder(Operand_Lhs.class, Operand_Rhs_Ctor.class)
 				.operands(true).toArray()
 
 		expect:
@@ -48,7 +44,7 @@ class OperandSpec extends Specification{
 
 	def "setter で注入"() {
 		setup:
-		def ops = Operand.builder(Operand_Lhs.class, Operand_Rhs_Setter.class)
+		def ops = OperandStreamBuilder.builder(Operand_Lhs.class, Operand_Rhs_Setter.class)
 				.operands(false).toArray()
 
 		expect:
@@ -80,7 +76,7 @@ class OperandSpec extends Specification{
 
 	def "フィールドに注入"() {
 		setup:
-		def ops = Operand.builder(Operand_Lhs.class, Operand_Rhs_Field.class)
+		def ops = OperandStreamBuilder.builder(Operand_Lhs.class, Operand_Rhs_Field.class)
 				.operands(true).toArray()
 
 		expect:
@@ -115,7 +111,7 @@ class OperandSpec extends Specification{
 
 	def "あいまいでコンストラクタを決定できない"() {
 		when:
-		Operand.builder(Operand_Lhs.class, Operand_Rhs_AmbiguousCtor.class)
+		OperandStreamBuilder.builder(Operand_Lhs.class, Operand_Rhs_AmbiguousCtor.class)
 				.operands(true)
 
 		then:
@@ -125,7 +121,7 @@ class OperandSpec extends Specification{
 
 	def "Map から POJO へ"() {
 		when:
-		def ops = Operand.builder(Operand_Map.class, Operand_Rhs_Field.class)
+		def ops = OperandStreamBuilder.builder(Operand_Map.class, Operand_Rhs_Field.class)
 				.operands(false).toArray()
 
 		then:
@@ -143,7 +139,7 @@ class OperandSpec extends Specification{
 
 	def "POJO から Map へ" () {
 		when:
-		def ops = Operand.builder(Operand_Lhs.class, Operand_Map.class)
+		def ops = OperandStreamBuilder.builder(Operand_Lhs.class, Operand_Map.class)
 				.operands(false)
 				.toArray()
 
@@ -175,7 +171,7 @@ class OperandSpec extends Specification{
 
 	def "Map から Map へ" () {
 		when:
-		def ops = Operand.builder(Operand_Map.class, Operand_Map.class)
+		def ops = OperandStreamBuilder.builder(Operand_Map.class, Operand_Map.class)
 				.operands(false).toArray()
 
 		then:

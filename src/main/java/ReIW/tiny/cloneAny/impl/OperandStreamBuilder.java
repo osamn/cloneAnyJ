@@ -22,11 +22,25 @@ import ReIW.tiny.cloneAny.impl.Operand.Push;
 import ReIW.tiny.cloneAny.impl.Operand.Store;
 import ReIW.tiny.cloneAny.pojo.AbortCallException;
 import ReIW.tiny.cloneAny.pojo.AccessEntry;
+import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.TypeAccessDef;
+import ReIW.tiny.cloneAny.pojo.TypeDefBuilder;
 
 // TODO ここで転送可能かみて、ストリームを調整する
 
-final class OperandStreamBuilder implements Operand.Builder{
+final class OperandStreamBuilder {
+
+	static OperandStreamBuilder builder(final Class<?> lhs, final Class<?> rhs) {
+		return new OperandStreamBuilder(TypeDefBuilder.createTypeDef(lhs), TypeDefBuilder.createTypeDef(rhs));
+	}
+
+	static OperandStreamBuilder builder(final Slot lhs, final Slot rhs) {
+		final String lhsName = Type.getType(lhs.typeClass).getInternalName();
+		final String rhsName = Type.getType(lhs.typeClass).getInternalName();
+		return new OperandStreamBuilder(TypeDefBuilder.createTypeDef(lhsName).bind(lhs.slotList),
+				TypeDefBuilder.createTypeDef(rhsName).bind(rhs.slotList));
+	}
+
 	// コピー元
 	private final TypeAccessDef provider;
 	// コピー先
@@ -37,8 +51,7 @@ final class OperandStreamBuilder implements Operand.Builder{
 		this.consumer = rhs;
 	}
 
-	@Override
-	public Stream<Operand> operands(final boolean requireNew) {
+	Stream<Operand> operands(final boolean requireNew) {
 		// 副作用として計算されるコンストラクタの計算結果を保持しておくリスト
 		final List<List<OperandStreamBuilder.Ops>> ctorList = new ArrayList<>();
 
@@ -233,7 +246,8 @@ final class OperandStreamBuilder implements Operand.Builder{
 				// コンストラクタの場合、メソッドシグネチャと get -> set をまとめた Ops の数が一致してるものだけ
 				// ctorList にいれておく
 				// ＝呼び出し時にすべての引数が設定可能なもの
-				final List<OperandStreamBuilder.Ops> cc = entry.getValue().stream()// .filter(op -> !op.lhs.name.contentEquals("*"))
+				final List<OperandStreamBuilder.Ops> cc = entry.getValue().stream()// .filter(op ->
+																					// !op.lhs.name.contentEquals("*"))
 						.collect(Collectors.toList());
 				final int argSize = (Type.getArgumentsAndReturnSizes(sig) >> 2) - 1/* without this */;
 				if (argSize == cc.size()) {
@@ -247,7 +261,8 @@ final class OperandStreamBuilder implements Operand.Builder{
 	}
 
 	/** 一番確からしいコンストラクタをとる */
-	private static List<OperandStreamBuilder.Ops> findProbablyConstructor(final List<List<OperandStreamBuilder.Ops>> ctorOps) {
+	private static List<OperandStreamBuilder.Ops> findProbablyConstructor(
+			final List<List<OperandStreamBuilder.Ops>> ctorOps) {
 		final Optional<Map.Entry<Integer, List<List<OperandStreamBuilder.Ops>>>> most = ctorOps.stream()
 				// コンストラクタの引数の数でグルーピングして
 				.collect(Collectors.groupingBy(List::size)).entrySet().stream()

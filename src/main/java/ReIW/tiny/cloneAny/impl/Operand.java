@@ -1,13 +1,10 @@
 package ReIW.tiny.cloneAny.impl;
 
-import java.util.stream.Stream;
-
 import org.objectweb.asm.Type;
 
 import ReIW.tiny.cloneAny.pojo.Slot;
-import ReIW.tiny.cloneAny.pojo.TypeDefBuilder;
 
-public interface Operand {
+interface Operand {
 
 	/** インスタンスフィールドのロード */
 	final class Load implements Operand {
@@ -157,22 +154,4 @@ public interface Operand {
 		}
 	}
 
-	interface Builder {
-
-		Stream<Operand> operands(final boolean requireNew);
-
-	}
-
-	@Deprecated
-	static Builder builder(final Class<?> lhs, final Class<?> rhs) {
-		// TODO テストで使ってるのでそっちをメンテしたら削除
-		return new OperandStreamBuilder(TypeDefBuilder.createTypeDef(lhs), TypeDefBuilder.createTypeDef(rhs));
-	}
-
-	static Builder builder(final Slot lhs, final Slot rhs) {
-		final String lhsName = Type.getType(lhs.typeClass).getInternalName();
-		final String rhsName = Type.getType(lhs.typeClass).getInternalName();
-		return new OperandStreamBuilder(TypeDefBuilder.createTypeDef(lhsName).bind(lhs.slotList),
-				TypeDefBuilder.createTypeDef(rhsName).bind(rhs.slotList));
-	}
 }
