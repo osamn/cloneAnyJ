@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
 
-final class TypeDef implements TypeAccessDef {
+public final class TypeDef implements TypeAccessDef {
 
 	// name superName は internalName なので注意
 	private final String name;
@@ -41,6 +41,16 @@ final class TypeDef implements TypeAccessDef {
 		return name;
 	}
 
+	/**
+	 * 未解決の型パラメタを指定引数で解決したアクセサのストリームを作るためのラッパをつくる.
+	 * 
+	 * フィールドとかメソッドの戻りとか引数とかで直接 generic を指定しているタイプのアクセサから引っ張ってきた TypeDef
+	 * のアクセサをとる場合はこっち
+	 */
+	public TypeAccessDef bind(final List<Slot> binds) {
+		return new BoundTypeAccessDef(binds);
+	}
+
 	@Override
 	public Stream<AccessEntry> accessors() {
 		// Map#put Map#get をストリームの最後に回すためにいろいろする
@@ -66,16 +76,6 @@ final class TypeDef implements TypeAccessDef {
 		// +- slot(key_type)
 		// see TypeDefBuilder.TypeDefCreator#visitMethod
 		return slot.slotList.get(0).typeClass.contentEquals(Type.getDescriptor(String.class));
-	}
-
-	/**
-	 * 未解決の型パラメタを指定引数で解決したアクセサのストリームを作るためのラッパをつくる.
-	 * 
-	 * フィールドとかメソッドの戻りとか引数とかで直接 generic を指定しているタイプのアクセサから引っ張ってきた TypeDef
-	 * のアクセサをとる場合はこっち
-	 */
-	public TypeAccessDef bind(final List<Slot> binds) {
-		return new BoundTypeAccessDef(binds);
 	}
 
 	// complete から再帰的に継承元をたどることで

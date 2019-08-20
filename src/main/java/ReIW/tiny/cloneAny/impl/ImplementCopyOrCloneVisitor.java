@@ -10,7 +10,6 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
-import ReIW.tiny.cloneAny.pojo.Operand;
 
 final class ImplementCopyOrCloneVisitor extends DefaultClassVisitor {
 	private final Stream<Operand> ops;

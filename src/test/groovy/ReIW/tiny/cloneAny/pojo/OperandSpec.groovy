@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.Test
 
+import ReIW.tiny.cloneAny.impl.Operand
 import spock.lang.Specification
 
 class OperandSpec extends Specification{

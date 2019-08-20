@@ -31,9 +31,10 @@ public class DittoBuilder implements Ditto.Builder {
 		return (Ditto<L, R>) hive.computeIfAbsent(new CKey(lhs, rhs), this::compute);
 	}
 
-	// こいつは内部的に使うやつなんで generic を明示する必要はないので
-	protected Ditto<?, ?> get(final Slot lhs, final Slot rhs) {
-		return null;
+	// こいつは内部的に使うやつなんで generic を明示する必要はないの
+	@SuppressWarnings("rawtypes")
+	protected Ditto get(final Slot lhs, final Slot rhs) {
+		return (Ditto) hive.computeIfAbsent(new CKey(lhs, rhs), this::compute);
 	}
 
 	private final Object compute(final CKey key) {

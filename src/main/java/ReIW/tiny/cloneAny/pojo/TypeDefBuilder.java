@@ -22,14 +22,14 @@ import org.objectweb.asm.Type;
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 import ReIW.tiny.cloneAny.core.AccessFlag;
 
-final class TypeDefBuilder {
+public final class TypeDefBuilder {
 
 	// いつまでも hive 抱えててもいかんので GC で回収されるように弱参照をもっておく
 	private static WeakReference<TypeDefBuilder> cacheRef = new WeakReference<>(new TypeDefBuilder());
 
 	// TypeDef#complete で super を作るときに使う
 	// なんで className は internalName になってるよ
-	static TypeDef createTypeDef(final String className) {
+	public static TypeDef createTypeDef(final String className) {
 		try {
 			final Class<?> clazz = Class.forName(className.replace('/', '.'));
 			return createTypeDef(clazz);
@@ -38,7 +38,7 @@ final class TypeDefBuilder {
 		}
 	}
 
-	static TypeDef createTypeDef(final Class<?> clazz) {
+	public static TypeDef createTypeDef(final Class<?> clazz) {
 		TypeDefBuilder builder;
 		synchronized (TypeDefBuilder.class) {
 			builder = cacheRef.get();

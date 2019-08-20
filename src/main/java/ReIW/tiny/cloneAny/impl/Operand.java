@@ -1,8 +1,11 @@
-package ReIW.tiny.cloneAny.pojo;
+package ReIW.tiny.cloneAny.impl;
 
 import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
+
+import ReIW.tiny.cloneAny.pojo.Slot;
+import ReIW.tiny.cloneAny.pojo.TypeDefBuilder;
 
 public interface Operand {
 
@@ -160,7 +163,9 @@ public interface Operand {
 
 	}
 
+	@Deprecated
 	static Builder builder(final Class<?> lhs, final Class<?> rhs) {
+		// TODO テストで使ってるのでそっちをメンテしたら削除
 		return new OperandStreamBuilder(TypeDefBuilder.createTypeDef(lhs), TypeDefBuilder.createTypeDef(rhs));
 	}
 

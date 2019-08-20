@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.pojo;
+package ReIW.tiny.cloneAny.impl;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -11,15 +11,20 @@ import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
 
-import ReIW.tiny.cloneAny.pojo.Operand.Ctor;
-import ReIW.tiny.cloneAny.pojo.Operand.Load;
-import ReIW.tiny.cloneAny.pojo.Operand.MapGet;
-import ReIW.tiny.cloneAny.pojo.Operand.MapPut;
-import ReIW.tiny.cloneAny.pojo.Operand.Move;
-import ReIW.tiny.cloneAny.pojo.Operand.PropGet;
-import ReIW.tiny.cloneAny.pojo.Operand.PropSet;
-import ReIW.tiny.cloneAny.pojo.Operand.Push;
-import ReIW.tiny.cloneAny.pojo.Operand.Store;
+import ReIW.tiny.cloneAny.impl.Operand.Ctor;
+import ReIW.tiny.cloneAny.impl.Operand.Load;
+import ReIW.tiny.cloneAny.impl.Operand.MapGet;
+import ReIW.tiny.cloneAny.impl.Operand.MapPut;
+import ReIW.tiny.cloneAny.impl.Operand.Move;
+import ReIW.tiny.cloneAny.impl.Operand.PropGet;
+import ReIW.tiny.cloneAny.impl.Operand.PropSet;
+import ReIW.tiny.cloneAny.impl.Operand.Push;
+import ReIW.tiny.cloneAny.impl.Operand.Store;
+import ReIW.tiny.cloneAny.pojo.AbortCallException;
+import ReIW.tiny.cloneAny.pojo.AccessEntry;
+import ReIW.tiny.cloneAny.pojo.TypeAccessDef;
+
+// TODO ここで転送可能かみて、ストリームを調整する
 
 final class OperandStreamBuilder implements Operand.Builder{
 	// コピー元
