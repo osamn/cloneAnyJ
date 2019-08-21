@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import org.objectweb.asm.Type;
-
 public final class TypeDef implements TypeAccessDef {
 
 	// name superName は internalName なので注意
@@ -59,23 +57,12 @@ public final class TypeDef implements TypeAccessDef {
 		access.forEach(acc -> {
 			if (acc.name.contentEquals("*")) {
 				// マップの get/put の場合
-				if (isAccessibleMapEntry(acc.slot)) {
-					maps.accept(acc);
-				}
+				maps.accept(acc);
 			} else {
 				prop.accept(acc);
 			}
 		});
 		return Stream.concat(prop.build(), maps.build());
-	}
-
-	/** java.util.Map<K,V> をアクセサとして抽出対象にするのは K が String の時だけとする */
-	private static boolean isAccessibleMapEntry(Slot slot) {
-		// Map のスロットはちょっと特殊
-		// slot(val_type)
-		// +- slot(key_type)
-		// see TypeDefBuilder.TypeDefCreator#visitMethod
-		return slot.slotList.get(0).typeClass.contentEquals(Type.getDescriptor(String.class));
 	}
 
 	// complete から再帰的に継承元をたどることで

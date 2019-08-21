@@ -58,7 +58,10 @@ public final class PropertyUtil {
 	public static boolean isMapGet(final String name, final String descriptor) {
 		if (name.contentEquals("get")) {
 			final Type m = Type.getMethodType(descriptor);
-			return m.getArgumentTypes().length == 1 && m.getReturnType() != Type.VOID_TYPE;
+			final Type[] args = m.getArgumentTypes();
+			// java.util.Map<K,V> をアクセサとして抽出対象にするのは K が明に String の時だけとする
+			return args.length == 1 && args[0].getDescriptor().contentEquals("Ljava/lang/String;")
+					&& m.getReturnType() != Type.VOID_TYPE;
 		}
 		return false;
 	}
@@ -66,7 +69,10 @@ public final class PropertyUtil {
 	public static boolean isMapPut(final String name, final String descriptor) {
 		if (name.contentEquals("put")) {
 			final Type m = Type.getMethodType(descriptor);
-			return m.getArgumentTypes().length == 2 && m.getReturnType() != Type.VOID_TYPE;
+			final Type[] args = m.getArgumentTypes();
+			// java.util.Map<K,V> をアクセサとして抽出対象にするのは K が明に String の時だけとする
+			return args.length == 2 && args[0].getDescriptor().contentEquals("Ljava/lang/String;")
+					&& m.getReturnType() != Type.VOID_TYPE;
 		}
 		return false;
 	}

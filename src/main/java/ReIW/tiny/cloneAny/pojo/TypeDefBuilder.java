@@ -134,22 +134,17 @@ public final class TypeDefBuilder {
 								// Map#put あったら Map#get もあるよねってことで
 								// get の明示的な判定はしない
 
-								final List<Slot> params = new ArrayList<>();
 								final List<Slot> result = new ArrayList<>();
 								MethodSignatureParser.parseArgumentsAndReturn(descriptor, signature,
-										slot -> params.add(slot), slot -> result.add(slot));
-								// map は <K,V> なんで特殊なスロットを作る
-								// slot(val_type)
-								// +- slot(key_type)
-								final Slot key = params.get(0);
+										MethodSignatureParser::nop, slot -> result.add(slot));
+								// TODO Map<K, V> の V に型引数 テストケース確認する
+								// bind 済みのものはあってもいいよね
+								// unbound は例外になるよね、で無視されるよね
 								final Slot val = result.get(0);
-								final Slot slot = new Slot(val.typeParam, val.typeClass);
-								slot.slotList.add(key);
-
-								// Map#put(K)
-								typeDef.access.add(new AccessEntry(ACE_PROP_SET, "*", slot, "put"));
-								// Map#get(Object) だけど、キーの型を持っておきたいので同じスロットで追加
-								typeDef.access.add(new AccessEntry(ACE_PROP_GET, "*", slot, "get"));
+								// Map#put(K, V)
+								typeDef.access.add(new AccessEntry(ACE_PROP_SET, "*", val, "put"));
+								// Map#get(Object)
+								typeDef.access.add(new AccessEntry(ACE_PROP_GET, "*", val, "get"));
 							}
 						}
 					} catch (UnboundFormalTypeParameterException e) {
