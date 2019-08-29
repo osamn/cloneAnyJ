@@ -7,26 +7,44 @@ import java.util.Objects;
 
 import org.objectweb.asm.Type;
 
-public final class Slot {
-
-	public static Slot fromClass(final Class<?> clazz) {
-		return new Slot("=", Type.getDescriptor(clazz));
-	}
+public class Slot {
 
 	public final String typeParam;
-	public final String typeClass; // descriptor 文字列が入るはず
+	public final String descriptor;
 	public final List<Slot> slotList = new ArrayList<>(5);
 
-	Slot(final String typeParam) {
-		this(typeParam, Type.getDescriptor(Object.class));
+	public boolean isArray;
+	public boolean instanceOfMap;
+	public boolean instanceOfList;
+
+	public Slot(final Class<?> clazz) {
+		if (clazz.isArray()) {
+			// 配列クラスを直接指定して作成すると、slotList.get(0) が elementType になって
+			// いろいろ面倒になるのでエラーにしておく
+			throw new IllegalArgumentException();
+		}
+		this.typeParam = null;
+		this.descriptor = Type.getDescriptor(clazz);
+		this.instanceOfMap = Map.class.isAssignableFrom(clazz);
+		this.instanceOfList = List.class.isAssignableFrom(clazz);
 	}
 
-	Slot(final String typeParam, final String typeClass) {
+	public Slot(final String typeParam, final String descriptor) {
 		this.typeParam = typeParam;
-		this.typeClass = typeClass;
+		this.descriptor = descriptor;
+		if (descriptor.contentEquals("[")) {
+			this.isArray = true;
+			this.instanceOfMap = false;
+			this.instanceOfList = false;
+		} else {
+			final Class<?> clazz = Type.getType(descriptor).getClass();
+			this.isArray = false;
+			this.instanceOfMap = Map.class.isAssignableFrom(clazz);
+			this.instanceOfList = List.class.isAssignableFrom(clazz);
+		}
 	}
 
-	Slot rebind(final Map<String, String> binds) {
+	public Slot rebind(final Map<String, String> binds) {
 		if (slotList.size() == 0) {
 			// 子要素がない ＆＆
 			if (typeParam == null || typeParam.contentEquals("=") || typeParam.contentEquals("+")
@@ -39,11 +57,11 @@ public final class Slot {
 		final Slot slot;
 		if (bound == null) {
 			// 自分の typeParam が再定義されていない
-			slot = new Slot(typeParam, typeClass);
+			slot = new Slot(typeParam, descriptor);
 		} else if (bound.startsWith("T")) {
 			// 型パラメタ名の再定義
 			// see TypeDef#createBindMap
-			slot = new Slot(bound.substring(1), typeClass);
+			slot = new Slot(bound.substring(1), descriptor);
 		} else {
 			// 型パラメタに型引数をくっつける
 			// certain bind
@@ -58,7 +76,7 @@ public final class Slot {
 	@Override
 	public int hashCode() {
 		// slotList は構築後に追加されるため hashCode は使用する時点で再計算が必要
-		return Objects.hash(typeParam, typeClass, slotList);
+		return Objects.hash(typeParam, descriptor, slotList);
 	}
 
 	@Override
@@ -75,10 +93,10 @@ public final class Slot {
 				return false;
 		} else if (!slotList.equals(other.slotList))
 			return false;
-		if (typeClass == null) {
-			if (other.typeClass != null)
+		if (descriptor == null) {
+			if (other.descriptor != null)
 				return false;
-		} else if (!typeClass.equals(other.typeClass))
+		} else if (!descriptor.equals(other.descriptor))
 			return false;
 		if (typeParam == null) {
 			if (other.typeParam != null)
@@ -90,7 +108,7 @@ public final class Slot {
 
 	@Override
 	public String toString() {
-		return "Slot [typeParam=" + typeParam + ", typeClass=" + typeClass + ", slotList=" + slotList + "]";
+		return "Slot [typeParam=" + typeParam + ", typeClass=" + descriptor + ", slotList=" + slotList + "]";
 	}
 
 }

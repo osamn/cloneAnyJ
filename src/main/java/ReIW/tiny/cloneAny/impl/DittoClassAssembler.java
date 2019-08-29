@@ -12,9 +12,6 @@ import org.objectweb.asm.Type;
 import ReIW.tiny.cloneAny.core.AssemblyDomain;
 import ReIW.tiny.cloneAny.core.AssemblyException;
 
-// generic な要素を持つ配列の場合、型パラメタが消えちゃうの
-// なので配列のスロットの型名から再度スロットをとって formal がのこってたらエラーにするとか
-// そんな感じにしないといかんかも
 
 public final class DittoClassAssembler {
 
@@ -30,10 +27,10 @@ public final class DittoClassAssembler {
 		// 実体化するクラスの名前
 		clazzName = key.getInternalName();
 		// AbstractDitto に埋め込む情報
-		lhsName = Type.getType(key.lhs.typeClass).getInternalName();
-		rhsName = Type.getType(key.rhs.typeClass).getInternalName();
+		lhsName = Type.getType(key.lhs.descriptor).getInternalName();
+		rhsName = Type.getType(key.rhs.descriptor).getInternalName();
 		// オペランドの元
-		builder = OperandStreamBuilder.builder(key.lhs, key.rhs);
+		builder = null ; //OperandStreamBuilder.builder(key.lhs, key.rhs);
 	}
 
 	Class<?> createClass() {
@@ -59,10 +56,10 @@ public final class DittoClassAssembler {
 		final ClassVisitor term = domain.getTerminalClassVisitor(this::inspectBytes);
 		final ClassVisitor cv0 = new ConcreteDittoClassVisitor(clazzName, term);
 		final ClassVisitor cv1 = new ImplementClassNameGetterVisitor(lhsName, rhsName, cv0);
-		final ClassVisitor cv2 = new ImplementCopyOrCloneVisitor(builder.operands(true), cv1);
+		//final ClassVisitor cv2 = new ImplementCopyOrCloneVisitor(builder.operands(true), cv1);
 		// クラスを構築してロードする
 		final ClassReader cr = new ClassReader(AbstractDitto.class.getName());
-		cr.accept(cv2, ClassReader.SKIP_DEBUG);
+		//cr.accept(cv2, ClassReader.SKIP_DEBUG);
 	}
 
 	private PrintWriter debugOut = new PrintWriter(System.out);

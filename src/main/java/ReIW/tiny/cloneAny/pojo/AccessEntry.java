@@ -17,7 +17,7 @@ public final class AccessEntry {
 	// あと ctor の descriptor とか
 	public final String rel;
 
-	AccessEntry(final int elementType, final String name, final Slot slot, final String rel) {
+	public AccessEntry(final int elementType, final String name, final Slot slot, final String rel) {
 		this.elementType = elementType;
 		this.name = name;
 		this.slot = slot;

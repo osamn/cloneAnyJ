@@ -36,7 +36,7 @@ public final class CKey {
 	}
 
 	private static void writeSlotName(final StringBuilder buf, final Slot slot) {
-		buf.append(Type.getType(slot.typeClass).getInternalName());
+		buf.append(Type.getType(slot.descriptor).getInternalName());
 		if (slot.slotList.size() > 0) {
 			for (Slot s : slot.slotList) {
 				buf.append('.');

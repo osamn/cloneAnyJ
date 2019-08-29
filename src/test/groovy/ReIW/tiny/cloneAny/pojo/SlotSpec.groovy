@@ -21,7 +21,7 @@ class SlotSpec extends Specification {
 		slot.is(actual) == is_me
 		// rebind されたか確認
 		actual.typeParam == actualTypeParam
-		actual.typeClass == actualTypeClass
+		actual.descriptor == actualTypeClass
 		
 		where:
 		typeParam || is_me | actualTypeParam | actualTypeClass
@@ -44,7 +44,7 @@ class SlotSpec extends Specification {
 		
 		expect:
 		actual.slotList[0].typeParam == actualTypeParam
-		actual.slotList[0].typeClass == actualTypeClass
+		actual.slotList[0].descriptor == actualTypeClass
 		
 		where:
 		typeParam | typeClass | actualTypeParam | actualTypeClass

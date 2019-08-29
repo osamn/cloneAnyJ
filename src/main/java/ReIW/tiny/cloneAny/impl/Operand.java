@@ -6,7 +6,7 @@ import ReIW.tiny.cloneAny.pojo.Slot;
 
 interface Operand {
 
-	/** インスタンスフィールドのロード */
+	/** フィールド読取 */
 	final class Load implements Operand {
 		public final String owner;
 		public final String name;
@@ -24,7 +24,7 @@ interface Operand {
 		}
 	}
 
-	/** インスタンスフィールドに設定 */
+	/** フィールド格納 */
 	final class Store implements Operand {
 		public final String owner;
 		public final String name;
@@ -43,12 +43,12 @@ interface Operand {
 	}
 
 	/** プロパティ取得 */
-	final class PropGet implements Operand {
+	final class Get implements Operand {
 		public final String owner;
 		public final String rel;
 		public final int size;
 
-		PropGet(final String owner, final String rel, final String clazz) {
+		Get(final String owner, final String rel, final String clazz) {
 			this.owner = owner;
 			this.rel = rel;
 			this.size = Type.getType(clazz).getSize();
@@ -61,12 +61,12 @@ interface Operand {
 	}
 
 	/** プロパティ設定 */
-	final class PropSet implements Operand {
+	final class Set implements Operand {
 		public final String owner;
 		public final String rel;
 		public final int size;
 
-		PropSet(final String owner, final String rel, final String clazz) {
+		Set(final String owner, final String rel, final String clazz) {
 			this.owner = owner;
 			this.rel = rel;
 			this.size = Type.getType(clazz).getSize();
@@ -78,11 +78,13 @@ interface Operand {
 		}
 	}
 
+	// map の場合 get も put も Object が対象になるんで size ==1 固定なんで持たなくてもいいよね
+
 	/** Map#get */
-	final class MapGet implements Operand {
+	final class GetKey implements Operand {
 		public final String name;
 
-		MapGet(final String name) {
+		GetKey(final String name) {
 			this.name = name;
 		}
 
@@ -92,13 +94,11 @@ interface Operand {
 		}
 	}
 
-	// map の場合 get も put も Object が対象になるんで size ==1 固定なんで持たなくてもいいよね
-
 	/** Map#put */
-	final class MapPut implements Operand {
+	final class SetKey implements Operand {
 		public final String name;
 
-		MapPut(final String name) {
+		SetKey(final String name) {
 			this.name = name;
 		}
 
@@ -108,35 +108,19 @@ interface Operand {
 		}
 	}
 
-	/** 値変換 */
-	final class Move implements Operand {
+	/** Stack top の値変換 */
+	final class ConvTop implements Operand {
 		public final Slot src;
 		public final Slot dst;
 
-		Move(final Slot src, final Slot dst) {
+		ConvTop(final Slot src, final Slot dst) {
 			this.src = src;
 			this.dst = dst;
 		}
 
 		@Override
 		public String toString() {
-			return "Move " + src.typeClass + " -> " + dst.typeClass;
-		}
-	}
-
-	/** コンストラクタ引数用の値変換 */
-	final class Push implements Operand {
-		public final Slot src;
-		public final Slot dst;
-
-		Push(final Slot src, final Slot dst) {
-			this.src = src;
-			this.dst = dst;
-		}
-
-		@Override
-		public String toString() {
-			return "Push " + src.typeClass + " -> " + dst.typeClass;
+			return "Conv " + src.descriptor + " -> " + dst.descriptor;
 		}
 	}
 

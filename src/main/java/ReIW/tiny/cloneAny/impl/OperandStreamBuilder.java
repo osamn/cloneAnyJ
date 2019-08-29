@@ -1,52 +1,36 @@
 package ReIW.tiny.cloneAny.impl;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.objectweb.asm.Type;
-
-import ReIW.tiny.cloneAny.impl.Operand.Ctor;
-import ReIW.tiny.cloneAny.impl.Operand.Load;
-import ReIW.tiny.cloneAny.impl.Operand.MapGet;
-import ReIW.tiny.cloneAny.impl.Operand.MapPut;
-import ReIW.tiny.cloneAny.impl.Operand.Move;
-import ReIW.tiny.cloneAny.impl.Operand.PropGet;
-import ReIW.tiny.cloneAny.impl.Operand.PropSet;
-import ReIW.tiny.cloneAny.impl.Operand.Push;
-import ReIW.tiny.cloneAny.impl.Operand.Store;
 import ReIW.tiny.cloneAny.pojo.AbortCallException;
 import ReIW.tiny.cloneAny.pojo.AccessEntry;
-import ReIW.tiny.cloneAny.pojo.Slot;
-import ReIW.tiny.cloneAny.pojo.TypeAccessDef;
-import ReIW.tiny.cloneAny.pojo.TypeDefBuilder;
 
 // TODO ここで転送可能かみて、ストリームを調整する
 
 final class OperandStreamBuilder {
 
+	/*
 	static OperandStreamBuilder builder(final Class<?> lhs, final Class<?> rhs) {
 		return new OperandStreamBuilder(TypeDefBuilder.createTypeDef(lhs), TypeDefBuilder.createTypeDef(rhs));
 	}
 
 	static OperandStreamBuilder builder(final Slot lhs, final Slot rhs) {
-		final String lhsName = Type.getType(lhs.typeClass).getInternalName();
-		final String rhsName = Type.getType(lhs.typeClass).getInternalName();
+		final String lhsName = Type.getType(lhs.descriptor).getInternalName();
+		final String rhsName = Type.getType(lhs.descriptor).getInternalName();
 		return new OperandStreamBuilder(TypeDefBuilder.createTypeDef(lhsName).bind(lhs.slotList),
 				TypeDefBuilder.createTypeDef(rhsName).bind(rhs.slotList));
 	}
 
 	// コピー元
-	private final TypeAccessDef provider;
+	private final TypeAccessDef_ provider;
 	// コピー先
-	private final TypeAccessDef consumer;
+	private final TypeAccessDef_ consumer;
 
-	OperandStreamBuilder(final TypeAccessDef lhs, final TypeAccessDef rhs) {
+	OperandStreamBuilder(final TypeAccessDef_ lhs, final TypeAccessDef_ rhs) {
 		this.provider = lhs;
 		this.consumer = rhs;
 	}
@@ -99,6 +83,8 @@ final class OperandStreamBuilder {
 
 		// コンストラクタの引数のコピー操作をストリームに
 		for (OperandStreamBuilder.Ops op : ctor) {
+			// TODO ここで変換できるか確認して変換できなかったらスキップ
+
 			final AccessEntry src = op.lhs;
 			final AccessEntry dst = op.rhs;
 
@@ -106,22 +92,22 @@ final class OperandStreamBuilder {
 			switch (src.elementType) {
 			case AccessEntry.ACE_FIELD:
 			case AccessEntry.ACE_FINAL_FIELD:
-				builder.accept(new Load(provider.getInternalName(), src.name, src.slot.typeClass));
+				builder.accept(new Load(provider.getInternalName(), src.name, src.slot.descriptor));
 				break;
 			case AccessEntry.ACE_PROP_GET:
 				if (src.name.contentEquals("*")) {
 					// Map 関連はプロパティ名持ってないので相手側の名前を使う
-					builder.accept(new MapGet(dst.name));
+					builder.accept(new GetKey(dst.name));
 				} else {
-					builder.accept(new PropGet(provider.getInternalName(), src.rel, src.slot.typeClass));
+					builder.accept(new Get(provider.getInternalName(), src.rel, src.slot.descriptor));
 				}
 				break;
 			default:
 				throw new IllegalStateException();
 			}
 
-			// push オペランドを配置
-			builder.accept(new Push(src.slot, dst.slot));
+			// convert stack top
+			builder.accept(new ConvTop(src.slot, dst.slot));
 		}
 
 		final String desc = ctor.get(0).rhs.rel;
@@ -140,6 +126,8 @@ final class OperandStreamBuilder {
 
 		// コピー操作をストリームに
 		ops.forEach(op -> {
+			// TODO ここで変換できるか確認して変換できなかったらスキップ
+
 			final AccessEntry src = op.lhs;
 			final AccessEntry dst = op.rhs;
 
@@ -147,34 +135,34 @@ final class OperandStreamBuilder {
 			switch (src.elementType) {
 			case AccessEntry.ACE_FIELD:
 			case AccessEntry.ACE_FINAL_FIELD:
-				builder.accept(new Load(provider.getInternalName(), src.name, src.slot.typeClass));
+				builder.accept(new Load(provider.getInternalName(), src.name, src.slot.descriptor));
 				break;
 			case AccessEntry.ACE_PROP_GET:
 				if (src.name.contentEquals("*")) {
 					// Map 関連はプロパティ名持ってないので相手側の名前を使う
-					builder.accept(new MapGet(dst.name));
+					builder.accept(new GetKey(dst.name));
 				} else {
-					builder.accept(new PropGet(provider.getInternalName(), src.rel, src.slot.typeClass));
+					builder.accept(new Get(provider.getInternalName(), src.rel, src.slot.descriptor));
 				}
 				break;
 			default:
 				throw new IllegalStateException();
 			}
 
-			// move
-			builder.accept(new Move(src.slot, dst.slot));
+			// convert stack top
+			builder.accept(new ConvTop(src.slot, dst.slot));
 
 			// set stack top value to dst property
 			switch (dst.elementType) {
 			case AccessEntry.ACE_FIELD:
-				builder.accept(new Store(consumer.getInternalName(), dst.name, dst.slot.typeClass));
+				builder.accept(new Store(consumer.getInternalName(), dst.name, dst.slot.descriptor));
 				break;
 			case AccessEntry.ACE_PROP_SET:
 				if (dst.name.contentEquals("*")) {
 					// Map 関連はプロパティ名持ってないので相手側の名前を使う
-					builder.accept(new MapPut(src.name));
+					builder.accept(new SetKey(src.name));
 				} else {
-					builder.accept(new PropSet(consumer.getInternalName(), dst.rel, dst.slot.typeClass));
+					builder.accept(new Set(consumer.getInternalName(), dst.rel, dst.slot.descriptor));
 				}
 				break;
 			default:
@@ -184,12 +172,12 @@ final class OperandStreamBuilder {
 
 		return builder.build();
 	}
+	*/
 
 	/**
 	 * コンストラクタを除いたコピー操作のストリームを計算する
 	 * 
 	 * 副作用としてコンストラクタ操作を ctorList に設定する
-	 */
 	private Stream<OperandStreamBuilder.Ops> calcCopyAndInit(final List<List<OperandStreamBuilder.Ops>> ctorList) {
 		// とりあえず getter 側のマップつくる
 		// マップキーはプロパティ名
@@ -214,7 +202,7 @@ final class OperandStreamBuilder {
 					if (set.name.contentEquals("*")) {
 						// "*" は Map の場合のみで、かつ必ずストリームの最後のはずなので
 						// processed に入っていないものをすべて移してあげる
-						// name or * -> *
+						// (name or *) -> *
 						final Stream.Builder<OperandStreamBuilder.Ops> rest = Stream.builder();
 						getters.values().forEach(acc -> {
 							if (!processed.contains(acc.name)) {
@@ -236,7 +224,7 @@ final class OperandStreamBuilder {
 				// setter 側の rel でまとめ上げる
 				// rel は下のどれか
 				// ・コンストラクタ -> (...)V
-				// ・アクセッサ -> set* get*
+				// ・アクセッサ -> set* get* Map#get Map#put
 				// ・フィールド -> name と同じ
 				.collect(Collectors.groupingBy(op -> op.rhs.rel));
 
@@ -249,7 +237,7 @@ final class OperandStreamBuilder {
 				final List<OperandStreamBuilder.Ops> cc = entry.getValue().stream()// .filter(op ->
 																					// !op.lhs.name.contentEquals("*"))
 						.collect(Collectors.toList());
-				final int argSize = (Type.getArgumentsAndReturnSizes(sig) >> 2) - 1/* without this */;
+				final int argSize = (Type.getArgumentsAndReturnSizes(sig) >> 2) - 1// without this;
 				if (argSize == cc.size()) {
 					// exact matched constructor
 					ctorList.add(cc);
@@ -259,6 +247,7 @@ final class OperandStreamBuilder {
 			return true;
 		}).map(entry -> entry.getValue()).flatMap(ops -> ops.stream());
 	}
+	 */
 
 	/** 一番確からしいコンストラクタをとる */
 	private static List<OperandStreamBuilder.Ops> findProbablyConstructor(

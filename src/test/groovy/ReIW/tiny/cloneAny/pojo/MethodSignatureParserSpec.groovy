@@ -16,20 +16,20 @@ class MethodSignatureParserSpec extends Specification {
 
 		expect: "slot の値を検証"
 		slot.typeParam == param
-		slot.typeClass == clazz
+		slot.descriptor == clazz
 
 		and: "slot の子を検証"
 		def X = slot.slotList[0]
 		X?.typeParam == nestedParam
-		X?.typeClass == nestedClass
+		X?.descriptor == nestedClass
 
 		and: "slot の孫を検証"
 		def Y = X?.slotList?.getAt(0)
 		def Z = X?.slotList?.getAt(1)
 		Y?.typeParam == nestedNestedParam1
-		Y?.typeClass == nestedNestedClass1
+		Y?.descriptor == nestedNestedClass1
 		Z?.typeParam == nestedNestedParam2
-		Z?.typeClass == nestedNestedClass2
+		Z?.descriptor == nestedNestedClass2
 
 		where:
 		descriptor				| signature					|| param	| clazz
@@ -63,20 +63,20 @@ class MethodSignatureParserSpec extends Specification {
 
 		expect: "slot の値を検証"
 		slot.typeParam == param
-		slot.typeClass == clazz
+		slot.descriptor == clazz
 
 		and: "slot の子を検証"
 		def X = slot.slotList[0]
 		X?.typeParam == nestedParam
-		X?.typeClass == nestedClass
+		X?.descriptor == nestedClass
 
 		and: "slot の孫を検証"
 		def Y = X?.slotList?.getAt(0)
 		def Z = X?.slotList?.getAt(1)
 		Y?.typeParam == nestedNestedParam1
-		Y?.typeClass == nestedNestedClass1
+		Y?.descriptor == nestedNestedClass1
 		Z?.typeParam == nestedNestedParam2
-		Z?.typeClass == nestedNestedClass2
+		Z?.descriptor == nestedNestedClass2
 
 		where:
 		descriptor				| signature					|| param	| clazz
