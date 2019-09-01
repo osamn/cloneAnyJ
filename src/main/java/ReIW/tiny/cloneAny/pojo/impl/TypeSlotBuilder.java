@@ -2,8 +2,8 @@ package ReIW.tiny.cloneAny.pojo.impl;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -70,7 +70,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 			// final なものは読み取り専用になるよ
 			final Accessor.Type type = AccessFlag.isFinal(access) ? Accessor.Type.ReadonlyField : Accessor.Type.Field;
 			new FieldSignatureParser(slot -> {
-				typeSlot.access.add(new SlotAccessor.SingleSlotAccessor(type, typeSlot.getName(), name, descriptor, slot));
+				typeSlot.access.add(new SingleSlotAccessor(type, typeSlot.getName(), name, descriptor, slot));
 			}).parse(descriptor, signature);
 		}
 		return null;
@@ -81,19 +81,19 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 			String[] exceptions) {
 		if (isAccessible(access)) {
 			if (name.contentEquals("<init>")) {
-				final SlotAccessor.MultiSlotAccessor acc = new SlotAccessor.MultiSlotAccessor(typeSlot.getName(), name, descriptor);
+				final MultiSlotAccessor acc = new MultiSlotAccessor(typeSlot.getName(), name, descriptor);
 				new MethodSignatureParser(acc.slots::add, null).parseArgumentsAndReturn(descriptor, signature);
 				return new MethodParamNameMapper(acc.slots, acc.names::add);
 			} else {
 				try {
 					if (PropertyUtil.isGetter(name, descriptor)) {
 						new MethodSignatureParser(null, slot -> {
-							typeSlot.access.add(new SlotAccessor.SingleSlotAccessor(Accessor.Type.Get, typeSlot.getName(), name,
+							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Get, typeSlot.getName(), name,
 									descriptor, slot));
 						}).parseArgumentsAndReturn(descriptor, signature);
 					} else if (PropertyUtil.isSetter(name, descriptor)) {
 						new MethodSignatureParser(slot -> {
-							typeSlot.access.add(new SlotAccessor.SingleSlotAccessor(Accessor.Type.Set, typeSlot.getName(), name,
+							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Set, typeSlot.getName(), name,
 									descriptor, slot));
 						}, null).parseArgumentsAndReturn(descriptor, signature);
 					}
@@ -120,7 +120,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		private final Iterator<Slot> slots;
 		private final Consumer<String> cons;
 
-		private MethodParamNameMapper(final ArrayList<Slot> slots, final Consumer<String> cons) {
+		private MethodParamNameMapper(final List<Slot> slots, final Consumer<String> cons) {
 			this.slots = slots.iterator();
 			this.cons = cons;
 		}

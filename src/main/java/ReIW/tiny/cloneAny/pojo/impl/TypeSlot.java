@@ -58,7 +58,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		if (superDesc.contentEquals("Ljava/lang/Object;")) {
 			return;
 		}
-		// 親の TypeDef を作って
+		// 親の TypeSlot を作って
 		final TypeSlot superType = TypeSlotBuilder.createTypeSlot(Type.getType(superDesc).getClass());
 		superType.complete();
 		// 親のアクセサを自分に持ってくる
