@@ -1,6 +1,7 @@
 package ReIW.tiny.cloneAny.pojo.impl
 
 import ReIW.tiny.cloneAny.pojo.Slot
+import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException
 import spock.lang.Specification
 
 class MethodSignatureParserSpec extends Specification {
@@ -241,5 +242,15 @@ class MethodSignatureParserSpec extends Specification {
 		slots[1].slotList[0].typeParam == "=";
 		slots[1].slotList[0].descriptor == "Ljava/lang/Long;";
 		slots[1].slotList[0].slotList.size() == 0
+	}
+	
+	def "has formal parameter : <X> void set...(X)"() {
+		setup:
+
+		when:
+		new MethodSignatureParser(null, null).parseArgumentsAndReturn(null, "<X:Ljava/lang/Object;>(TX;)V")
+
+		then:
+		thrown(UnboundFormalTypeParameterException)
 	}
 }

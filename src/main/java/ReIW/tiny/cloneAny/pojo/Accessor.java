@@ -14,7 +14,9 @@ public interface Accessor {
 
 	String getOwner();
 
-	String getName(); // field 名または method 名なので注意！プロパティ名じゃないよ
+	String getName();
+	
+	String getRel();
 
 	String getDescriptor();
 

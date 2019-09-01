@@ -70,7 +70,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 			// final なものは読み取り専用になるよ
 			final Accessor.Type type = AccessFlag.isFinal(access) ? Accessor.Type.ReadonlyField : Accessor.Type.Field;
 			new FieldSignatureParser(slot -> {
-				typeSlot.access.add(new SingleSlotAccessor(type, typeSlot.getName(), name, descriptor, slot));
+				typeSlot.access.add(new SingleSlotAccessor(type, typeSlot.getName(), name, name, descriptor, slot));
 			}).parse(descriptor, signature);
 		}
 		return null;
@@ -88,13 +88,13 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				try {
 					if (PropertyUtil.isGetter(name, descriptor)) {
 						new MethodSignatureParser(null, slot -> {
-							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Get, typeSlot.getName(), name,
-									descriptor, slot));
+							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Get, typeSlot.getName(),
+									PropertyUtil.getPropertyName(name), name, descriptor, slot));
 						}).parseArgumentsAndReturn(descriptor, signature);
 					} else if (PropertyUtil.isSetter(name, descriptor)) {
 						new MethodSignatureParser(slot -> {
-							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Set, typeSlot.getName(), name,
-									descriptor, slot));
+							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Set, typeSlot.getName(),
+									PropertyUtil.getPropertyName(name), name, descriptor, slot));
 						}, null).parseArgumentsAndReturn(descriptor, signature);
 					}
 				} catch (UnboundFormalTypeParameterException e) {

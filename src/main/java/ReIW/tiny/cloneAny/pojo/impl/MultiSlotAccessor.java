@@ -48,6 +48,11 @@ public final class MultiSlotAccessor implements SlotAccessor {
 	public String getName() {
 		return name;
 	}
+	
+	@Override
+	public String getRel() {
+		return name;
+	}
 
 	@Override
 	public String getDescriptor() {

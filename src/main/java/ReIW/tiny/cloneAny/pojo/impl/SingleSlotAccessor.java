@@ -10,39 +10,19 @@ public final class SingleSlotAccessor implements SlotAccessor {
 	private final Accessor.Type type;
 	private final String owner;
 	private final String name;
+	private final String rel;
 	private final String descriptor;
-	private final boolean readable;
-	private final boolean writable;
 
 	public final Slot slot;
 
-	SingleSlotAccessor(final Accessor.Type type, final String owner, final String name, final String descriptor,
-			final Slot slot) {
+	SingleSlotAccessor(final Accessor.Type type, final String owner, final String name, final String rel,
+			final String descriptor, final Slot slot) {
 		this.type = type;
 		this.owner = owner;
 		this.name = name;
+		this.rel = rel;
 		this.descriptor = descriptor;
 		this.slot = slot;
-		switch (type) {
-		case Field:
-			readable = true;
-			writable = true;
-			break;
-		case ReadonlyField:
-			readable = true;
-			writable = false;
-			break;
-		case Get:
-			readable = true;
-			writable = false;
-			break;
-		case Set:
-			readable = false;
-			writable = true;
-			break;
-		default:
-			throw new IllegalArgumentException();
-		}
 	}
 
 	@Override
@@ -52,12 +32,12 @@ public final class SingleSlotAccessor implements SlotAccessor {
 
 	@Override
 	public boolean canRead() {
-		return readable;
+		return type == Accessor.Type.Get || type == Accessor.Type.Field || type == Accessor.Type.ReadonlyField;
 	}
 
 	@Override
 	public boolean canWrite() {
-		return writable;
+		return type == Accessor.Type.Set || type == Accessor.Type.Field || type == Accessor.Type.LumpSet;
 	}
 
 	@Override
@@ -71,6 +51,11 @@ public final class SingleSlotAccessor implements SlotAccessor {
 	}
 
 	@Override
+	public String getRel() {
+		return rel;
+	}
+
+	@Override
 	public String getDescriptor() {
 		return descriptor;
 	}
@@ -80,7 +65,7 @@ public final class SingleSlotAccessor implements SlotAccessor {
 		if (this.owner.contentEquals(owner)) {
 			return this;
 		}
-		return new SingleSlotAccessor(this.type, newOwner, this.name, this.descriptor, this.slot);
+		return new SingleSlotAccessor(this.type, newOwner, this.name, this.rel, this.descriptor, this.slot);
 	}
 
 	@Override
@@ -88,7 +73,7 @@ public final class SingleSlotAccessor implements SlotAccessor {
 		if (binds.size() == 0) {
 			return this;
 		}
-		return new SingleSlotAccessor(this.type, this.owner, this.name, this.descriptor, this.slot.rebind(binds));
+		return new SingleSlotAccessor(this.type, this.owner, this.name, this.rel, this.descriptor, this.slot.rebind(binds));
 	}
 
 }
