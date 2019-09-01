@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.core;
+package ReIW.tiny.cloneAny.utils;
 
 import org.objectweb.asm.Opcodes;
 

@@ -15,11 +15,11 @@ import org.objectweb.asm.Type;
 
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 import ReIW.tiny.cloneAny.asm7.DefaultMethodVisitor;
-import ReIW.tiny.cloneAny.core.AccessFlag;
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 import ReIW.tiny.cloneAny.pojo.UnboundMethodParameterNameException;
+import ReIW.tiny.cloneAny.utils.AccessFlag;
 import ReIW.tiny.cloneAny.utils.PropertyUtil;
 
 public final class TypeSlotBuilder extends DefaultClassVisitor {

@@ -11,7 +11,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
-import ReIW.tiny.cloneAny.core.AccessFlag;
+import ReIW.tiny.cloneAny.utils.AccessFlag;
 
 public class ConcreteDittoClassVisitor extends DefaultClassVisitor {
 

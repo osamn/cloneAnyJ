@@ -15,6 +15,7 @@ import org.objectweb.asm.ModuleVisitor;
 import org.objectweb.asm.TypePath;
 
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
+import ReIW.tiny.cloneAny.utils.AccessFlag;
 
 public final class AssemblyDomain extends ClassLoader {
 

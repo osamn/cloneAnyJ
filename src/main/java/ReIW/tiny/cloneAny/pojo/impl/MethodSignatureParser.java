@@ -33,9 +33,9 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 		if (signature == null) {
 			Type m = Type.getMethodType(descriptor);
 			for (Type t : m.getArgumentTypes()) {
-				argCons.accept(SlotHelper.buildSlot(t.getDescriptor()));
+				argCons.accept(Slot.getSlot(t.getDescriptor()));
 			}
-			retCons.accept(SlotHelper.buildSlot(m.getReturnType().getDescriptor()));
+			retCons.accept(Slot.getSlot(m.getReturnType().getDescriptor()));
 		} else {
 			new SignatureReader(signature).accept(this);
 		}
@@ -103,7 +103,7 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 
 	private Slot unrollArray() {
 		Slot slot = stack.pop();
-		while (!stack.isEmpty() && stack.peek().isArray) {
+		while (!stack.isEmpty() && stack.peek().isArrayType()) {
 			stack.peek().slotList.add(slot);
 			slot = stack.pop();
 		}

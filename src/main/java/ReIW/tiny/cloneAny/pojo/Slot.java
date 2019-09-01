@@ -8,12 +8,35 @@ import org.objectweb.asm.Type;
 
 public class Slot {
 
+	/**
+	 * descriptor から Slot をつくる.
+	 */
+	public static Slot getSlot(final String descriptor) {
+		// 配列か？
+		if (descriptor.startsWith("[")) {
+			// 配列の間、配列を示す slot 階層を追加していく
+			String desc = descriptor.substring(1);
+			final Slot root = new Slot(null, "[");
+			Slot curr = root;
+			while (desc.startsWith("[")) {
+				Slot s = new Slot(null, "[");
+				curr.slotList.add(s);
+				curr = s;
+				desc = desc.substring(1);
+			}
+			// 最後に elementType の slot を追加する
+			curr.slotList.add(new Slot(null, desc));
+			return root;
+		} else {
+			return new Slot(null, descriptor);
+		}
+	}
+
 	public final String typeParam;
 	public final String descriptor;
 	public final List<Slot> slotList = new ArrayList<>(5);
 
-	public final boolean isArray;
-
+	private final boolean isArray;
 	private final boolean instanceOfMap;
 	private final boolean instanceOfList;
 
@@ -43,6 +66,10 @@ public class Slot {
 			this.instanceOfMap = Map.class.isAssignableFrom(clazz);
 			this.instanceOfList = List.class.isAssignableFrom(clazz);
 		}
+	}
+
+	public boolean isArrayType() {
+		return isArray;
 	}
 
 	public boolean keyed() {

@@ -23,7 +23,7 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	void parse(final String descriptor, final String signature) {
 		if (signature == null) {
-			cons.accept(SlotHelper.buildSlot(descriptor));
+			cons.accept(Slot.getSlot(descriptor));
 		} else {
 			new SignatureReader(signature).accept(this);
 		}
@@ -70,7 +70,7 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	private Slot unrollArray() {
 		Slot slot = stack.pop();
-		while (!stack.isEmpty() && stack.peek().isArray) {
+		while (!stack.isEmpty() && stack.peek().isArrayType()) {
 			stack.peek().slotList.add(slot);
 			slot = stack.pop();
 		}
