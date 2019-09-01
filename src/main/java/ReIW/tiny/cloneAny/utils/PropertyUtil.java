@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.pojo;
+package ReIW.tiny.cloneAny.utils;
 
 import org.objectweb.asm.Type;
 
@@ -55,6 +55,7 @@ public final class PropertyUtil {
 		return false;
 	}
 
+	@Deprecated
 	public static boolean isMapPut(final String name, final String descriptor) {
 		if (name.contentEquals("put")) {
 			final Type m = Type.getMethodType(descriptor);

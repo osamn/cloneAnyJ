@@ -33,9 +33,9 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 		if (signature == null) {
 			Type m = Type.getMethodType(descriptor);
 			for (Type t : m.getArgumentTypes()) {
-				argCons.accept(new Slot(null, t.getDescriptor()));
+				argCons.accept(SlotHelper.buildSlot(t.getDescriptor()));
 			}
-			retCons.accept(new Slot(null, m.getReturnType().getDescriptor()));
+			retCons.accept(SlotHelper.buildSlot(m.getReturnType().getDescriptor()));
 		} else {
 			new SignatureReader(signature).accept(this);
 		}
@@ -44,6 +44,18 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 	@Override
 	public void visitFormalTypeParameter(String name) {
 		throw new UnboundFormalTypeParameterException("Method should not have formal type parameter.");
+	}
+
+	@Override
+	public void visitClassType(String name) {
+		stack.push(new Slot(typeParamName, Type.getObjectType(name).getDescriptor()));
+	}
+
+	@Override
+	public SignatureVisitor visitArrayType() {
+		stack.push(new Slot(typeParamName, "["));
+		typeParamName = null;
+		return super.visitArrayType();
 	}
 
 	@Override
@@ -64,11 +76,6 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 	}
 
 	@Override
-	public void visitClassType(String name) {
-		stack.push(new Slot(typeParamName, Type.getObjectType(name).getDescriptor()));
-	}
-
-	@Override
 	public SignatureVisitor visitTypeArgument(char wildcard) {
 		typeParamName = String.valueOf(wildcard);
 		return super.visitTypeArgument(wildcard);
@@ -85,13 +92,22 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitEnd() {
-		Slot slot = stack.pop();
+		Slot slot = unrollArray();
 		if (stack.isEmpty()) {
 			cons.accept(slot);
 		} else {
 			stack.peek().slotList.add(slot);
 		}
 		typeParamName = null;
+	}
+
+	private Slot unrollArray() {
+		Slot slot = stack.pop();
+		while (!stack.isEmpty() && stack.peek().isArray) {
+			stack.peek().slotList.add(slot);
+			slot = stack.pop();
+		}
+		return slot;
 	}
 
 }

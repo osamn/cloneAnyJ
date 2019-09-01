@@ -8,17 +8,15 @@ import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
 
-import ReIW.tiny.cloneAny.pojo.AccessEntry;
+import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.TypeAccessDef;
 
 public class TypeSlot extends Slot implements TypeAccessDef {
 
-	boolean hasDefaultCtor;
-
 	final ArrayList<Slot> superSlots = new ArrayList<>();
 
-	final ArrayList<AccessEntry> access = new ArrayList<>();
+	final ArrayList<Accessor> access = new ArrayList<>();
 
 	private boolean completed;
 
@@ -27,17 +25,12 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 	}
 
 	@Override
-	public boolean hasDefaultCtor() {
-		return hasDefaultCtor;
-	}
-
-	@Override
 	public String getName() {
 		return Type.getType(this.descriptor).getInternalName();
 	}
 
 	@Override
-	public Stream<AccessEntry> accessors() {
+	public Stream<Accessor> accessors() {
 		return access.stream();
 	}
 
@@ -66,7 +59,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 			return;
 		}
 		// 親の TypeDef を作って
-		final TypeSlot superType = TypeSlotBuilder.createTypeDef(Type.getType(superDesc).getClass());
+		final TypeSlot superType = TypeSlotBuilder.createTypeSlot(Type.getType(superDesc).getClass());
 		superType.complete();
 		// 親のアクセサを自分に持ってくる
 		pullAllUp(superType);
@@ -75,26 +68,26 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 	// スーパークラス上で公開されたアクセスエントリを自分の型引数をバインドして
 	// 自分のエントリとして追加する
 	private void pullAllUp(final TypeSlot superType) {
-		final HashMap<String, String> bounds = createBindMap(superType);
+		final HashMap<String, String> binds = createBindMap(superType);
 		final HashSet<String> checkExists = new HashSet<>();
-		for (AccessEntry entry : superType.access) {
-			if (entry.elementType == AccessEntry.ACE_CTOR_ARG) {
-				// ただしスーパークラスのコンストラクタ引数は除外しとく
-				continue;
+		superType.access.stream().map(acc -> (SlotAccessor) acc).forEach(acc -> {
+			if (acc.getType() == Accessor.Type.LumpSet) {
+				// ただしスーパークラスのコンストラクタは除外しとく
+				return;
 			}
 			// 同じエントリがないように name + rel で確認する
 			// override したときとか同じエントリが階層上位にあったりするので
-			if (checkExists.add(entry.name + entry.rel)) {
-				access.add(new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bounds), entry.rel));
+			if (checkExists.add(acc.getName() + acc.getDescriptor())) {
+				access.add(((SlotAccessor) acc).chown(getName()).rebind(binds));
 			}
-		}
+		});
 	}
 
-	private HashMap<String, String> createBindMap(final TypeSlot superType) {
+	private HashMap<String, String> createBindMap(final TypeSlot superSlot) {
 		final HashMap<String, String> map = new HashMap<>();
-		for (int i = 0; i < superType.slotList.size(); i++) {
+		for (int i = 0; i < superSlot.slotList.size(); i++) {
 			// 継承元のクラス側で定義されてる formal type parameter を退避
-			final Slot baseSlot = superType.slotList.get(i);
+			final Slot baseSlot = superSlot.slotList.get(i);
 			// 自身の extends で宣言されている type argument を退避
 			final Slot thisSlot = superSlots.get(0).slotList.get(i);
 			// で、それらを比べてなにが型パラメタにくっついたかを調べる
@@ -123,24 +116,19 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		}
 
 		@Override
-		public boolean hasDefaultCtor() {
-			return TypeSlot.this.hasDefaultCtor();
-		}
-
-		@Override
 		public String getName() {
 			return TypeSlot.this.getName();
 		}
 
 		@Override
-		public Stream<AccessEntry> accessors() {
+		public Stream<Accessor> accessors() {
 			final HashMap<String, String> bindMap = new HashMap<>();
 			for (int i = 0; i < binds.size(); i++) {
 				bindMap.put(TypeSlot.this.slotList.get(i).typeParam, binds.get(i).descriptor);
 			}
-			return TypeSlot.this.accessors().map(
-					(entry) -> new AccessEntry(entry.elementType, entry.name, entry.slot.rebind(bindMap), entry.rel));
+			return TypeSlot.this.accessors().map(acc -> (SlotAccessor) acc).map(acc -> acc.rebind(bindMap));
 		}
 
 	}
+
 }

@@ -5,7 +5,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.FieldVisitor;
@@ -16,11 +16,11 @@ import org.objectweb.asm.Type;
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 import ReIW.tiny.cloneAny.asm7.DefaultMethodVisitor;
 import ReIW.tiny.cloneAny.core.AccessFlag;
-import ReIW.tiny.cloneAny.pojo.AccessEntry;
-import ReIW.tiny.cloneAny.pojo.PropertyUtil;
+import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 import ReIW.tiny.cloneAny.pojo.UnboundMethodParameterNameException;
+import ReIW.tiny.cloneAny.utils.PropertyUtil;
 
 public final class TypeSlotBuilder extends DefaultClassVisitor {
 
@@ -28,7 +28,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	private static WeakReference<ConcurrentHashMap<Class<?>, TypeSlot>> hiveRef = new WeakReference<>(
 			new ConcurrentHashMap<>());
 
-	public static TypeSlot createTypeDef(final Class<?> clazz) {
+	public static TypeSlot createTypeSlot(final Class<?> clazz) {
 		ConcurrentHashMap<Class<?>, TypeSlot> hive;
 		synchronized (hiveRef) {
 			hive = hiveRef.get();
@@ -68,9 +68,10 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
 		if (isAccessible(access)) {
 			// final なものは読み取り専用になるよ
-			final int aceType = AccessFlag.isFinal(access) ? AccessEntry.ACE_FINAL_FIELD : AccessEntry.ACE_FIELD;
-			new FieldSignatureParser(slot -> typeSlot.access.add(new AccessEntry(aceType, name, slot, name)))
-					.parse(descriptor, signature);
+			final Accessor.Type type = AccessFlag.isFinal(access) ? Accessor.Type.ReadonlyField : Accessor.Type.Field;
+			new FieldSignatureParser(slot -> {
+				typeSlot.access.add(new SlotAccessor.SingleSlotAccessor(type, typeSlot.getName(), name, descriptor, slot));
+			}).parse(descriptor, signature);
 		}
 		return null;
 	}
@@ -80,30 +81,26 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 			String[] exceptions) {
 		if (isAccessible(access)) {
 			if (name.contentEquals("<init>")) {
-				if (descriptor.contentEquals("()V")) {
-					typeSlot.hasDefaultCtor = true;
-				}
-				final ArrayList<Slot> slots = new ArrayList<>();
-				new MethodSignatureParser(slots::add, null).parseArgumentsAndReturn(descriptor, signature);
-				return new MethodParamNameMapper(slots, (paramName, slot) -> {
-					typeSlot.access.add(new AccessEntry(AccessEntry.ACE_CTOR_ARG, paramName, slot, descriptor));
-				});
+				final SlotAccessor.MultiSlotAccessor acc = new SlotAccessor.MultiSlotAccessor(typeSlot.getName(), name, descriptor);
+				new MethodSignatureParser(acc.slots::add, null).parseArgumentsAndReturn(descriptor, signature);
+				return new MethodParamNameMapper(acc.slots, acc.names::add);
 			} else {
 				try {
 					if (PropertyUtil.isGetter(name, descriptor)) {
 						new MethodSignatureParser(null, slot -> {
-							final String propName = PropertyUtil.getPropertyName(name);
-							typeSlot.access.add(new AccessEntry(AccessEntry.ACE_PROP_GET, propName, slot, name));
+							typeSlot.access.add(new SlotAccessor.SingleSlotAccessor(Accessor.Type.Get, typeSlot.getName(), name,
+									descriptor, slot));
 						}).parseArgumentsAndReturn(descriptor, signature);
 					} else if (PropertyUtil.isSetter(name, descriptor)) {
 						new MethodSignatureParser(slot -> {
-							final String propName = PropertyUtil.getPropertyName(name);
-							typeSlot.access.add(new AccessEntry(AccessEntry.ACE_PROP_SET, propName, slot, name));
+							typeSlot.access.add(new SlotAccessor.SingleSlotAccessor(Accessor.Type.Set, typeSlot.getName(), name,
+									descriptor, slot));
 						}, null).parseArgumentsAndReturn(descriptor, signature);
 					}
 				} catch (UnboundFormalTypeParameterException e) {
 					// プロパティっぽいけど、メソッド自体に型パラメタがあるので無視する
 					// public <X> X getHoge()
+					// public <X> void setHoge(X val)
 					// みたいなやつ
 				}
 			}
@@ -121,13 +118,13 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	private static final class MethodParamNameMapper extends DefaultMethodVisitor {
 
 		private final Iterator<Slot> slots;
-		private final BiConsumer<String, Slot> cons;
+		private final Consumer<String> cons;
 
-		private MethodParamNameMapper(final ArrayList<Slot> slots, final BiConsumer<String, Slot> cons) {
+		private MethodParamNameMapper(final ArrayList<Slot> slots, final Consumer<String> cons) {
 			this.slots = slots.iterator();
 			this.cons = cons;
 		}
-		
+
 		/*
 		 * You need to compile your class with the -parameters option to make javac
 		 * include the parameter names. ということで visitParameter はコンパイルオプション依存らしいので使えない
@@ -140,7 +137,8 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 			// this(0) を除いた引数だけ処理する
 			// ガードしないと引数じゃないローカル変数まで処理しちゃうので
 			if (0 < index && slots.hasNext()) {
-				cons.accept(name, slots.next());
+				cons.accept(name);
+				slots.next();
 			}
 		}
 

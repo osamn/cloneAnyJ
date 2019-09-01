@@ -3,7 +3,6 @@ package ReIW.tiny.cloneAny.pojo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.objectweb.asm.Type;
 
@@ -13,9 +12,10 @@ public class Slot {
 	public final String descriptor;
 	public final List<Slot> slotList = new ArrayList<>(5);
 
-	public boolean isArray;
-	public boolean instanceOfMap;
-	public boolean instanceOfList;
+	public final boolean isArray;
+
+	private final boolean instanceOfMap;
+	private final boolean instanceOfList;
 
 	public Slot(final Class<?> clazz) {
 		if (clazz.isArray()) {
@@ -23,6 +23,7 @@ public class Slot {
 			// いろいろ面倒になるのでエラーにしておく
 			throw new IllegalArgumentException();
 		}
+		this.isArray = false;
 		this.typeParam = null;
 		this.descriptor = Type.getDescriptor(clazz);
 		this.instanceOfMap = Map.class.isAssignableFrom(clazz);
@@ -42,6 +43,14 @@ public class Slot {
 			this.instanceOfMap = Map.class.isAssignableFrom(clazz);
 			this.instanceOfList = List.class.isAssignableFrom(clazz);
 		}
+	}
+
+	public boolean keyed() {
+		return instanceOfMap && slotList.get(0).descriptor.contentEquals("Ljava/lang/String;");
+	}
+
+	public boolean indexed() {
+		return isArray || instanceOfList;
 	}
 
 	public Slot rebind(final Map<String, String> binds) {
@@ -74,41 +83,8 @@ public class Slot {
 	}
 
 	@Override
-	public int hashCode() {
-		// slotList は構築後に追加されるため hashCode は使用する時点で再計算が必要
-		return Objects.hash(typeParam, descriptor, slotList);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Slot other = (Slot) obj;
-		if (slotList == null) {
-			if (other.slotList != null)
-				return false;
-		} else if (!slotList.equals(other.slotList))
-			return false;
-		if (descriptor == null) {
-			if (other.descriptor != null)
-				return false;
-		} else if (!descriptor.equals(other.descriptor))
-			return false;
-		if (typeParam == null) {
-			if (other.typeParam != null)
-				return false;
-		} else if (!typeParam.equals(other.typeParam))
-			return false;
-		return true;
-	}
-
-	@Override
 	public String toString() {
-		return "Slot [typeParam=" + typeParam + ", typeClass=" + descriptor + ", slotList=" + slotList + "]";
+		return "Slot [typeParam=" + typeParam + ", descriptor=" + descriptor + ", slotList=" + slotList + "]";
 	}
 
 }

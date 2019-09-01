@@ -29,6 +29,7 @@ final class ClassSignatureParser extends DefaultSignatureVisitor {
 	void parse(final String superName, final String[] interfaces, final String signature) {
 		if (signature == null) {
 			// signature がない場合は、自クラスも継承元も non generic なので
+			// ルートは配列になることがないのでそのまま Slot 作る
 			supers.accept(new Slot(null, Type.getObjectType(superName).getDescriptor()));
 			if (interfaces != null) {
 				Arrays.stream(interfaces).map(intf -> new Slot(null, Type.getObjectType(intf).getDescriptor()))
@@ -37,6 +38,13 @@ final class ClassSignatureParser extends DefaultSignatureVisitor {
 		} else {
 			new SignatureReader(signature).accept(this);
 		}
+	}
+
+	@Override
+	public SignatureVisitor visitArrayType() {
+		stack.push(new Slot(typeParamName, "["));
+		typeParamName = null;
+		return super.visitArrayType();
 	}
 
 	@Override
@@ -68,7 +76,7 @@ final class ClassSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitEnd() {
-		Slot slot = stack.pop();
+		Slot slot = unrollArray();
 		if (stack.isEmpty()) {
 			cons.accept(slot);
 		} else {
@@ -76,4 +84,14 @@ final class ClassSignatureParser extends DefaultSignatureVisitor {
 		}
 		typeParamName = null;
 	}
+
+	private Slot unrollArray() {
+		Slot slot = stack.pop();
+		while (!stack.isEmpty() && stack.peek().isArray) {
+			stack.peek().slotList.add(slot);
+			slot = stack.pop();
+		}
+		return slot;
+	}
+
 }
