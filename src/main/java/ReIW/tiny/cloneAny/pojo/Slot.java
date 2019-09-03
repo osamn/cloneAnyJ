@@ -10,6 +10,8 @@ public class Slot {
 
 	/**
 	 * descriptor から Slot をつくる.
+	 * 
+	 * signature がある場合は SignatureReader から作るんだけど non generic な人の場合は自分で作らないといかんの
 	 */
 	public static Slot getSlot(final String descriptor) {
 		// 配列か？
@@ -34,50 +36,51 @@ public class Slot {
 
 	public final String typeParam;
 	public final String descriptor;
-	public final List<Slot> slotList = new ArrayList<>(5);
+	public final List<Slot> slotList = new ArrayList<>();
 
-	private final boolean isArray;
-	private final boolean instanceOfMap;
-	private final boolean instanceOfList;
+	public final boolean isArrayType;
+	public final boolean isPrimitiveType;
+	public final boolean isMap;
+	public final boolean isList;
+	public final boolean isCharSequence;
 
 	public Slot(final Class<?> clazz) {
-		if (clazz.isArray()) {
-			// 配列クラスを直接指定して作成すると、slotList.get(0) が elementType になって
-			// いろいろ面倒になるのでエラーにしておく
-			throw new IllegalArgumentException();
-		}
-		this.isArray = false;
 		this.typeParam = null;
 		this.descriptor = Type.getDescriptor(clazz);
-		this.instanceOfMap = Map.class.isAssignableFrom(clazz);
-		this.instanceOfList = List.class.isAssignableFrom(clazz);
+		this.isArrayType = clazz.isArray();
+		this.isPrimitiveType = clazz.isPrimitive();
+		this.isMap = Map.class.isAssignableFrom(clazz);
+		this.isList = List.class.isAssignableFrom(clazz);
+		this.isCharSequence = CharSequence.class.isAssignableFrom(clazz);
 	}
 
 	public Slot(final String typeParam, final String descriptor) {
 		this.typeParam = typeParam;
 		this.descriptor = descriptor;
 		if (descriptor.contentEquals("[")) {
-			this.isArray = true;
-			this.instanceOfMap = false;
-			this.instanceOfList = false;
+			this.isArrayType = true;
+			this.isPrimitiveType = false;
+			this.isMap = false;
+			this.isList = false;
+			this.isCharSequence = false;
 		} else {
+			this.isArrayType = false;
 			final Class<?> clazz = Type.getType(descriptor).getClass();
-			this.isArray = false;
-			this.instanceOfMap = Map.class.isAssignableFrom(clazz);
-			this.instanceOfList = List.class.isAssignableFrom(clazz);
+			this.isPrimitiveType = clazz.isPrimitive();
+			this.isMap = Map.class.isAssignableFrom(clazz);
+			this.isList = List.class.isAssignableFrom(clazz);
+			this.isCharSequence = CharSequence.class.isAssignableFrom(clazz);
 		}
 	}
 
-	public boolean isArrayType() {
-		return isArray;
-	}
-
 	public boolean keyed() {
-		return instanceOfMap && slotList.get(0).descriptor.contentEquals("Ljava/lang/String;");
+		// Map のキーが String 以外はキーアクセス不可にする
+		// キー自体を型変換するのがいやなので
+		return isMap && slotList.get(0).descriptor.contentEquals("Ljava/lang/String;");
 	}
 
 	public boolean indexed() {
-		return isArray || instanceOfList;
+		return isArrayType || isList;
 	}
 
 	public Slot rebind(final Map<String, String> binds) {

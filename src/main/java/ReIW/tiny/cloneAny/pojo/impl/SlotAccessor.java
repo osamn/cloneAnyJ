@@ -4,10 +4,10 @@ import java.util.Map;
 
 import ReIW.tiny.cloneAny.pojo.Accessor;
 
-interface SlotAccessor extends Accessor {
+abstract class SlotAccessor implements Accessor {
 
-	SlotAccessor chown(String owner);
+	abstract SlotAccessor chown(String owner);
 
-	SlotAccessor rebind(Map<String, String> binds);
+	abstract SlotAccessor rebind(Map<String, String> binds);
 
 }

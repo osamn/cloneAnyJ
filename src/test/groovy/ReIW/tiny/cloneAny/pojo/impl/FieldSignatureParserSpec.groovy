@@ -15,7 +15,7 @@ class FieldSignatureParserSpec extends Specification{
 		then:
 		slot.typeParam == null
 		slot.descriptor == "Lfoo/bar/Hoge;"
-		slot.slotList.size() == 0
+		slot.slotList == []
 	}
 
 	def "non generic object array : String[][]"() {
@@ -40,7 +40,7 @@ class FieldSignatureParserSpec extends Specification{
 
 		slot_2.typeParam == null
 		slot_2.descriptor == "Ljava/lang/String;"
-		slot_2.slotList.size() == 0
+		slot_2.slotList == []
 	}
 
 	def "generic object : Map<String, Integer>"(){
@@ -61,11 +61,11 @@ class FieldSignatureParserSpec extends Specification{
 
 		slot_1.typeParam == "="
 		slot_1.descriptor == "Ljava/lang/String;"
-		slot_1.slotList.size() == 0
+		slot_1.slotList == []
 
 		slot_2.typeParam == "="
 		slot_2.descriptor == "Ljava/lang/Integer;"
-		slot_2.slotList.size() == 0
+		slot_2.slotList == []
 	}
 
 	def "unbound generic object : Map<K, Integer>"() {
@@ -86,11 +86,11 @@ class FieldSignatureParserSpec extends Specification{
 
 		slot_1.typeParam == "K"
 		slot_1.descriptor == "Ljava/lang/Object;"
-		slot_1.slotList.size() == 0
+		slot_1.slotList == []
 
 		slot_2.typeParam == "="
 		slot_2.descriptor == "Ljava/lang/Integer;"
-		slot_2.slotList.size() == 0
+		slot_2.slotList == []
 	}
 
 	def "generic object array : List<String[][]>[][]"(){
@@ -133,6 +133,6 @@ class FieldSignatureParserSpec extends Specification{
 
 		slot_5.typeParam == null
 		slot_5.descriptor == "Ljava/lang/String;"
-		slot_5.slotList.size() == 0
+		slot_5.slotList == []
 	}
 }

@@ -7,7 +7,7 @@ import java.util.Map;
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Slot;
 
-public final class MultiSlotAccessor implements SlotAccessor {
+public final class MultiSlotAccessor extends SlotAccessor {
 
 	private final Accessor.Type type;
 	private final String owner;
@@ -60,7 +60,7 @@ public final class MultiSlotAccessor implements SlotAccessor {
 	}
 
 	@Override
-	public SlotAccessor chown(String owner) {
+	SlotAccessor chown(String owner) {
 		if (this.owner.contentEquals(owner)) {
 			return this;
 		}
@@ -71,7 +71,7 @@ public final class MultiSlotAccessor implements SlotAccessor {
 	}
 
 	@Override
-	public SlotAccessor rebind(Map<String, String> binds) {
+	SlotAccessor rebind(Map<String, String> binds) {
 		if (binds.size() == 0) {
 			return this;
 		}

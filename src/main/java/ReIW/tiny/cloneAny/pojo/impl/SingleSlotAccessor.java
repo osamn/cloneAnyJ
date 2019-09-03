@@ -5,7 +5,7 @@ import java.util.Map;
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Slot;
 
-public final class SingleSlotAccessor implements SlotAccessor {
+public final class SingleSlotAccessor extends SlotAccessor {
 
 	private final Accessor.Type type;
 	private final String owner;
@@ -16,12 +16,12 @@ public final class SingleSlotAccessor implements SlotAccessor {
 	public final Slot slot;
 
 	SingleSlotAccessor(final Accessor.Type type, final String owner, final String name, final String rel,
-			final String descriptor, final Slot slot) {
+			final Slot slot) {
 		this.type = type;
 		this.owner = owner;
 		this.name = name;
 		this.rel = rel;
-		this.descriptor = descriptor;
+		this.descriptor = slot.descriptor;
 		this.slot = slot;
 	}
 
@@ -61,19 +61,19 @@ public final class SingleSlotAccessor implements SlotAccessor {
 	}
 
 	@Override
-	public SlotAccessor chown(final String newOwner) {
+	SlotAccessor chown(final String newOwner) {
 		if (this.owner.contentEquals(owner)) {
 			return this;
 		}
-		return new SingleSlotAccessor(this.type, newOwner, this.name, this.rel, this.descriptor, this.slot);
+		return new SingleSlotAccessor(this.type, newOwner, this.name, this.rel, this.slot);
 	}
 
 	@Override
-	public SlotAccessor rebind(final Map<String, String> binds) {
+	SlotAccessor rebind(final Map<String, String> binds) {
 		if (binds.size() == 0) {
 			return this;
 		}
-		return new SingleSlotAccessor(this.type, this.owner, this.name, this.rel, this.descriptor, this.slot.rebind(binds));
+		return new SingleSlotAccessor(this.type, this.owner, this.name, this.rel, this.slot.rebind(binds));
 	}
 
 }

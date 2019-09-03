@@ -23,7 +23,7 @@ class ClassSignatureParserSpec extends Specification {
 		then:
 		supers[0].typeParam == null
 		supers[0].descriptor == "Lfoo/bar/Hoge;"
-		supers[0].slotList.size() == 0
+		supers[0].slotList == []
 	}
 
 	def "extends generic class : class Foo extends Hoge<String>"() {
@@ -42,7 +42,7 @@ class ClassSignatureParserSpec extends Specification {
 		then:
 		supers[0].slotList[0].typeParam == "="
 		supers[0].slotList[0].descriptor == "Ljava/lang/String;"
-		supers[0].slotList[0].slotList.size() == 0
+		supers[0].slotList[0].slotList == []
 	}
 
 	def "implements non generic interfaces : class Foo implements Hoge, Piyo"() {
@@ -56,17 +56,17 @@ class ClassSignatureParserSpec extends Specification {
 		then:
 		supers[0].typeParam == null
 		supers[0].descriptor == "Ljava/lang/Object;"
-		supers[0].slotList.size() == 0
+		supers[0].slotList == []
 
 		then:
 		supers[1].typeParam == null
 		supers[1].descriptor == "Lfoo/bar/Hoge;"
-		supers[1].slotList.size() == 0
+		supers[1].slotList == []
 
 		then:
 		supers[2].typeParam == null
 		supers[2].descriptor == "Lfoo/bar/Piyo;"
-		supers[2].slotList.size() == 0
+		supers[2].slotList == []
 	}
 
 	def "implements generic interface : class Foo implements Hoge<String[]>"() {
@@ -80,7 +80,7 @@ class ClassSignatureParserSpec extends Specification {
 		then:
 		supers[0].typeParam == null
 		supers[0].descriptor == "Ljava/lang/Object;"
-		supers[0].slotList.size() == 0
+		supers[0].slotList == []
 
 		then:
 		supers[1].typeParam == null
@@ -95,7 +95,7 @@ class ClassSignatureParserSpec extends Specification {
 		then:
 		supers[1].slotList[0].slotList[0].typeParam == null
 		supers[1].slotList[0].slotList[0].descriptor == "Ljava/lang/String;"
-		supers[1].slotList[0].slotList[0].slotList.size() == 0
+		supers[1].slotList[0].slotList[0].slotList == []
 	}
 
 	//def "implements generic intreface : class Foo implements Hoge<String>"() { }
@@ -111,17 +111,17 @@ class ClassSignatureParserSpec extends Specification {
 		then:
 		formals[0].typeParam == "K"
 		formals[0].descriptor == "Ljava/lang/Object;"
-		formals[0].slotList.size() == 0
+		formals[0].slotList == []
 
 		then:
 		formals[1].typeParam == "V"
 		formals[1].descriptor == "Ljava/lang/Object;"
-		formals[1].slotList.size() == 0
+		formals[1].slotList == []
 
 		then:
 		supers[0].typeParam == null
 		supers[0].descriptor == "Ljava/lang/Object;"
-		supers[0].slotList.size() == 0
+		supers[0].slotList == []
 	}
 	
 	def "partial bound generic class : class Foo<K> extends Hoge<K, String[]>"() {
@@ -135,7 +135,7 @@ class ClassSignatureParserSpec extends Specification {
 		then:
 		formals[0].typeParam == "K"
 		formals[0].descriptor == "Ljava/lang/Object;"
-		formals[0].slotList.size() == 0
+		formals[0].slotList == []
 
 		then:
 		supers[0].typeParam == null
@@ -145,7 +145,7 @@ class ClassSignatureParserSpec extends Specification {
 		then:
 		supers[0].slotList[0].typeParam == "K"
 		supers[0].slotList[0].descriptor == "Ljava/lang/Object;"
-		supers[0].slotList[0].slotList.size() == 0
+		supers[0].slotList[0].slotList == []
 		
 		then:
 		supers[0].slotList[1].typeParam == "="
@@ -155,7 +155,7 @@ class ClassSignatureParserSpec extends Specification {
 		then:
 		supers[0].slotList[1].slotList[0].typeParam == null
 		supers[0].slotList[1].slotList[0].descriptor == "Ljava/lang/String;"
-		supers[0].slotList[1].slotList[0].slotList.size() == 0
+		supers[0].slotList[1].slotList[0].slotList == []
 	}
 	
 	def "extends nested generic class : class Foo extends Hoge<List<String>>"() {
@@ -179,7 +179,7 @@ class ClassSignatureParserSpec extends Specification {
 		then:
 		supers[0].slotList[0].slotList[0].typeParam == "="
 		supers[0].slotList[0].slotList[0].descriptor == "Ljava/lang/String;"
-		supers[0].slotList[0].slotList[0].slotList.size() == 0
-		
+		supers[0].slotList[0].slotList[0].slotList == []
 	}
+
 }

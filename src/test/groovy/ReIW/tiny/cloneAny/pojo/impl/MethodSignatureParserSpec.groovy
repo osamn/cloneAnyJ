@@ -16,7 +16,7 @@ class MethodSignatureParserSpec extends Specification {
 		then:
 		slot.typeParam == null
 		slot.descriptor == "Ljava/lang/String;"
-		slot.slotList.size() == 0
+		slot.slotList == []
 	}
 
 	def "non generic object array getter : String[][] get..."() {
@@ -27,8 +27,8 @@ class MethodSignatureParserSpec extends Specification {
 
 		when:
 		new MethodSignatureParser(null, {slot = it}).parseArgumentsAndReturn("()[[Ljava/lang/String;", null)
-		slot_1 = slot.slotList.get(0)
-		slot_2 = slot_1.slotList.get(0)
+		slot_1 = slot.slotList[0]
+		slot_2 = slot_1.slotList[0]
 
 		then:
 		slot.typeParam == null
@@ -43,7 +43,7 @@ class MethodSignatureParserSpec extends Specification {
 		then:
 		slot_2.typeParam == null
 		slot_2.descriptor == "Ljava/lang/String;"
-		slot_2.slotList.size() == 0
+		slot_2.slotList == []
 	}
 
 	def "generic object getter : Map<String, Integer> get..."(){
@@ -54,8 +54,8 @@ class MethodSignatureParserSpec extends Specification {
 
 		when:
 		new MethodSignatureParser(null, {slot = it}).parseArgumentsAndReturn(null, "()Ljava/util/Map<Ljava/lang/String;Ljava/lang/Integer;>;")
-		slot_1 = slot.slotList.get(0)
-		slot_2 = slot.slotList.get(1)
+		slot_1 = slot.slotList[0]
+		slot_2 = slot.slotList[1]
 
 		then:
 		slot.typeParam == null
@@ -64,11 +64,11 @@ class MethodSignatureParserSpec extends Specification {
 
 		slot_1.typeParam == "="
 		slot_1.descriptor == "Ljava/lang/String;"
-		slot_1.slotList.size() == 0
+		slot_1.slotList == []
 
 		slot_2.typeParam == "="
 		slot_2.descriptor == "Ljava/lang/Integer;"
-		slot_2.slotList.size() == 0
+		slot_2.slotList == []
 	}
 
 	def "unbound generic object getter : Map<K, Integer> get..."() {
@@ -79,8 +79,8 @@ class MethodSignatureParserSpec extends Specification {
 
 		when:
 		new MethodSignatureParser(null, {slot = it}).parseArgumentsAndReturn(null, "()Ljava/util/Map<TK;Ljava/lang/Integer;>;")
-		slot_1 = slot.slotList.get(0)
-		slot_2 = slot.slotList.get(1)
+		slot_1 = slot.slotList[0]
+		slot_2 = slot.slotList[1]
 
 		then:
 		slot.typeParam == null
@@ -89,11 +89,11 @@ class MethodSignatureParserSpec extends Specification {
 
 		slot_1.typeParam == "K"
 		slot_1.descriptor == "Ljava/lang/Object;"
-		slot_1.slotList.size() == 0
+		slot_1.slotList == []
 
 		slot_2.typeParam == "="
 		slot_2.descriptor == "Ljava/lang/Integer;"
-		slot_2.slotList.size() == 0
+		slot_2.slotList == []
 	}
 
 	def "generic object array getter : List<String[][]>[][] get..."(){
@@ -107,11 +107,11 @@ class MethodSignatureParserSpec extends Specification {
 
 		when:
 		new MethodSignatureParser(null, {slot = it}).parseArgumentsAndReturn(null, "()[[Ljava/util/List<[[Ljava/lang/String;>;")
-		slot_1 = slot.slotList.get(0)
-		slot_2 = slot_1.slotList.get(0)
-		slot_3 = slot_2.slotList.get(0)
-		slot_4 = slot_3.slotList.get(0)
-		slot_5 = slot_4.slotList.get(0)
+		slot_1 = slot.slotList[0]
+		slot_2 = slot_1.slotList[0]
+		slot_3 = slot_2.slotList[0]
+		slot_4 = slot_3.slotList[0]
+		slot_5 = slot_4.slotList[0]
 
 		then:
 		slot.typeParam == null
@@ -136,7 +136,7 @@ class MethodSignatureParserSpec extends Specification {
 
 		slot_5.typeParam == null
 		slot_5.descriptor == "Ljava/lang/String;"
-		slot_5.slotList.size() == 0
+		slot_5.slotList == []
 	}
 
 	def "non generic object array setter : set...(String[])"() {

@@ -22,6 +22,8 @@ import ReIW.tiny.cloneAny.pojo.UnboundMethodParameterNameException;
 import ReIW.tiny.cloneAny.utils.AccessFlag;
 import ReIW.tiny.cloneAny.utils.PropertyUtil;
 
+// TODO lombok 使ってるとき signature のこってるの？
+
 public final class TypeSlotBuilder extends DefaultClassVisitor {
 
 	// いつまでも hive 抱えててもいかんので GC で回収されるように弱参照をもっておく
@@ -37,25 +39,24 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				hiveRef = new WeakReference<>(hive);
 			}
 		}
-		final TypeSlot td = hive.computeIfAbsent(clazz, TypeSlotBuilder::build);
+		final TypeSlot td = hive.computeIfAbsent(clazz, new TypeSlotBuilder()::build);
 		td.complete();
 		return td;
 	}
 
-	private static TypeSlot build(final Class<?> clazz) {
+	private TypeSlot typeSlot;
+
+	private TypeSlotBuilder() {
+	}
+
+	private TypeSlot build(final Class<?> clazz) {
 		try {
-			final TypeSlotBuilder builder = new TypeSlotBuilder(new TypeSlot(clazz));
-			new ClassReader(Type.getType(clazz).getInternalName()).accept(builder, 0);
-			return builder.typeSlot;
+			typeSlot = new TypeSlot(clazz);
+			new ClassReader(Type.getType(typeSlot.descriptor).getInternalName()).accept(this, 0);
+			return typeSlot;
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e);
 		}
-	}
-
-	private final TypeSlot typeSlot;
-
-	private TypeSlotBuilder(final TypeSlot typeDef) {
-		this.typeSlot = typeDef;
 	}
 
 	@Override
@@ -70,7 +71,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 			// final なものは読み取り専用になるよ
 			final Accessor.Type type = AccessFlag.isFinal(access) ? Accessor.Type.ReadonlyField : Accessor.Type.Field;
 			new FieldSignatureParser(slot -> {
-				typeSlot.access.add(new SingleSlotAccessor(type, typeSlot.getName(), name, name, descriptor, slot));
+				typeSlot.access.add(new SingleSlotAccessor(type, typeSlot.getName(), name, name, slot));
 			}).parse(descriptor, signature);
 		}
 		return null;
@@ -82,6 +83,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		if (isAccessible(access)) {
 			if (name.contentEquals("<init>")) {
 				final MultiSlotAccessor acc = new MultiSlotAccessor(typeSlot.getName(), name, descriptor);
+				typeSlot.access.add(acc);
 				new MethodSignatureParser(acc.slots::add, null).parseArgumentsAndReturn(descriptor, signature);
 				return new MethodParamNameMapper(acc.slots, acc.names::add);
 			} else {
@@ -89,12 +91,12 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 					if (PropertyUtil.isGetter(name, descriptor)) {
 						new MethodSignatureParser(null, slot -> {
 							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Get, typeSlot.getName(),
-									PropertyUtil.getPropertyName(name), name, descriptor, slot));
+									PropertyUtil.getPropertyName(name), name, slot));
 						}).parseArgumentsAndReturn(descriptor, signature);
 					} else if (PropertyUtil.isSetter(name, descriptor)) {
 						new MethodSignatureParser(slot -> {
 							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Set, typeSlot.getName(),
-									PropertyUtil.getPropertyName(name), name, descriptor, slot));
+									PropertyUtil.getPropertyName(name), name, slot));
 						}, null).parseArgumentsAndReturn(descriptor, signature);
 					}
 				} catch (UnboundFormalTypeParameterException e) {
@@ -111,8 +113,9 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	private static boolean isAccessible(int access) {
 		return AccessFlag.isPublic(access) // public で
 				&& !AccessFlag.isStatic(access) // instance で
-				&& !AccessFlag.isAbstract(access) // concrete で
-				&& !AccessFlag.isSynthetic(access); // コンパイラが生成したものじゃない
+				&& !AccessFlag.isAbstract(access); // concrete で
+		// lombok とかがつけそうなので synthetic は判定しないでおく
+		// && !AccessFlag.isSynthetic(access);
 	}
 
 	private static final class MethodParamNameMapper extends DefaultMethodVisitor {

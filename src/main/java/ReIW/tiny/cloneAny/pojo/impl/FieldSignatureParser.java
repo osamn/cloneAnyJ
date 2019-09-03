@@ -70,7 +70,7 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	private Slot unrollArray() {
 		Slot slot = stack.pop();
-		while (!stack.isEmpty() && stack.peek().isArrayType()) {
+		while (!stack.isEmpty() && stack.peek().isArrayType) {
 			stack.peek().slotList.add(slot);
 			slot = stack.pop();
 		}
