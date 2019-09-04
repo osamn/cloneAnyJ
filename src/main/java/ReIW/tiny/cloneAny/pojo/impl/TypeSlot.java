@@ -11,6 +11,7 @@ import org.objectweb.asm.Type;
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.TypeAccessDef;
+import ReIW.tiny.cloneAny.utils.Descriptors;
 
 public class TypeSlot extends Slot implements TypeAccessDef {
 
@@ -59,7 +60,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 			return;
 		}
 		// 親の TypeSlot を作って
-		final TypeSlot superType = TypeSlotBuilder.createTypeSlot(Type.getType(superDesc).getClass());
+		final TypeSlot superType = TypeSlotBuilder.createTypeSlot(Descriptors.toClass(superDesc));
 		superType.complete();
 		// 親のアクセサを自分に持ってくる
 		pullAllUp(superType);
@@ -70,6 +71,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 	private void pullAllUp(final TypeSlot superType) {
 		final HashMap<String, String> binds = createBindMap(superType);
 		final HashSet<String> checkExists = new HashSet<>();
+		this.access.forEach(acc -> checkExists.add(acc.getName() + acc.getDescriptor()));
 		superType.access.stream().map(acc -> (SlotAccessor) acc).forEach(acc -> {
 			if (acc.getType() == Accessor.Type.LumpSet) {
 				// ただしスーパークラスのコンストラクタは除外しとく

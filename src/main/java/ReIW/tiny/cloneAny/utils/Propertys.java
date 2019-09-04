@@ -2,12 +2,9 @@ package ReIW.tiny.cloneAny.utils;
 
 import org.objectweb.asm.Type;
 
-public final class PropertyUtil {
+public interface Propertys {
 
-	private PropertyUtil() {
-	}
-
-	public static final String getPropertyName(final String methodName) {
+	static String getPropertyName(final String methodName) {
 		int off;
 
 		if (methodName.startsWith("set") || methodName.startsWith("get")) {
@@ -35,7 +32,7 @@ public final class PropertyUtil {
 		return buf.toString();
 	}
 
-	public static boolean isGetter(final String name, final String descriptor) {
+	static boolean isGetter(final String name, final String descriptor) {
 		if (name.startsWith("get") && name.length() > 3) {
 			final Type m = Type.getMethodType(descriptor);
 			return m.getArgumentTypes().length == 0 && m.getReturnType() != Type.VOID_TYPE;
@@ -47,22 +44,10 @@ public final class PropertyUtil {
 		return false;
 	}
 
-	public static boolean isSetter(final String name, final String descriptor) {
+	static boolean isSetter(final String name, final String descriptor) {
 		if (name.startsWith("set") && name.length() > 3) {
 			final Type m = Type.getMethodType(descriptor);
 			return m.getArgumentTypes().length == 1 && m.getReturnType() == Type.VOID_TYPE;
-		}
-		return false;
-	}
-
-	@Deprecated
-	public static boolean isMapPut(final String name, final String descriptor) {
-		if (name.contentEquals("put")) {
-			final Type m = Type.getMethodType(descriptor);
-			final Type[] args = m.getArgumentTypes();
-			// java.util.Map<K,V> をアクセサとして抽出対象にするのは K が明に String の時だけとする
-			return args.length == 2 && args[0].getDescriptor().contentEquals("Ljava/lang/String;")
-					&& m.getReturnType() != Type.VOID_TYPE;
 		}
 		return false;
 	}

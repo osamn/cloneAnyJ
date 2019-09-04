@@ -1,8 +1,8 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
-public class TypeSlotBuilderTester {
+interface TypeSlotBuilderTester {
 
-	public static class Field {
+	class Field {
 		private Field() {
 		}
 
@@ -23,7 +23,7 @@ public class TypeSlotBuilderTester {
 		public String publicField;
 	}
 
-	public static class ReadonlyField {
+	class ReadonlyField {
 		private ReadonlyField() {
 		}
 
@@ -32,7 +32,7 @@ public class TypeSlotBuilderTester {
 		public final int publicField = 0;
 	}
 
-	public static abstract class Getter {
+	abstract class Getter {
 		private Getter() {
 		}
 
@@ -45,7 +45,7 @@ public class TypeSlotBuilderTester {
 		}
 	}
 
-	public static class Setter {
+	class Setter {
 		private Setter() {
 		}
 
@@ -58,7 +58,7 @@ public class TypeSlotBuilderTester {
 		}
 	}
 
-	public static class Ctor {
+	class Ctor {
 
 		public Ctor(String hoge) {
 		}
@@ -67,7 +67,7 @@ public class TypeSlotBuilderTester {
 		}
 	}
 
-	public static class DefaultCtor {
+	class DefaultCtor {
 	}
 
 }

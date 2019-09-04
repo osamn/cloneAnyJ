@@ -20,7 +20,7 @@ import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 import ReIW.tiny.cloneAny.pojo.UnboundMethodParameterNameException;
 import ReIW.tiny.cloneAny.utils.AccessFlag;
-import ReIW.tiny.cloneAny.utils.PropertyUtil;
+import ReIW.tiny.cloneAny.utils.Propertys;
 
 // TODO lombok 使ってるとき signature のこってるの？
 
@@ -88,15 +88,15 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				return new MethodParamNameMapper(acc.slots, acc.names::add);
 			} else {
 				try {
-					if (PropertyUtil.isGetter(name, descriptor)) {
+					if (Propertys.isGetter(name, descriptor)) {
 						new MethodSignatureParser(null, slot -> {
 							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Get, typeSlot.getName(),
-									PropertyUtil.getPropertyName(name), name, slot));
+									Propertys.getPropertyName(name), name, slot));
 						}).parseArgumentsAndReturn(descriptor, signature);
-					} else if (PropertyUtil.isSetter(name, descriptor)) {
+					} else if (Propertys.isSetter(name, descriptor)) {
 						new MethodSignatureParser(slot -> {
 							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Set, typeSlot.getName(),
-									PropertyUtil.getPropertyName(name), name, slot));
+									Propertys.getPropertyName(name), name, slot));
 						}, null).parseArgumentsAndReturn(descriptor, signature);
 					}
 				} catch (UnboundFormalTypeParameterException e) {

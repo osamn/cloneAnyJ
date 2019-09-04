@@ -1,15 +1,15 @@
 package ReIW.tiny.cloneAny.utils
 
-import ReIW.tiny.cloneAny.utils.PropertyUtil
+import ReIW.tiny.cloneAny.utils.Propertys
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class PropertyUtilSpec extends Specification {
+class PropertysSpec extends Specification {
 
 	// @Unroll
 	def "Property name from #methodName => #propName"() {
 		expect:
-		propName == PropertyUtil.getPropertyName(methodName)
+		propName == Propertys.getPropertyName(methodName)
 
 		where:
 		methodName	|| propName
@@ -31,7 +31,7 @@ class PropertyUtilSpec extends Specification {
 	// @Unroll
 	def "Method #name#descriptor is getter or not => #expected"() {
 		expect:
-		expected == PropertyUtil.isGetter(name, descriptor)
+		expected == Propertys.isGetter(name, descriptor)
 
 		where:
 		expected	|| name			| descriptor
@@ -48,7 +48,7 @@ class PropertyUtilSpec extends Specification {
 	// @Unroll
 	def "Method #name#descriptor is setter or not => #expected"() {
 		expect:
-		expected == PropertyUtil.isSetter(name, descriptor)
+		expected == Propertys.isSetter(name, descriptor)
 
 		where:
 		expected	|| name			| descriptor

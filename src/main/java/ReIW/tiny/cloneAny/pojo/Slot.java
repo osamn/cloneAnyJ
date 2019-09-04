@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.objectweb.asm.Type;
 
+import ReIW.tiny.cloneAny.utils.Descriptors;
+
 public class Slot {
 
 	/**
@@ -65,7 +67,7 @@ public class Slot {
 			this.isCharSequence = false;
 		} else {
 			this.isArrayType = false;
-			final Class<?> clazz = Type.getType(descriptor).getClass();
+			final Class<?> clazz = Descriptors.toClass(descriptor);
 			this.isPrimitiveType = clazz.isPrimitive();
 			this.isMap = Map.class.isAssignableFrom(clazz);
 			this.isList = List.class.isAssignableFrom(clazz);

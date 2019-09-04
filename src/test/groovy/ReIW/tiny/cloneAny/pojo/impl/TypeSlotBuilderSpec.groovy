@@ -42,7 +42,7 @@ class TypeSlotBuilderSpec extends Specification {
 		typeSlot.access[0].slot.descriptor == "I"
 	}
 
-	def "getter : abstract は対象にならないこと"() {
+	def "getter + abstract は対象にならないこと"() {
 		when:
 		def typeSlot = TypeSlotBuilder.createTypeSlot(TypeSlotBuilderTester.Getter.class)
 
@@ -55,7 +55,7 @@ class TypeSlotBuilderSpec extends Specification {
 		typeSlot.access[0].slot.descriptor == "Ljava/lang/Integer;"
 	}
 
-	def "setter : 引数型の違うものは異なった accessor として取れること"() {
+	def "setter + 引数型の違うものは異なった accessor として取れること"() {
 		when:
 		def typeSlot = TypeSlotBuilder.createTypeSlot(TypeSlotBuilderTester.Setter.class)
 
