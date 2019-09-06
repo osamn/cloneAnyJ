@@ -16,12 +16,12 @@ public final class SingleSlotAccessor extends SlotAccessor {
 	public final Slot slot;
 
 	SingleSlotAccessor(final Accessor.Type type, final String owner, final String name, final String rel,
-			final Slot slot) {
+			final String descriptor, final Slot slot) {
 		this.type = type;
 		this.owner = owner;
 		this.name = name;
 		this.rel = rel;
-		this.descriptor = slot.descriptor;
+		this.descriptor = descriptor;
 		this.slot = slot;
 	}
 
@@ -65,7 +65,7 @@ public final class SingleSlotAccessor extends SlotAccessor {
 		if (this.owner.contentEquals(owner)) {
 			return this;
 		}
-		return new SingleSlotAccessor(this.type, newOwner, this.name, this.rel, this.slot);
+		return new SingleSlotAccessor(this.type, newOwner, this.name, this.rel, this.descriptor, this.slot);
 	}
 
 	@Override
@@ -73,7 +73,8 @@ public final class SingleSlotAccessor extends SlotAccessor {
 		if (binds.size() == 0) {
 			return this;
 		}
-		return new SingleSlotAccessor(this.type, this.owner, this.name, this.rel, this.slot.rebind(binds));
+		return new SingleSlotAccessor(this.type, this.owner, this.name, this.rel, this.descriptor,
+				this.slot.rebind(binds));
 	}
 
 }

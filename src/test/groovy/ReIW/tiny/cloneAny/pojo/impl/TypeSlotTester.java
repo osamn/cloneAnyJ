@@ -37,4 +37,15 @@ interface TypeSlotTester {
 		}
 
 	}
+
+	class GenericBase<X, Y, Z> {
+		public Z baseVal;
+		public void setBaseVal(X val) {}
+	}
+
+	class GenericExtends<A, B> extends GenericBase<A, B, String> {
+		public B getExtendsVal() {
+			return null;
+		}
+	}
 }

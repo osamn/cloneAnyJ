@@ -52,7 +52,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	private TypeSlot build(final Class<?> clazz) {
 		try {
 			typeSlot = new TypeSlot(clazz);
-			new ClassReader(Type.getType(typeSlot.descriptor).getInternalName()).accept(this, 0);
+			new ClassReader(Type.getType(typeSlot.getClassDescriptor()).getInternalName()).accept(this, 0);
 			return typeSlot;
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e);
@@ -71,7 +71,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 			// final なものは読み取り専用になるよ
 			final Accessor.Type type = AccessFlag.isFinal(access) ? Accessor.Type.ReadonlyField : Accessor.Type.Field;
 			new FieldSignatureParser(slot -> {
-				typeSlot.access.add(new SingleSlotAccessor(type, typeSlot.getName(), name, name, slot));
+				typeSlot.access.add(new SingleSlotAccessor(type, typeSlot.getName(), name, name, descriptor, slot));
 			}).parse(descriptor, signature);
 		}
 		return null;
@@ -91,12 +91,12 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 					if (Propertys.isGetter(name, descriptor)) {
 						new MethodSignatureParser(null, slot -> {
 							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Get, typeSlot.getName(),
-									Propertys.getPropertyName(name), name, slot));
+									Propertys.getPropertyName(name), name, descriptor, slot));
 						}).parseArgumentsAndReturn(descriptor, signature);
 					} else if (Propertys.isSetter(name, descriptor)) {
 						new MethodSignatureParser(slot -> {
 							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Set, typeSlot.getName(),
-									Propertys.getPropertyName(name), name, slot));
+									Propertys.getPropertyName(name), name, descriptor, slot));
 						}, null).parseArgumentsAndReturn(descriptor, signature);
 					}
 				} catch (UnboundFormalTypeParameterException e) {

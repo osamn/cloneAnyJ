@@ -29,7 +29,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 
 	@Override
 	public String getName() {
-		return Type.getType(this.descriptor).getInternalName();
+		return Type.getType(this.getClassDescriptor()).getInternalName();
 	}
 
 	@Override
@@ -57,7 +57,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		completed = true;
 
 		// 親が Object.class だったら継承階層のルートまでたどってるので終了する
-		final String superDesc = superSlots.get(0).descriptor;
+		final String superDesc = superSlots.get(0).getClassDescriptor();
 		if (superDesc.contentEquals("Ljava/lang/Object;")) {
 			return;
 		}
@@ -73,7 +73,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 	private void pullAllUp(final TypeSlot superType) {
 		final HashMap<String, String> binds = createBindMap(superType);
 		final HashSet<String> checkExists = new HashSet<>();
-		this.access.forEach(acc -> checkExists.add(acc.getName() + acc.getDescriptor()));
+		this.access.forEach(acc -> checkExists.add(acc.getRel() + acc.getDescriptor()));
 		superType.access.stream().map(acc -> (SlotAccessor) acc).forEach(acc -> {
 			if (acc.getType() == Accessor.Type.LumpSet) {
 				// ただしスーパークラスのコンストラクタは除外しとく
@@ -81,8 +81,9 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 			}
 			// 同じエントリがないように name + rel で確認する
 			// override したときとか同じエントリが階層上位にあったりするので
-			if (checkExists.add(acc.getName() + acc.getDescriptor())) {
-				access.add(acc.chown(getName()).rebind(binds));
+			if (checkExists.add(acc.getRel() + acc.getDescriptor())) {
+				final SlotAccessor sa = acc.chown(getName()).rebind(binds);
+				access.add(sa);
 			}
 		});
 	}
@@ -95,7 +96,9 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 			final Slot thisSlot = superSlots.get(0).slotList.get(i);
 			// で、それらを比べてなにが型パラメタにくっついたかを調べる
 			// それぞれの型パラメタの数とか並び順はコンパイルとおってるかぎり絶対一致してるはずだよ
-			if (thisSlot.descriptor == null) {
+
+			//if (thisSlot.descriptor.contentEquals("Ljava/lang/Object;")) {
+			if (!thisSlot.isCertainBound()) {
 				// 型パラメタをリマップする。目印として 'T' をつける
 				// 以下より T で始まる型引数はありえないため T を目印にしてるよ
 				//// Object -> L
@@ -104,30 +107,9 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 				//// array -> [
 				map.put(baseSlot.typeParam, "T" + thisSlot.typeParam);
 			} else {
-				map.put(baseSlot.typeParam, thisSlot.descriptor);
+				map.put(baseSlot.typeParam, thisSlot.getClassDescriptor());
 			}
 		}));
-		/*
-		for (int i = 0; i < superSlot.slotList.size(); i++) {
-			// 継承元のクラス側で定義されてる formal type parameter を退避
-			final Slot baseSlot = superSlot.slotList.get(i);
-			// 自身の extends で宣言されている type argument を退避
-			final Slot thisSlot = superSlots.get(0).slotList.get(i);
-			// で、それらを比べてなにが型パラメタにくっついたかを調べる
-			// それぞれの型パラメタの数とか並び順はコンパイルとおってるかぎり絶対一致してるはずだよ
-			if (thisSlot.descriptor == null) {
-				// 型パラメタをリマップする。目印として 'T' をつける
-				// 以下より T で始まる型引数はありえないため T を目印にしてるよ
-				//// Object -> L
-				//// void -> V
-				//// primitive -> ZCBSIFJD
-				//// array -> [
-				map.put(baseSlot.typeParam, "T" + thisSlot.typeParam);
-			} else {
-				map.put(baseSlot.typeParam, thisSlot.descriptor);
-			}
-		}
-		*/
 		return map;
 	}
 
@@ -148,13 +130,8 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		public Stream<Accessor> accessors() {
 			final HashMap<String, String> bindMap = new HashMap<>();
 			binds.forEach(withIndex((slot, i) -> {
-				bindMap.put(TypeSlot.this.slotList.get(i).typeParam, slot.descriptor);
+				bindMap.put(TypeSlot.this.slotList.get(i).typeParam, slot.getClassDescriptor());
 			}));
-			/*
-			 * for (int i = 0; i < binds.size(); i++) {
-			 * bindMap.put(TypeSlot.this.slotList.get(i).typeParam,
-			 * binds.get(i).descriptor); }
-			 */
 			return TypeSlot.this.accessors().map(acc -> (SlotAccessor) acc).map(acc -> acc.rebind(bindMap));
 		}
 

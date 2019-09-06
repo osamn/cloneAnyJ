@@ -12,15 +12,20 @@ public class Slot {
 
 	/**
 	 * descriptor から Slot をつくる.
-	 * 
-	 * signature がある場合は SignatureReader から作るんだけど non generic な人の場合は自分で作らないといかんの
 	 */
 	public static Slot getSlot(final String descriptor) {
+		return getSlot(null, descriptor);
+	}
+
+	/*
+	 * 配列を考慮したスロットを作る人
+	 */
+	private static Slot getSlot(final String typeParam, final String descriptor) {
 		// 配列か？
 		if (descriptor.startsWith("[")) {
 			// 配列の間、配列を示す slot 階層を追加していく
 			String desc = descriptor.substring(1);
-			final Slot root = new Slot(null, "[");
+			final Slot root = new Slot(typeParam, "[");
 			Slot curr = root;
 			while (desc.startsWith("[")) {
 				Slot s = new Slot(null, "[");
@@ -32,12 +37,14 @@ public class Slot {
 			curr.slotList.add(new Slot(null, desc));
 			return root;
 		} else {
-			return new Slot(null, descriptor);
+			return new Slot(typeParam, descriptor);
 		}
+
 	}
 
+	private final String descriptor;
+
 	public final String typeParam;
-	public final String descriptor;
 	public final List<Slot> slotList = new ArrayList<>();
 
 	public final boolean isArrayType;
@@ -92,14 +99,23 @@ public class Slot {
 		return isArrayType || isList;
 	}
 
+	public boolean isCertainBound() {
+		final boolean bound = typeParam == null || typeParam.contentEquals("=") || typeParam.contentEquals("+")
+				|| typeParam.contentEquals("-");
+		return bound && slotList.stream().allMatch(Slot::isCertainBound);
+	}
+
+	public String getClassDescriptor() {
+		if (isArrayType) {
+			return descriptor + slotList.get(0).getClassDescriptor();
+		}
+		return descriptor;
+	}
+
 	public Slot rebind(final Map<String, String> binds) {
-		if (slotList.size() == 0) {
-			// 子要素がない ＆＆
-			if (typeParam == null || typeParam.contentEquals("=") || typeParam.contentEquals("+")
-					|| typeParam.contentEquals("-")) {
-				// 自身の型パラメタが解決済み
-				return this;
-			}
+		if (isCertainBound()) {
+			// 型パラメタが解決済み
+			return this;
 		}
 		final String bound = binds.get(typeParam);
 		// とりあえず bind した自身のコピーを作る
@@ -115,7 +131,7 @@ public class Slot {
 		} else {
 			// 型パラメタに型引数をくっつける
 			// certain bind
-			slot = new Slot("=", bound);
+			slot = getSlot("=", bound);
 		}
 		// 子スロットを bind しながらコピーする
 		for (Slot child : slotList) {

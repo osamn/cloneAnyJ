@@ -157,6 +157,25 @@ class FieldSignatureParserSpec extends Specification{
 		def Slot slot
 
 		when:
+		new FieldSignatureParser({slot = it}).parse("[I", null)
+		
+		then:
+		slot.slotList.size()== 1
+		slot.typeParam == null
+		slot.descriptor == '['
+		
+		then:
+		slot.slotList[0].slotList.size() == 0
+		slot.slotList[0].typeParam == null
+		slot.slotList[0].descriptor == 'I'
+		
+	}	
+	
+	def "primitive array array"() {
+		setup:
+		def Slot slot
+
+		when:
 		new FieldSignatureParser({slot = it}).parse("[[I", null)
 		
 		then:
