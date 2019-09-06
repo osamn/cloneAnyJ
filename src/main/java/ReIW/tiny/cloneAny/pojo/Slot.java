@@ -50,10 +50,17 @@ public class Slot {
 		this.typeParam = null;
 		this.descriptor = Type.getDescriptor(clazz);
 		this.isArrayType = clazz.isArray();
-		this.isPrimitiveType = clazz.isPrimitive();
-		this.isMap = Map.class.isAssignableFrom(clazz);
-		this.isList = List.class.isAssignableFrom(clazz);
-		this.isCharSequence = CharSequence.class.isAssignableFrom(clazz);
+		if (isArrayType) {
+			this.isPrimitiveType = false;
+			this.isMap = false;
+			this.isList = false;
+			this.isCharSequence = false;
+		} else {
+			this.isPrimitiveType = clazz.isPrimitive();
+			this.isMap = Map.class.isAssignableFrom(clazz);
+			this.isList = List.class.isAssignableFrom(clazz);
+			this.isCharSequence = CharSequence.class.isAssignableFrom(clazz);
+		}
 	}
 
 	public Slot(final String typeParam, final String descriptor) {
@@ -95,19 +102,22 @@ public class Slot {
 			}
 		}
 		final String bound = binds.get(typeParam);
+		// とりあえず bind した自身のコピーを作る
+		// 細かくチェックすればコピーしなくていいかもしれんけど面倒なんで
 		final Slot slot;
 		if (bound == null) {
 			// 自分の typeParam が再定義されていない
 			slot = new Slot(typeParam, descriptor);
 		} else if (bound.startsWith("T")) {
 			// 型パラメタ名の再定義
-			// see TypeDef#createBindMap
+			// see TypeSlot#createBindMap
 			slot = new Slot(bound.substring(1), descriptor);
 		} else {
 			// 型パラメタに型引数をくっつける
 			// certain bind
 			slot = new Slot("=", bound);
 		}
+		// 子スロットを bind しながらコピーする
 		for (Slot child : slotList) {
 			slot.slotList.add(child.rebind(binds));
 		}

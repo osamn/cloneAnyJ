@@ -1,20 +1,23 @@
 package ReIW.tiny.cloneAny.pojo.impl
 
+import org.objectweb.asm.Type
+
 import ReIW.tiny.cloneAny.pojo.Slot
 import spock.lang.Specification
 
 class FieldSignatureParserSpec extends Specification{
 
-	def "non generic object"() {
+	def "non generic simple user class"() {
 		setup:
 		def Slot slot
+		def clazz = FieldSignatureParserTester.Simple.class;
 
 		when:
-		new FieldSignatureParser({slot = it}).parse("Lfoo/bar/Hoge;", null)
+		new FieldSignatureParser({slot = it}).parse(Type.getDescriptor(clazz), null)
 
 		then:
 		slot.typeParam == null
-		slot.descriptor == "Lfoo/bar/Hoge;"
+		slot.descriptor == 'LReIW/tiny/cloneAny/pojo/impl/FieldSignatureParserTester$Simple;';
 		slot.slotList == []
 	}
 
@@ -135,4 +138,64 @@ class FieldSignatureParserSpec extends Specification{
 		slot_5.descriptor == "Ljava/lang/String;"
 		slot_5.slotList == []
 	}
+	
+	def "primitive"() {
+		setup:
+		def Slot slot
+
+		when:
+		new FieldSignatureParser({slot = it}).parse("J", null)
+		
+		then:
+		slot.slotList.size()== 0
+		slot.typeParam == null
+		slot.descriptor == 'J'
+	}
+	
+	def "primitive array"() {
+		setup:
+		def Slot slot
+
+		when:
+		new FieldSignatureParser({slot = it}).parse("[[I", null)
+		
+		then:
+		slot.slotList.size()== 1
+		slot.typeParam == null
+		slot.descriptor == '['
+		
+		then:
+		slot.slotList[0].slotList.size() == 1
+		slot.slotList[0].typeParam == null
+		slot.slotList[0].descriptor == '['
+		
+		then:
+		slot.slotList[0].slotList[0].slotList.size() == 0
+		slot.slotList[0].slotList[0].typeParam == null
+		slot.slotList[0].slotList[0].descriptor == 'I'
+	}	
+	
+	def "primitive array bound generic object"() {
+		setup:
+		def Slot slot
+
+		when:
+		new FieldSignatureParser({slot = it}).parse(null, 'Ljava/util/List<[I>;')
+		
+		then:
+		slot.slotList.size()== 1
+		slot.typeParam == null
+		slot.descriptor == 'Ljava/util/List;'
+		
+		then:
+		slot.slotList[0].slotList.size() == 1
+		slot.slotList[0].typeParam == '='
+		slot.slotList[0].descriptor == '['
+		
+		then:
+		slot.slotList[0].slotList[0].slotList.size() == 0
+		slot.slotList[0].slotList[0].typeParam == null
+		slot.slotList[0].slotList[0].descriptor == 'I'
+	}
+
 }

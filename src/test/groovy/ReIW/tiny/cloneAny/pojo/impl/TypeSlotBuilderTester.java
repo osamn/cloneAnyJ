@@ -65,6 +65,11 @@ interface TypeSlotBuilderTester {
 
 		public Ctor(boolean foo, Integer bar) {
 		}
+
+		// 型パラメタがあるので対象外になること
+		public <X> X getVal() {
+			return null;
+		}
 	}
 
 	class DefaultCtor {

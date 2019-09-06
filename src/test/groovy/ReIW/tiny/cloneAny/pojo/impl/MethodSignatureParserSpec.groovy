@@ -217,40 +217,90 @@ class MethodSignatureParserSpec extends Specification {
 		slots[2].slotList.size() == 0
 	}
 	
-	def "lump setter mixed : set...(String[], List<Long>)"() {
+	def "lump setter mixed : set...(String[], List<Long>, int[])"() {
 		setup:
 		def slots = []
 
 		when:
-		new MethodSignatureParser({slots<< it}, null).parseArgumentsAndReturn(null, "([Ljava/lang/String;Ljava/util/List<Ljava/lang/Long;>;)V")
+		new MethodSignatureParser({slots<< it}, null).parseArgumentsAndReturn(null, "([Ljava/lang/String;Ljava/util/List<Ljava/lang/Long;>;[I)V")
 
 		then:
-		slots.size() == 2
+		slots.size() == 3
 
 		then:
 		slots[0].typeParam == null
 		slots[0].descriptor == "["
 		slots[0].slotList.size() == 1
-		slots[0].slotList[0].typeParam == null;
-		slots[0].slotList[0].descriptor == "Ljava/lang/String;";
+		slots[0].slotList[0].typeParam == null
+		slots[0].slotList[0].descriptor == "Ljava/lang/String;"
 		slots[0].slotList[0].slotList.size() == 0
 
 		then:
 		slots[1].typeParam == null
 		slots[1].descriptor == "Ljava/util/List;"
 		slots[1].slotList.size() == 1
-		slots[1].slotList[0].typeParam == "=";
-		slots[1].slotList[0].descriptor == "Ljava/lang/Long;";
+		slots[1].slotList[0].typeParam == "="
+		slots[1].slotList[0].descriptor == "Ljava/lang/Long;"
 		slots[1].slotList[0].slotList.size() == 0
+
+		then:
+		slots[2].typeParam == null
+		slots[2].descriptor == "["
+		slots[2].slotList.size() == 1
+		slots[2].slotList[0].typeParam == null
+		slots[2].slotList[0].descriptor == "I"
+		slots[2].slotList[0].slotList.size() == 0
 	}
 	
-	def "has formal parameter : <X> void set...(X)"() {
-		setup:
-
+	def "has formal parameter method throws error : <X> void set...(X)"() {
 		when:
 		new MethodSignatureParser(null, null).parseArgumentsAndReturn(null, "<X:Ljava/lang/Object;>(TX;)V")
 
 		then:
 		thrown(UnboundFormalTypeParameterException)
+	}
+	
+	def "primitive array getter"() {
+		setup:
+		def slots = []
+
+		when:
+		new MethodSignatureParser(null , {slots << it}).parseArgumentsAndReturn("()[J", null)
+
+		
+		then:
+		slots.size() == 1
+
+		then:
+		slots[0].typeParam == null
+		slots[0].descriptor == "["
+		slots[0].slotList.size() == 1
+		
+		then:
+		slots[0].slotList[0].typeParam == null
+		slots[0].slotList[0].descriptor == 'J'
+		slots[0].slotList[0].slotList.size() == 0
+	}
+	
+	def "primitive array setter"() {
+		setup:
+		def slots = []
+
+		when:
+		new MethodSignatureParser({slots << it}, null).parseArgumentsAndReturn("([I)V", null)
+
+		
+		then:
+		slots.size() == 1
+
+		then:
+		slots[0].typeParam == null
+		slots[0].descriptor == "["
+		slots[0].slotList.size() == 1
+		
+		then:
+		slots[0].slotList[0].typeParam == null
+		slots[0].slotList[0].descriptor == 'I'
+		slots[0].slotList[0].slotList.size() == 0
 	}
 }

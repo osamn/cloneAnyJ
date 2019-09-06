@@ -13,6 +13,8 @@ import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.TypeAccessDef;
 import ReIW.tiny.cloneAny.utils.Descriptors;
 
+import static ReIW.tiny.cloneAny.utils.Consumers.withIndex;
+
 public class TypeSlot extends Slot implements TypeAccessDef {
 
 	final ArrayList<Slot> superSlots = new ArrayList<>();
@@ -80,13 +82,32 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 			// 同じエントリがないように name + rel で確認する
 			// override したときとか同じエントリが階層上位にあったりするので
 			if (checkExists.add(acc.getName() + acc.getDescriptor())) {
-				access.add(((SlotAccessor) acc).chown(getName()).rebind(binds));
+				access.add(acc.chown(getName()).rebind(binds));
 			}
 		});
 	}
 
 	private HashMap<String, String> createBindMap(final TypeSlot superSlot) {
 		final HashMap<String, String> map = new HashMap<>();
+		// 継承元のクラス側で定義されてる formal type parameter を基にして
+		superSlot.slotList.forEach(withIndex((baseSlot, i) -> {
+			// 自身の extends で宣言されている type argument を退避
+			final Slot thisSlot = superSlots.get(0).slotList.get(i);
+			// で、それらを比べてなにが型パラメタにくっついたかを調べる
+			// それぞれの型パラメタの数とか並び順はコンパイルとおってるかぎり絶対一致してるはずだよ
+			if (thisSlot.descriptor == null) {
+				// 型パラメタをリマップする。目印として 'T' をつける
+				// 以下より T で始まる型引数はありえないため T を目印にしてるよ
+				//// Object -> L
+				//// void -> V
+				//// primitive -> ZCBSIFJD
+				//// array -> [
+				map.put(baseSlot.typeParam, "T" + thisSlot.typeParam);
+			} else {
+				map.put(baseSlot.typeParam, thisSlot.descriptor);
+			}
+		}));
+		/*
 		for (int i = 0; i < superSlot.slotList.size(); i++) {
 			// 継承元のクラス側で定義されてる formal type parameter を退避
 			final Slot baseSlot = superSlot.slotList.get(i);
@@ -106,6 +127,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 				map.put(baseSlot.typeParam, thisSlot.descriptor);
 			}
 		}
+		*/
 		return map;
 	}
 
@@ -125,9 +147,14 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		@Override
 		public Stream<Accessor> accessors() {
 			final HashMap<String, String> bindMap = new HashMap<>();
-			for (int i = 0; i < binds.size(); i++) {
-				bindMap.put(TypeSlot.this.slotList.get(i).typeParam, binds.get(i).descriptor);
-			}
+			binds.forEach(withIndex((slot, i) -> {
+				bindMap.put(TypeSlot.this.slotList.get(i).typeParam, slot.descriptor);
+			}));
+			/*
+			 * for (int i = 0; i < binds.size(); i++) {
+			 * bindMap.put(TypeSlot.this.slotList.get(i).typeParam,
+			 * binds.get(i).descriptor); }
+			 */
 			return TypeSlot.this.accessors().map(acc -> (SlotAccessor) acc).map(acc -> acc.rebind(bindMap));
 		}
 

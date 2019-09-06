@@ -64,6 +64,13 @@ final class ClassSignatureParser extends DefaultSignatureVisitor {
 	}
 
 	@Override
+	public void visitBaseType(char descriptor) {
+		stack.push(new Slot(typeParamName, Character.toString(descriptor)));
+		// primitive の場合 visitEnd に回らないので、ここで明示的に呼んでおく
+		visitEnd();
+	}
+
+	@Override
 	public SignatureVisitor visitTypeArgument(char wildcard) {
 		typeParamName = String.valueOf(wildcard);
 		return super.visitTypeArgument(wildcard);

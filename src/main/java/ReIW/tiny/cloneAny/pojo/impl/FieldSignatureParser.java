@@ -31,8 +31,14 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitClassType(String name) {
-		// generic は primitive がないので getObjectType でおけ
 		stack.push(new Slot(typeParamName, Type.getObjectType(name).getDescriptor()));
+	}
+
+	@Override
+	public void visitBaseType(char descriptor) {
+		stack.push(new Slot(typeParamName, Character.toString(descriptor)));
+		// primitive の場合 visitEnd に回らないので、ここで明示的に呼んでおく
+		visitEnd();
 	}
 
 	@Override

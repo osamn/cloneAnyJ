@@ -52,6 +52,13 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 	}
 
 	@Override
+	public void visitBaseType(char descriptor) {
+		stack.push(new Slot(typeParamName, Character.toString(descriptor)));
+		// primitive の場合 visitEnd に回らないので、ここで明示的に呼んでおく
+		visitEnd();
+	}
+
+	@Override
 	public SignatureVisitor visitArrayType() {
 		stack.push(new Slot(typeParamName, "["));
 		typeParamName = null;
@@ -62,11 +69,6 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 	public SignatureVisitor visitParameterType() {
 		cons = argCons;
 		return super.visitParameterType();
-	}
-
-	@Override
-	public void visitBaseType(char descriptor) {
-		cons.accept(new Slot(null, String.valueOf(descriptor)));
 	}
 
 	@Override
