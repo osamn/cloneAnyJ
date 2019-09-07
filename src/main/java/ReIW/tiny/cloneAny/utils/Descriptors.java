@@ -2,28 +2,12 @@ package ReIW.tiny.cloneAny.utils;
 
 import org.objectweb.asm.Type;
 
+	// TODO あとでテスト
 public interface Descriptors {
 
 	static Class<?> toClass(final String descriptor) {
+		// LOOKUPSWITCH なんであんまり変わらんかもしれんけど、なんとなく出現頻度順にしておく
 		switch (descriptor.charAt(0)) {
-		case 'V':
-			return void.class;
-		case 'Z':
-			return boolean.class;
-		case 'C':
-			return char.class;
-		case 'B':
-			return byte.class;
-		case 'S':
-			return short.class;
-		case 'I':
-			return int.class;
-		case 'F':
-			return float.class;
-		case 'J':
-			return long.class;
-		case 'D':
-			return double.class;
 		case 'L':
 			try {
 				return Class.forName(Type.getType(descriptor).getClassName());
@@ -31,6 +15,24 @@ public interface Descriptors {
 				// class のバイナリベースから呼び出されるのでありえないはず
 				throw new IllegalArgumentException(e);
 			}
+		case 'I':
+			return int.class;
+		case 'Z':
+			return boolean.class;
+		case 'C':
+			return char.class;
+		case 'B':
+			return byte.class;
+		case 'D':
+			return double.class;
+		case 'J':
+			return long.class;
+		case 'F':
+			return float.class;
+		case 'S':
+			return short.class;
+		case 'V':
+			return void.class;
 		case '[':
 			final String desc = descriptor.substring(1);
 			return toClass(desc).arrayType();
@@ -41,8 +43,7 @@ public interface Descriptors {
 		}
 	}
 
-	// TODO あとでテストする
-	static boolean isBoxing(String descriptor) {
+	static boolean isBoxingType(String descriptor) {
 		if (descriptor.startsWith("Ljava/lang/")) {
 			if (descriptor.contentEquals("Ljava/lang/String;")) {
 				return false;

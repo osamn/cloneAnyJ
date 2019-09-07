@@ -64,7 +64,7 @@ public class Slot {
 		this.isMap = isMap;
 		this.isList = isList;
 		this.isCharSequence = isCharSequence;
-		this.isBoxingType = Descriptors.isBoxing(descriptor);
+		this.isBoxingType = Descriptors.isBoxingType(descriptor);
 	}
 
 	public boolean keyed() {
