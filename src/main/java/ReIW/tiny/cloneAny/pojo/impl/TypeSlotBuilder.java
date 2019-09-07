@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -51,7 +52,13 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 
 	private TypeSlot build(final Class<?> clazz) {
 		try {
-			typeSlot = new TypeSlot(clazz);
+			if (clazz.isArray()) {
+				// クラスファイルとして定義されているものが対象なんで配列型はありえない
+				throw new IllegalArgumentException("Top level class should not be array type.");
+			}
+			typeSlot = new TypeSlot(null, Type.getDescriptor(clazz), false, clazz.isPrimitive(),
+					Map.class.isAssignableFrom(clazz), List.class.isAssignableFrom(clazz),
+					CharSequence.class.isAssignableFrom(clazz));
 			new ClassReader(Type.getType(typeSlot.getClassDescriptor()).getInternalName()).accept(this, 0);
 			return typeSlot;
 		} catch (IOException e) {
@@ -83,7 +90,9 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		if (isAccessible(access)) {
 			if (name.contentEquals("<init>")) {
 				final MultiSlotAccessor acc = new MultiSlotAccessor(typeSlot.getName(), name, descriptor);
-				typeSlot.access.add(acc);
+				// ストリームでのコンストラクタ出現順を最初に持っていきたいのでコンストラクタは必ずリストの先頭に追加する
+				// コンストラクタの定義順とは逆になるけどそれは気にしないの;-)
+				typeSlot.access.add(0, acc);
 				new MethodSignatureParser(acc.slots::add, null).parseArgumentsAndReturn(descriptor, signature);
 				return new MethodParamNameMapper(acc.slots, acc.names::add);
 			} else {

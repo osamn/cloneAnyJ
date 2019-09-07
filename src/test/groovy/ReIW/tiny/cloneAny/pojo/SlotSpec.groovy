@@ -44,10 +44,10 @@ class SlotSpec extends Specification {
 		// descriptor / class から作るので generic の型パラメタは作成されない
 		setup:
 		def Slot slot
-		
+
 		when:
 		slot = Slot.getSlot(null, HashMap.class)
-		
+
 		then:
 		slot.isArrayType == false
 		slot.isPrimitiveType == false
@@ -59,7 +59,7 @@ class SlotSpec extends Specification {
 
 		when:
 		slot = Slot.getSlot(null, "Ljava/util/HashMap;")
-		
+
 		then:
 		slot.isArrayType == false
 		slot.isPrimitiveType == false
@@ -74,10 +74,10 @@ class SlotSpec extends Specification {
 		// descriptor / class から作るので generic の型パラメタは作成されない
 		setup:
 		def Slot slot
-		
+
 		when:
 		slot = Slot.getSlot(null, ArrayList.class)
-		
+
 		then:
 		slot.isArrayType == false
 		slot.isPrimitiveType == false
@@ -89,7 +89,7 @@ class SlotSpec extends Specification {
 
 		when:
 		slot = Slot.getSlot(null, "Ljava/util/ArrayList;")
-		
+
 		then:
 		slot.isArrayType == false
 		slot.isPrimitiveType == false
@@ -103,10 +103,10 @@ class SlotSpec extends Specification {
 	def 'instance of CharSequence'() {
 		setup:
 		def Slot slot
-		
+
 		when:
 		slot = Slot.getSlot(null, String.class)
-		
+
 		then:
 		slot.isArrayType == false
 		slot.isPrimitiveType == false
@@ -118,7 +118,7 @@ class SlotSpec extends Specification {
 
 		when:
 		slot = Slot.getSlot(null, "Ljava/lang/String;")
-		
+
 		then:
 		slot.isArrayType == false
 		slot.isPrimitiveType == false
@@ -218,8 +218,50 @@ class SlotSpec extends Specification {
 	}
 
 
-	@Ignore
-	def "rebind"() {
-		// TODO 未テスト
+	def "rebind slot"() {
+		def actual
+
+		setup:
+		def slot = Slot.getSlot(null, Object)
+		slot.slotList.add(Slot.getSlot('X', Object))
+		slot.slotList.add(Slot.getSlot('Y', Object))
+		slot.slotList.add(Slot.getSlot('Z', Object))
+
+		when:
+		actual = slot.rebind(['X':'TA', 'Y':'Ljava/lang/String;', 'Z':'[I'])
+
+		then:
+		actual.slotList.size() == 3
+		
+		then:
+		actual.slotList[0].typeParam == 'A'
+		actual.slotList[0].descriptor == 'Ljava/lang/Object;'
+		
+		then:
+		actual.slotList[1].typeParam == '='
+		actual.slotList[1].descriptor == 'Ljava/lang/String;'
+		
+		then:
+		actual.slotList[2].typeParam == '='
+		actual.slotList[2].getClassDescriptor() == '[I'
+		
+		when:
+		actual = actual.rebind(['A':'Ljava/lang/Integer;'])
+		
+		then:
+		actual.slotList.size() == 3
+		
+		then:
+		actual.slotList[0].typeParam == '='
+		actual.slotList[0].descriptor == 'Ljava/lang/Integer;'
+		
+		then:
+		actual.slotList[1].typeParam == '='
+		actual.slotList[1].descriptor == 'Ljava/lang/String;'
+		
+		then:
+		actual.slotList[2].typeParam == '='
+		actual.slotList[2].getClassDescriptor() == '[I'
+		
 	}
 }

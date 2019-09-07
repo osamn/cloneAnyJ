@@ -15,7 +15,7 @@ public class Slot {
 			final Slot root = new Slot(typeParam, "[", true, false, false, false, false);
 			final Class<?> componentType = clazz.getComponentType();
 			if (componentType != null) {
-				root.slotList.add(getSlot(null, componentType));
+				root.slotList.add(Slot.getSlot(null, componentType));
 			}
 			return root;
 		} else {
@@ -32,7 +32,7 @@ public class Slot {
 			// SignatureReader#visitArrayType から呼ばれるときは descriptor == "[" なので
 			// 子スロットを追加しないよ
 			if (!componentDesc.isEmpty()) {
-				root.slotList.add(getSlot(typeParam, componentDesc));
+				root.slotList.add(Slot.getSlot(typeParam, componentDesc));
 			}
 			return root;
 		} else {
@@ -40,38 +40,6 @@ public class Slot {
 			return new Slot(typeParam, Type.getDescriptor(clazz), false, clazz.isPrimitive(),
 					Map.class.isAssignableFrom(clazz), List.class.isAssignableFrom(clazz),
 					CharSequence.class.isAssignableFrom(clazz));
-		}
-	}
-
-	@Deprecated
-	public static Slot getSlot(final String descriptor) {
-		return getSlotFromDesc(null, descriptor);
-	}
-
-	/*
-	 * signature じゃなく descriptor からスロットを作る人
-	 * 
-	 * なので型パラメタとかないので配列じゃない場合は子スロットは入らないよ
-	 */
-	@Deprecated
-	private static Slot getSlotFromDesc(final String typeParam, final String descriptor) {
-		// 配列か？
-		if (descriptor.startsWith("[")) {
-			// 配列の間、配列を示す slot 階層を追加していく
-			String desc = descriptor.substring(1);
-			final Slot root = new Slot(typeParam, "[");
-			Slot curr = root;
-			while (desc.startsWith("[")) {
-				Slot s = new Slot(null, "[");
-				curr.slotList.add(s);
-				curr = s;
-				desc = desc.substring(1);
-			}
-			// 最後に elementType の slot を追加する
-			curr.slotList.add(new Slot(null, desc));
-			return root;
-		} else {
-			return new Slot(typeParam, descriptor);
 		}
 	}
 
@@ -95,44 +63,6 @@ public class Slot {
 		this.isMap = isMap;
 		this.isList = isList;
 		this.isCharSequence = isCharSequence;
-	}
-
-	@Deprecated
-	public Slot(final Class<?> clazz) {
-		this.typeParam = null;
-		this.descriptor = Type.getDescriptor(clazz);
-		this.isArrayType = clazz.isArray();
-		if (isArrayType) {
-			this.isPrimitiveType = false;
-			this.isMap = false;
-			this.isList = false;
-			this.isCharSequence = false;
-		} else {
-			this.isPrimitiveType = clazz.isPrimitive();
-			this.isMap = Map.class.isAssignableFrom(clazz);
-			this.isList = List.class.isAssignableFrom(clazz);
-			this.isCharSequence = CharSequence.class.isAssignableFrom(clazz);
-		}
-	}
-
-	@Deprecated
-	public Slot(final String typeParam, final String descriptor) {
-		this.typeParam = typeParam;
-		this.descriptor = descriptor;
-		if (descriptor.contentEquals("[")) {
-			this.isArrayType = true;
-			this.isPrimitiveType = false;
-			this.isMap = false;
-			this.isList = false;
-			this.isCharSequence = false;
-		} else {
-			this.isArrayType = false;
-			final Class<?> clazz = Descriptors.toClass(descriptor);
-			this.isPrimitiveType = clazz.isPrimitive();
-			this.isMap = Map.class.isAssignableFrom(clazz);
-			this.isList = List.class.isAssignableFrom(clazz);
-			this.isCharSequence = CharSequence.class.isAssignableFrom(clazz);
-		}
 	}
 
 	public boolean keyed() {
@@ -163,22 +93,24 @@ public class Slot {
 			// 型パラメタが解決済みなので自身をそのまま返す
 			return this;
 		}
+
+		// とりあえず自身の型引数を bind したコピーを作る
 		final String bound = binds.get(typeParam);
-		// とりあえず bind した自身のコピーを作る
-		// 細かくチェックすればコピーしなくていいかもしれんけど面倒なんで
 		final Slot slot;
 		if (bound == null) {
 			// 自分の typeParam が再定義されていない
-			slot = new Slot(typeParam, descriptor);
+			slot = new Slot(typeParam, descriptor, isArrayType, isPrimitiveType, isMap, isList, isCharSequence);
 		} else if (bound.startsWith("T")) {
 			// 型パラメタ名の再定義
 			// see TypeSlot#createBindMap
-			slot = new Slot(bound.substring(1), descriptor);
+			slot = new Slot(bound.substring(1), descriptor, isArrayType, isPrimitiveType, isMap, isList,
+					isCharSequence);
 		} else {
 			// 型パラメタに型引数をくっつける
 			// certain bind
-			slot = getSlot("=", bound);
+			slot = Slot.getSlot("=", bound);
 		}
+
 		// 子スロットを bind しながらコピーする
 		for (Slot child : slotList) {
 			slot.slotList.add(child.rebind(binds));

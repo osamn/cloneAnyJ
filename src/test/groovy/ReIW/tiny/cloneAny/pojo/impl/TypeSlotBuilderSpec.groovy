@@ -88,9 +88,29 @@ class TypeSlotBuilderSpec extends Specification {
 		typeSlot.access[0].getType() == Accessor.Type.LumpSet
 		typeSlot.access[0].getName() == "<init>"
 		typeSlot.access[0].getRel() == "<init>"
-		typeSlot.access[0].getDescriptor() == "(Ljava/lang/String;)V"
-		typeSlot.access[0].names == ["hoge"]
+		typeSlot.access[0].getDescriptor() == "(ZLjava/lang/Integer;)V"
+		typeSlot.access[0].names == ["foo", "bar"]
 		typeSlot.access[0].slots.collect {
+			[
+				it.typeParam,
+				it.descriptor,
+				it.slotList
+			]
+		} == [
+			[null, "Z", []],
+			[
+				null,
+				"Ljava/lang/Integer;",
+				[]]
+		]
+
+		then:
+		typeSlot.access[1].getType() == Accessor.Type.LumpSet
+		typeSlot.access[1].getName() == "<init>"
+		typeSlot.access[1].getRel() == "<init>"
+		typeSlot.access[1].getDescriptor() == "(Ljava/lang/String;)V"
+		typeSlot.access[1].names == ["hoge"]
+		typeSlot.access[1].slots.collect {
 			[
 				it.typeParam,
 				it.descriptor,
@@ -104,25 +124,6 @@ class TypeSlotBuilderSpec extends Specification {
 				[]]
 		]
 
-		then:
-		typeSlot.access[1].getType() == Accessor.Type.LumpSet
-		typeSlot.access[1].getName() == "<init>"
-		typeSlot.access[1].getRel() == "<init>"
-		typeSlot.access[1].getDescriptor() == "(ZLjava/lang/Integer;)V"
-		typeSlot.access[1].names == ["foo", "bar"]
-		typeSlot.access[1].slots.collect {
-			[
-				it.typeParam,
-				it.descriptor,
-				it.slotList
-			]
-		} == [
-			[null, "Z", []],
-			[
-				null,
-				"Ljava/lang/Integer;",
-				[]]
-		]
 	}
 
 	def "デフォルトコンストラクタ"() {

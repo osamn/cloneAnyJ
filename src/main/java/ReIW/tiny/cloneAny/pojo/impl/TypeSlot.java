@@ -1,10 +1,11 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
+import static ReIW.tiny.cloneAny.utils.Consumers.withIndex;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
@@ -14,8 +15,6 @@ import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.TypeAccessDef;
 import ReIW.tiny.cloneAny.utils.Descriptors;
 
-import static ReIW.tiny.cloneAny.utils.Consumers.withIndex;
-
 public class TypeSlot extends Slot implements TypeAccessDef {
 
 	final ArrayList<Slot> superSlots = new ArrayList<>();
@@ -24,17 +23,9 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 
 	private boolean completed;
 
-	TypeSlot(final Class<?> clazz) {
-		super(null, Type.getDescriptor(clazz), checkArray(clazz), clazz.isPrimitive(),
-				Map.class.isAssignableFrom(clazz), List.class.isAssignableFrom(clazz),
-				CharSequence.class.isAssignableFrom(clazz));
-	}
-
-	private static boolean checkArray(final Class<?> clazz) {
-		if (clazz.isArray()) {
-			throw new IllegalArgumentException("Top level class should not be array type.");
-		}
-		return false;
+	TypeSlot(String typeParam, String descriptor, boolean isArrayType, boolean isPrimitiveType, boolean isMap,
+			boolean isList, boolean isCharSequence) {
+		super(typeParam, descriptor, isArrayType, isPrimitiveType, isMap, isList, isCharSequence);
 	}
 
 	@Override
@@ -98,26 +89,32 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		});
 	}
 
-	private HashMap<String, String> createBindMap(final TypeSlot superSlot) {
+	private HashMap<String, String> createBindMap(final TypeSlot superType) {
 		final HashMap<String, String> map = new HashMap<>();
-		// 継承元のクラス側で定義されてる formal type parameter を基にして
-		superSlot.slotList.forEach(withIndex((baseSlot, i) -> {
-			// 自身の extends で宣言されている type argument を退避
-			final Slot thisSlot = superSlots.get(0).slotList.get(i);
+		// class Bar<X, Y>
+		// -> X, Y
+		// に対して
+		// class Foo<A> extends Bar<A, String>
+		// -> A, String
+		// この対応をマップとして作成する
+		superType.slotList.forEach(withIndex((superFormalSlot, i) -> {
+			// extends 元のクラスで宣言されている type argument を退避
+			final Slot typeParamSlot = superSlots.get(0).slotList.get(i);
 			// で、それらを比べてなにが型パラメタにくっついたかを調べる
 			// それぞれの型パラメタの数とか並び順はコンパイルとおってるかぎり絶対一致してるはずだよ
 
 			// if (thisSlot.descriptor.contentEquals("Ljava/lang/Object;")) {
-			if (!thisSlot.isCertainBound()) {
-				// 型パラメタをリマップする。目印として 'T' をつける
+			if (typeParamSlot.isCertainBound()) {
+				// 型パラメタが解決されてるので、そいつをくっつける
+				map.put(superFormalSlot.typeParam, typeParamSlot.getClassDescriptor());
+			} else {
+				// 型パラメタをリネームする。目印として 'T' をつける
 				// 以下より T で始まる型引数はありえないため T を目印にしてるよ
 				//// Object -> L
 				//// void -> V
 				//// primitive -> ZCBSIFJD
 				//// array -> [
-				map.put(baseSlot.typeParam, "T" + thisSlot.typeParam);
-			} else {
-				map.put(baseSlot.typeParam, thisSlot.getClassDescriptor());
+				map.put(superFormalSlot.typeParam, "T" + typeParamSlot.typeParam);
 			}
 		}));
 		return map;
@@ -128,6 +125,10 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		private final List<Slot> binds;
 
 		private BoundTypeDef(final List<Slot> binds) {
+			if (binds.size() != TypeSlot.this.slotList.size()) {
+				// this.slotList -> formal parameter なので binds と必ず長さが一致するはず
+				throw new IllegalArgumentException("Type parameters to bind should be match formal-parameters.");
+			}
 			this.binds = binds;
 		}
 

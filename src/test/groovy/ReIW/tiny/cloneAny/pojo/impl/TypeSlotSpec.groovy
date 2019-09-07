@@ -26,25 +26,25 @@ class TypeSlotSpec extends Specification {
 
 		then:
 		acc[0] == [
+			Accessor.Type.LumpSet,
+			Type.getInternalName(TypeSlotTester.Simple),
+			"<init>",
+			"<init>",
+			"(Ljava/lang/String;)V"
+		]
+		acc[1] == [
 			Accessor.Type.Field,
 			Type.getInternalName(TypeSlotTester.Simple),
 			"thisField",
 			"thisField",
 			"Ljava/lang/String;"
 		]
-		acc[1] == [
+		acc[2] == [
 			Accessor.Type.Get,
 			Type.getInternalName(TypeSlotTester.Simple),
 			"thisVal",
 			"getThisVal",
 			"()D"
-		]
-		acc[2] == [
-			Accessor.Type.LumpSet,
-			Type.getInternalName(TypeSlotTester.Simple),
-			"<init>",
-			"<init>",
-			"(Ljava/lang/String;)V"
 		]
 		acc[3] == [
 			Accessor.Type.Set,
@@ -69,7 +69,7 @@ class TypeSlotSpec extends Specification {
 		]
 
 		then:
-		ts.access[2].names == ["thisCtorArg"]
+		ts.access[0].names == ["thisCtorArg"]
 	}
 
 	def "暗黙の bind で継承元まで型引数が bind されてること"() {
@@ -134,8 +134,8 @@ class TypeSlotSpec extends Specification {
 		when:
 		def ts = TypeSlotBuilder.createTypeSlot(TypeSlotTester.GenericExtends)
 				.bind([
-					Slot.getSlot("Ljava/lang/Double;"),
-					Slot.getSlot("[[I")
+					Slot.getSlot(null, "Ljava/lang/Double;"),
+					Slot.getSlot(null, "[[I")
 				])
 		def access = ts.accessors().toArray()
 
@@ -164,8 +164,8 @@ class TypeSlotSpec extends Specification {
 		when:
 		def ts = TypeSlotBuilder.createTypeSlot(clazz)
 				.bind([
-					Slot.getSlot("Ljava/lang/String;"),
-					Slot.getSlot("[I")
+					Slot.getSlot(null, "Ljava/lang/String;"),
+					Slot.getSlot(null, "[I")
 				])
 		def access = ts.accessors().toArray()
 

@@ -26,15 +26,17 @@ public interface Descriptors {
 			return double.class;
 		case 'L':
 			try {
-				// TODO native 呼び出しがはいるので、オーバーヘッド確認する
-				// 場合によっては map にしたほうがいいかもしれんので
 				return Class.forName(Type.getType(descriptor).getClassName());
 			} catch (ClassNotFoundException e) {
 				// class のバイナリベースから呼び出されるのでありえないはず
 				throw new IllegalArgumentException(e);
 			}
+		case '[':
+			final String desc = descriptor.substring(1);
+			return toClass(desc).arrayType();
+		case '(':
+			// 基本的に method descriptor の '(' は例外におとしておく
 		default:
-			// 基本的に配列 '[' メソッド '(' は来ないはずなので例外にしとく
 			throw new IllegalArgumentException();
 		}
 	}
