@@ -33,9 +33,9 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 		if (signature == null) {
 			Type m = Type.getMethodType(descriptor);
 			for (Type t : m.getArgumentTypes()) {
-				argCons.accept(Slot.getSlot(t.getDescriptor()));
+				argCons.accept(Slot.getSlot(null, t.getDescriptor()));
 			}
-			retCons.accept(Slot.getSlot(m.getReturnType().getDescriptor()));
+			retCons.accept(Slot.getSlot(null, m.getReturnType().getDescriptor()));
 		} else {
 			new SignatureReader(signature).accept(this);
 		}
@@ -48,19 +48,19 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitClassType(String name) {
-		stack.push(new Slot(typeParamName, Type.getObjectType(name).getDescriptor()));
+		stack.push(Slot.getSlot(typeParamName, Type.getObjectType(name).getDescriptor()));
 	}
 
 	@Override
 	public void visitBaseType(char descriptor) {
-		stack.push(new Slot(typeParamName, Character.toString(descriptor)));
+		stack.push(Slot.getSlot(typeParamName, Character.toString(descriptor)));
 		// primitive の場合 visitEnd に回らないので、ここで明示的に呼んでおく
 		visitEnd();
 	}
 
 	@Override
 	public SignatureVisitor visitArrayType() {
-		stack.push(new Slot(typeParamName, "["));
+		stack.push(Slot.getSlot(typeParamName, "["));
 		typeParamName = null;
 		return super.visitArrayType();
 	}
@@ -86,9 +86,9 @@ final class MethodSignatureParser extends DefaultSignatureVisitor {
 	@Override
 	public void visitTypeVariable(String name) {
 		if (stack.isEmpty()) {
-			cons.accept(new Slot(name, "Ljava/lang/Object;"));
+			cons.accept(Slot.getSlot(name, Object.class));
 		} else {
-			stack.peek().slotList.add(new Slot(name, "Ljava/lang/Object;"));
+			stack.peek().slotList.add(Slot.getSlot(name, Object.class));
 		}
 	}
 

@@ -48,4 +48,10 @@ interface TypeSlotTester {
 			return null;
 		}
 	}
+	
+	class GenericCtor<X, Y> {
+		public GenericCtor(Y first, X second) {
+			
+		}
+	}
 }

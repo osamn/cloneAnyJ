@@ -23,7 +23,7 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	void parse(final String descriptor, final String signature) {
 		if (signature == null) {
-			cons.accept(Slot.getSlot(descriptor));
+			cons.accept(Slot.getSlot(null, descriptor));
 		} else {
 			new SignatureReader(signature).accept(this);
 		}
@@ -31,19 +31,19 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitClassType(String name) {
-		stack.push(new Slot(typeParamName, Type.getObjectType(name).getDescriptor()));
+		stack.push(Slot.getSlot(typeParamName, Type.getObjectType(name).getDescriptor()));
 	}
 
 	@Override
 	public void visitBaseType(char descriptor) {
-		stack.push(new Slot(typeParamName, Character.toString(descriptor)));
+		stack.push(Slot.getSlot(typeParamName, Character.toString(descriptor)));
 		// primitive の場合 visitEnd に回らないので、ここで明示的に呼んでおく
 		visitEnd();
 	}
 
 	@Override
 	public SignatureVisitor visitArrayType() {
-		stack.push(new Slot(typeParamName, "["));
+		stack.push(Slot.getSlot(typeParamName, "["));
 		typeParamName = null;
 		return super.visitArrayType();
 	}
@@ -57,9 +57,9 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 	@Override
 	public void visitTypeVariable(String name) {
 		if (stack.isEmpty()) {
-			cons.accept(new Slot(name, "Ljava/lang/Object;"));
+			cons.accept(Slot.getSlot(name, Object.class));
 		} else {
-			stack.peek().slotList.add(new Slot(name, "Ljava/lang/Object;"));
+			stack.peek().slotList.add(Slot.getSlot(name, Object.class));
 		}
 	}
 

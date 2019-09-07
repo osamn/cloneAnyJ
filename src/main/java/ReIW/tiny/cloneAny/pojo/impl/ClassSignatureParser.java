@@ -30,9 +30,9 @@ final class ClassSignatureParser extends DefaultSignatureVisitor {
 		if (signature == null) {
 			// signature がない場合は、自クラスも継承元も non generic なので
 			// ルートは配列になることがないのでそのまま Slot 作る
-			supers.accept(new Slot(null, Type.getObjectType(superName).getDescriptor()));
+			supers.accept(Slot.getSlot(null, Type.getObjectType(superName).getDescriptor()));
 			if (interfaces != null) {
-				Arrays.stream(interfaces).map(intf -> new Slot(null, Type.getObjectType(intf).getDescriptor()))
+				Arrays.stream(interfaces).map(intf -> Slot.getSlot(null, Type.getObjectType(intf).getDescriptor()))
 						.forEach(supers);
 			}
 		} else {
@@ -42,7 +42,7 @@ final class ClassSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public SignatureVisitor visitArrayType() {
-		stack.push(new Slot(typeParamName, "["));
+		stack.push(Slot.getSlot(typeParamName, "["));
 		typeParamName = null;
 		return super.visitArrayType();
 	}
@@ -60,12 +60,12 @@ final class ClassSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitClassType(String name) {
-		stack.push(new Slot(typeParamName, Type.getObjectType(name).getDescriptor()));
+		stack.push(Slot.getSlot(typeParamName, Type.getObjectType(name).getDescriptor()));
 	}
 
 	@Override
 	public void visitBaseType(char descriptor) {
-		stack.push(new Slot(typeParamName, Character.toString(descriptor)));
+		stack.push(Slot.getSlot(typeParamName, Character.toString(descriptor)));
 		// primitive の場合 visitEnd に回らないので、ここで明示的に呼んでおく
 		visitEnd();
 	}
@@ -78,7 +78,7 @@ final class ClassSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitTypeVariable(String name) {
-		stack.peek().slotList.add(new Slot(name, "Ljava/lang/Object;"));
+		stack.peek().slotList.add(Slot.getSlot(name, Object.class));
 	}
 
 	@Override

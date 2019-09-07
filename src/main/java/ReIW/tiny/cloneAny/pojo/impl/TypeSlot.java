@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
@@ -24,7 +25,16 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 	private boolean completed;
 
 	TypeSlot(final Class<?> clazz) {
-		super(clazz);
+		super(null, Type.getDescriptor(clazz), checkArray(clazz), clazz.isPrimitive(),
+				Map.class.isAssignableFrom(clazz), List.class.isAssignableFrom(clazz),
+				CharSequence.class.isAssignableFrom(clazz));
+	}
+
+	private static boolean checkArray(final Class<?> clazz) {
+		if (clazz.isArray()) {
+			throw new IllegalArgumentException("Top level class should not be array type.");
+		}
+		return false;
 	}
 
 	@Override
@@ -97,7 +107,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 			// で、それらを比べてなにが型パラメタにくっついたかを調べる
 			// それぞれの型パラメタの数とか並び順はコンパイルとおってるかぎり絶対一致してるはずだよ
 
-			//if (thisSlot.descriptor.contentEquals("Ljava/lang/Object;")) {
+			// if (thisSlot.descriptor.contentEquals("Ljava/lang/Object;")) {
 			if (!thisSlot.isCertainBound()) {
 				// 型パラメタをリマップする。目印として 'T' をつける
 				// 以下より T で始まる型引数はありえないため T を目印にしてるよ

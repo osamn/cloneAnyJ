@@ -155,11 +155,35 @@ class TypeSlotSpec extends Specification {
 		access[3].slot.getClassDescriptor() == "Ljava/lang/Double;"
 	}
 	
-	def "ctor の暗黙的な bind"() {
-		// TODO test	
-	}
 	
 	def "ctor の明示的な bind"() {
-		// TODO test	
+		setup:
+		def clazz = TypeSlotTester.GenericCtor
+		// コンストラクタは必ず自身が持つので継承元とかの考慮はいらない
+		// なので明示的な bind だけ考えればいいよ
+		when:
+		def ts = TypeSlotBuilder.createTypeSlot(clazz)
+				.bind([
+					Slot.getSlot("Ljava/lang/String;"),
+					Slot.getSlot("[I")
+				])
+		def access = ts.accessors().toArray()
+
+		then:
+		access.size() == 1
+		access[0] in MultiSlotAccessor
+		
+		when:
+		def acc = access[0] as MultiSlotAccessor
+		
+		then:
+		acc.descriptor == '(Ljava/lang/Object;Ljava/lang/Object;)V'
+		acc.name == '<init>'
+		acc.rel == '<init>'
+		acc.owner == Type.getInternalName(clazz)
+		acc.names == ['first', 'second']
+		acc.slots.collect {it.getClassDescriptor()} == ['[I', 'Ljava/lang/String;']
+
+		
 	}
 }

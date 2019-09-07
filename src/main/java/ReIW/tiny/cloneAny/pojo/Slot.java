@@ -10,17 +10,51 @@ import ReIW.tiny.cloneAny.utils.Descriptors;
 
 public class Slot {
 
-	/**
-	 * descriptor から Slot をつくる.
-	 */
+	public static Slot getSlot(final String typeParam, final Class<?> clazz) {
+		if (clazz.isArray()) {
+			final Slot root = new Slot(typeParam, "[", true, false, false, false, false);
+			final Class<?> componentType = clazz.getComponentType();
+			if (componentType != null) {
+				root.slotList.add(getSlot(null, componentType));
+			}
+			return root;
+		} else {
+			return new Slot(typeParam, Type.getDescriptor(clazz), false, clazz.isPrimitive(),
+					Map.class.isAssignableFrom(clazz), List.class.isAssignableFrom(clazz),
+					CharSequence.class.isAssignableFrom(clazz));
+		}
+	}
+
+	public static Slot getSlot(final String typeParam, final String descriptor) {
+		if (descriptor.startsWith("[")) {
+			final Slot root = new Slot(typeParam, "[", true, false, false, false, false);
+			final String componentDesc = descriptor.substring(1);
+			// SignatureReader#visitArrayType から呼ばれるときは descriptor == "[" なので
+			// 子スロットを追加しないよ
+			if (!componentDesc.isEmpty()) {
+				root.slotList.add(getSlot(typeParam, componentDesc));
+			}
+			return root;
+		} else {
+			final Class<?> clazz = Descriptors.toClass(descriptor);
+			return new Slot(typeParam, Type.getDescriptor(clazz), false, clazz.isPrimitive(),
+					Map.class.isAssignableFrom(clazz), List.class.isAssignableFrom(clazz),
+					CharSequence.class.isAssignableFrom(clazz));
+		}
+	}
+
+	@Deprecated
 	public static Slot getSlot(final String descriptor) {
-		return getSlot(null, descriptor);
+		return getSlotFromDesc(null, descriptor);
 	}
 
 	/*
-	 * 配列を考慮したスロットを作る人
+	 * signature じゃなく descriptor からスロットを作る人
+	 * 
+	 * なので型パラメタとかないので配列じゃない場合は子スロットは入らないよ
 	 */
-	private static Slot getSlot(final String typeParam, final String descriptor) {
+	@Deprecated
+	private static Slot getSlotFromDesc(final String typeParam, final String descriptor) {
 		// 配列か？
 		if (descriptor.startsWith("[")) {
 			// 配列の間、配列を示す slot 階層を追加していく
@@ -39,12 +73,11 @@ public class Slot {
 		} else {
 			return new Slot(typeParam, descriptor);
 		}
-
 	}
 
+	public final String typeParam;
 	private final String descriptor;
 
-	public final String typeParam;
 	public final List<Slot> slotList = new ArrayList<>();
 
 	public final boolean isArrayType;
@@ -53,6 +86,18 @@ public class Slot {
 	public final boolean isList;
 	public final boolean isCharSequence;
 
+	protected Slot(String typeParam, String descriptor, boolean isArrayType, boolean isPrimitiveType, boolean isMap,
+			boolean isList, boolean isCharSequence) {
+		this.typeParam = typeParam;
+		this.descriptor = descriptor;
+		this.isArrayType = isArrayType;
+		this.isPrimitiveType = isPrimitiveType;
+		this.isMap = isMap;
+		this.isList = isList;
+		this.isCharSequence = isCharSequence;
+	}
+
+	@Deprecated
 	public Slot(final Class<?> clazz) {
 		this.typeParam = null;
 		this.descriptor = Type.getDescriptor(clazz);
@@ -70,6 +115,7 @@ public class Slot {
 		}
 	}
 
+	@Deprecated
 	public Slot(final String typeParam, final String descriptor) {
 		this.typeParam = typeParam;
 		this.descriptor = descriptor;
@@ -114,7 +160,7 @@ public class Slot {
 
 	public Slot rebind(final Map<String, String> binds) {
 		if (isCertainBound()) {
-			// 型パラメタが解決済み
+			// 型パラメタが解決済みなので自身をそのまま返す
 			return this;
 		}
 		final String bound = binds.get(typeParam);
