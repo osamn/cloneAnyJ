@@ -37,19 +37,20 @@ public class Slot {
 			return root;
 		} else {
 			final Class<?> clazz = Descriptors.toClass(descriptor);
-			return new Slot(typeParam, Type.getDescriptor(clazz), false, clazz.isPrimitive(),
+			return new Slot(typeParam, descriptor, false, clazz.isPrimitive(),
 					Map.class.isAssignableFrom(clazz), List.class.isAssignableFrom(clazz),
 					CharSequence.class.isAssignableFrom(clazz));
 		}
 	}
 
 	public final String typeParam;
-	private final String descriptor;
+	public final String descriptor;
 
 	public final List<Slot> slotList = new ArrayList<>();
 
 	public final boolean isArrayType;
 	public final boolean isPrimitiveType;
+	public final boolean isBoxingType;
 	public final boolean isMap;
 	public final boolean isList;
 	public final boolean isCharSequence;
@@ -63,6 +64,7 @@ public class Slot {
 		this.isMap = isMap;
 		this.isList = isList;
 		this.isCharSequence = isCharSequence;
+		this.isBoxingType = Descriptors.isBoxing(descriptor);
 	}
 
 	public boolean keyed() {

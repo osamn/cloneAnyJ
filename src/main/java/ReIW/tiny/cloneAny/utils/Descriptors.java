@@ -40,4 +40,23 @@ public interface Descriptors {
 			throw new IllegalArgumentException();
 		}
 	}
+
+	// TODO あとでテストする
+	static boolean isBoxing(String descriptor) {
+		if (descriptor.startsWith("Ljava/lang/")) {
+			if (descriptor.contentEquals("Ljava/lang/String;")) {
+				return false;
+			}
+			return 
+					descriptor.contentEquals("Ljava/lang/Integer;") ||
+					descriptor.contentEquals("Ljava/lang/Boolean;") ||
+					descriptor.contentEquals("Ljava/lang/Character;") ||
+					descriptor.contentEquals("Ljava/lang/Byte;")  ||
+					descriptor.contentEquals("Ljava/lang/Short;") ||
+					descriptor.contentEquals("Ljava/lang/Long;")  ||
+					descriptor.contentEquals("Ljava/lang/Float;") ||
+					descriptor.contentEquals("Ljava/lang/Double;");
+		}
+		return false;
+	}
 }

@@ -10,8 +10,4 @@ public interface TypeAccessDef {
 
 	Stream<Accessor> accessors();
 
-	static TypeAccessDef createTypeDef(final Class<?> clazz) {
-		return null;
-	}
-
 }
