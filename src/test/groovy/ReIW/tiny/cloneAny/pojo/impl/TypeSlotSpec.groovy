@@ -10,7 +10,7 @@ class TypeSlotSpec extends Specification {
 
 	def "継承元のアクセスが抽出されること"() {
 		when:
-		def ts = TypeSlotBuilder.createTypeSlot(TypeSlotTester.Simple)
+		def ts = TypeSlotBuilder.build(TypeSlotTester.Simple)
 		def acc = ts.access.collect {
 			[
 				it.type,
@@ -74,7 +74,7 @@ class TypeSlotSpec extends Specification {
 
 	def "暗黙の bind で継承元まで型引数が bind されてること"() {
 		when:
-		def ts = TypeSlotBuilder.createTypeSlot(TypeSlotTester.GenericExtends)
+		def ts = TypeSlotBuilder.build(TypeSlotTester.GenericExtends)
 		def acc = ts.access.collect {
 			[
 				it.type,
@@ -132,7 +132,7 @@ class TypeSlotSpec extends Specification {
 
 	def "明示的な bind で継承元まで型引数が bind されてること"() {
 		when:
-		def ts = TypeSlotBuilder.createTypeSlot(TypeSlotTester.GenericExtends)
+		def ts = TypeSlotBuilder.build(TypeSlotTester.GenericExtends)
 				.bind([
 					Slot.getSlot(null, "Ljava/lang/Double;"),
 					Slot.getSlot(null, "[[I")
@@ -162,7 +162,7 @@ class TypeSlotSpec extends Specification {
 		// コンストラクタは必ず自身が持つので継承元とかの考慮はいらない
 		// なので明示的な bind だけ考えればいいよ
 		when:
-		def ts = TypeSlotBuilder.createTypeSlot(clazz)
+		def ts = TypeSlotBuilder.build(clazz)
 				.bind([
 					Slot.getSlot(null, "Ljava/lang/String;"),
 					Slot.getSlot(null, "[I")
@@ -183,7 +183,5 @@ class TypeSlotSpec extends Specification {
 		acc.owner == Type.getInternalName(clazz)
 		acc.names == ['first', 'second']
 		acc.slots.collect {it.getClassDescriptor()} == ['[I', 'Ljava/lang/String;']
-
-		
 	}
 }

@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.impl;
+package ReIW.tiny.cloneAny.compile;
 
 import static org.objectweb.asm.Opcodes.ARETURN;
 

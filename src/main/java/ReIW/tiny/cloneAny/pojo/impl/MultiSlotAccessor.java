@@ -1,8 +1,10 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
+import static ReIW.tiny.cloneAny.utils.Functions.withIndex;
+
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Slot;
@@ -14,8 +16,9 @@ public final class MultiSlotAccessor extends SlotAccessor {
 	private final String name;
 	private final String descriptor;
 
-	public final List<String> names = new ArrayList<>();
-	public final List<Slot> slots = new ArrayList<>();
+	public final ArrayList<String> names = new ArrayList<>();
+
+	public final ArrayList<Slot> slots = new ArrayList<>();
 
 	MultiSlotAccessor(String owner, String name, String descriptor) {
 		this.type = Accessor.Type.LumpSet;
@@ -48,7 +51,7 @@ public final class MultiSlotAccessor extends SlotAccessor {
 	public String getName() {
 		return name;
 	}
-	
+
 	@Override
 	public String getRel() {
 		return name;
@@ -57,6 +60,16 @@ public final class MultiSlotAccessor extends SlotAccessor {
 	@Override
 	public String getDescriptor() {
 		return descriptor;
+	}
+
+	@Override
+	public Slot getSlot() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Stream<ParamInfo> parameters() {
+		return names.stream().map(withIndex((name, i) -> new ParamInfo(name, slots.get(i))));
 	}
 
 	@Override

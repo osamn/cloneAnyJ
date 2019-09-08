@@ -7,7 +7,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 	def "field : public で non static だけとれること"() {
 		when:
-		def typeSlot = TypeSlotBuilder.createTypeSlot(TypeSlotBuilderTester.Field.class)
+		def typeSlot = TypeSlotBuilder.build(TypeSlotBuilderTester.Field.class)
 
 		then:
 		typeSlot.access.size() == 1
@@ -31,7 +31,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 	def "final field は readonly になること"() {
 		when:
-		def typeSlot = TypeSlotBuilder.createTypeSlot(TypeSlotBuilderTester.ReadonlyField.class)
+		def typeSlot = TypeSlotBuilder.build(TypeSlotBuilderTester.ReadonlyField.class)
 
 		then:
 		typeSlot.access.size() == 1
@@ -44,7 +44,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 	def "getter + abstract は対象にならないこと"() {
 		when:
-		def typeSlot = TypeSlotBuilder.createTypeSlot(TypeSlotBuilderTester.Getter.class)
+		def typeSlot = TypeSlotBuilder.build(TypeSlotBuilderTester.Getter.class)
 
 		then:
 		typeSlot.access.size() == 1
@@ -57,7 +57,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 	def "setter + 引数型の違うものは異なった accessor として取れること"() {
 		when:
-		def typeSlot = TypeSlotBuilder.createTypeSlot(TypeSlotBuilderTester.Setter.class)
+		def typeSlot = TypeSlotBuilder.build(TypeSlotBuilderTester.Setter.class)
 
 		then:
 		typeSlot.access.size() == 2
@@ -79,7 +79,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 	def "引数ありコンストラクタ"() {
 		when:
-		def typeSlot = TypeSlotBuilder.createTypeSlot(TypeSlotBuilderTester.Ctor.class)
+		def typeSlot = TypeSlotBuilder.build(TypeSlotBuilderTester.Ctor.class)
 
 		then:
 		typeSlot.access.size() == 2
@@ -128,7 +128,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 	def "デフォルトコンストラクタ"() {
 		when:
-		def typeSlot = TypeSlotBuilder.createTypeSlot(TypeSlotBuilderTester.DefaultCtor.class)
+		def typeSlot = TypeSlotBuilder.build(TypeSlotBuilderTester.DefaultCtor.class)
 
 		then:
 		typeSlot.access.size() == 1

@@ -1,19 +1,31 @@
 package ReIW.tiny.cloneAny.impl;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.objectweb.asm.Type;
+
+import ReIW.tiny.cloneAny.impl.Operand.ConvTop;
+import ReIW.tiny.cloneAny.impl.Operand.Ctor;
+import ReIW.tiny.cloneAny.impl.Operand.Get;
+import ReIW.tiny.cloneAny.impl.Operand.GetKey;
+import ReIW.tiny.cloneAny.impl.Operand.Load;
+import ReIW.tiny.cloneAny.impl.Operand.Set;
+import ReIW.tiny.cloneAny.impl.Operand.SetKey;
+import ReIW.tiny.cloneAny.impl.Operand.Store;
 import ReIW.tiny.cloneAny.pojo.AbortCallException;
 import ReIW.tiny.cloneAny.pojo.AccessEntry;
+import ReIW.tiny.cloneAny.pojo.Slot;
 
 // TODO ここで転送可能かみて、ストリームを調整する
 
 final class OperandStreamBuilder {
 
-	/*
 	static OperandStreamBuilder builder(final Class<?> lhs, final Class<?> rhs) {
 		return new OperandStreamBuilder(TypeDefBuilder.createTypeDef(lhs), TypeDefBuilder.createTypeDef(rhs));
 	}
@@ -172,12 +184,12 @@ final class OperandStreamBuilder {
 
 		return builder.build();
 	}
-	*/
 
 	/**
 	 * コンストラクタを除いたコピー操作のストリームを計算する
 	 * 
 	 * 副作用としてコンストラクタ操作を ctorList に設定する
+	 */
 	private Stream<OperandStreamBuilder.Ops> calcCopyAndInit(final List<List<OperandStreamBuilder.Ops>> ctorList) {
 		// とりあえず getter 側のマップつくる
 		// マップキーはプロパティ名
@@ -247,7 +259,6 @@ final class OperandStreamBuilder {
 			return true;
 		}).map(entry -> entry.getValue()).flatMap(ops -> ops.stream());
 	}
-	 */
 
 	/** 一番確からしいコンストラクタをとる */
 	private static List<OperandStreamBuilder.Ops> findProbablyConstructor(

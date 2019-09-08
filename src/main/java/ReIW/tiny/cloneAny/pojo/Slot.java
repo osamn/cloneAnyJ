@@ -42,7 +42,7 @@ public class Slot {
 					CharSequence.class.isAssignableFrom(clazz));
 		}
 	}
-
+	
 	public final String typeParam;
 	public final String descriptor;
 

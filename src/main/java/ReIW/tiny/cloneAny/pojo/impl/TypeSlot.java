@@ -63,7 +63,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 			return;
 		}
 		// 親の TypeSlot を作って
-		final TypeSlot superType = TypeSlotBuilder.createTypeSlot(Descriptors.toClass(superDesc));
+		final TypeSlot superType = TypeSlotBuilder.build(Descriptors.toClass(superDesc));
 		superType.complete();
 		// 親のアクセサを自分に持ってくる
 		pullAllUp(superType);

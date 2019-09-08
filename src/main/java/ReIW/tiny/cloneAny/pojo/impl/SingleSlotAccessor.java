@@ -1,6 +1,7 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Slot;
@@ -13,7 +14,7 @@ public final class SingleSlotAccessor extends SlotAccessor {
 	private final String rel;
 	private final String descriptor;
 
-	public final Slot slot;
+	private final Slot slot;
 
 	SingleSlotAccessor(final Accessor.Type type, final String owner, final String name, final String rel,
 			final String descriptor, final Slot slot) {
@@ -58,6 +59,16 @@ public final class SingleSlotAccessor extends SlotAccessor {
 	@Override
 	public String getDescriptor() {
 		return descriptor;
+	}
+
+	@Override
+	public Slot getSlot() {
+		return slot;
+	}
+
+	@Override
+	public Stream<ParamInfo> parameters() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

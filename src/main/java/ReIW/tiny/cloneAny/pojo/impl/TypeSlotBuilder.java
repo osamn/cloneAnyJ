@@ -21,6 +21,7 @@ import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 import ReIW.tiny.cloneAny.pojo.UnboundMethodParameterNameException;
 import ReIW.tiny.cloneAny.utils.AccessFlag;
+import ReIW.tiny.cloneAny.utils.Descriptors;
 import ReIW.tiny.cloneAny.utils.Propertys;
 
 // TODO lombok 使ってるとき signature のこってるの？
@@ -31,7 +32,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	private static WeakReference<ConcurrentHashMap<Class<?>, TypeSlot>> hiveRef = new WeakReference<>(
 			new ConcurrentHashMap<>());
 
-	public static TypeSlot createTypeSlot(final Class<?> clazz) {
+	public static TypeSlot build(final Class<?> clazz) {
 		ConcurrentHashMap<Class<?>, TypeSlot> hive;
 		synchronized (hiveRef) {
 			hive = hiveRef.get();
@@ -40,9 +41,13 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				hiveRef = new WeakReference<>(hive);
 			}
 		}
-		final TypeSlot td = hive.computeIfAbsent(clazz, new TypeSlotBuilder()::build);
+		final TypeSlot td = hive.computeIfAbsent(clazz, new TypeSlotBuilder()::buildTypeSlot);
 		td.complete();
 		return td;
+	}
+
+	public static TypeSlot build(final String descriptor) {
+		return build(Descriptors.toClass(descriptor));
 	}
 
 	private TypeSlot typeSlot;
@@ -50,7 +55,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	private TypeSlotBuilder() {
 	}
 
-	private TypeSlot build(final Class<?> clazz) {
+	private TypeSlot buildTypeSlot(final Class<?> clazz) {
 		try {
 			if (clazz.isArray()) {
 				// クラスファイルとして定義されているものが対象なんで配列型はありえない
@@ -93,7 +98,8 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				// ストリームでのコンストラクタ出現順を最初に持っていきたいのでコンストラクタは必ずリストの先頭に追加する
 				// コンストラクタの定義順とは逆になるけどそれは気にしないの;-)
 				typeSlot.access.add(0, acc);
-				new MethodSignatureParser(acc.slots::add, null).parseArgumentsAndReturn(descriptor, signature);
+				new MethodSignatureParser(acc.slots::add, null).parseArgumentsAndReturn(descriptor,
+						signature);
 				return new MethodParamNameMapper(acc.slots, acc.names::add);
 			} else {
 				try {
