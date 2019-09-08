@@ -12,7 +12,15 @@ public class OperandStreamBuilder {
 		return new OperandStreamBuilder(lhsSlot, rhsSlot);
 	}
 
-	public static boolean canMove(final Slot lhs, final Slot rhs) {
+	private final TypeSlot lhs;
+	private final TypeSlot rhs;
+
+	private OperandStreamBuilder(final TypeSlot lhs, final TypeSlot rhs) {
+		this.lhs = lhs;
+		this.rhs = rhs;
+	}
+
+	private static boolean canMove(final Slot lhs, final Slot rhs) {
 		// List / Array をまずチェック
 		if (lhs.indexed() && rhs.indexed()) {
 			return canMove(lhs.slotList.get(0), rhs.slotList.get(0));
@@ -84,14 +92,6 @@ public class OperandStreamBuilder {
 
 		// Object -> Object はがんばる;-)
 		return true;
-	}
-
-	private final TypeSlot lhs;
-	private final TypeSlot rhs;
-
-	private OperandStreamBuilder(final TypeSlot lhs, final TypeSlot rhs) {
-		this.lhs = lhs;
-		this.rhs = rhs;
 	}
 
 }
