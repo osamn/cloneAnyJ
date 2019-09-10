@@ -10,7 +10,4 @@ public class Operand {
 
 	public Accessor rhs;
 	
-	public boolean loopSet() {
-		return rhs.getSlot().indexed();
-	}
 }

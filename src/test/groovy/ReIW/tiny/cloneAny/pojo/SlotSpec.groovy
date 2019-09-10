@@ -1,143 +1,39 @@
 package ReIW.tiny.cloneAny.pojo
 
-import spock.lang.Ignore
+import org.objectweb.asm.Type
+
 import spock.lang.Specification
 
 class SlotSpec extends Specification {
 
 	def 'getSlot simple object class'() {
-		setup:
-		def Slot slot
-
 		when:
-		slot = Slot.getSlot(null, Object.class)
-
-		then:
-		slot.getClassDescriptor() == "Ljava/lang/Object;"
+		def Slot slot = new Slot(null, Type.getDescriptor(Object.class))
 
 		then:
 		slot.isArrayType == false
 		slot.isPrimitiveType == false
-		slot.isMap == false
-		slot.isList == false
-		slot.isCharSequence == false
-		slot.descriptor == "Ljava/lang/Object;"
-		slot.slotList.size() == 0
-
-		when:
-		slot = Slot.getSlot(null, "Ljava/lang/Object;")
-
-		then:
-		slot.getClassDescriptor() == "Ljava/lang/Object;"
-
-		then:
-		slot.isArrayType == false
-		slot.isPrimitiveType == false
-		slot.isMap == false
-		slot.isList == false
-		slot.isCharSequence == false
+		slot.isBoxingType == false
 		slot.descriptor == "Ljava/lang/Object;"
 		slot.slotList.size() == 0
 	}
 
-	def 'instance of Map'() {
-		// descriptor / class から作るので generic の型パラメタは作成されない
-		setup:
-		def Slot slot
-
+	def 'generic なクラスだけど型パラメタの子スロットは追加されない'() {
+		// descriptor から作るので generic の型パラメタは作成されない
 		when:
-		slot = Slot.getSlot(null, HashMap.class)
+		def Slot slot = new Slot(null, Type.getDescriptor(HashMap))
 
 		then:
 		slot.isArrayType == false
 		slot.isPrimitiveType == false
-		slot.isMap == true
-		slot.isList == false
-		slot.isCharSequence == false
-		slot.descriptor == "Ljava/util/HashMap;"
-		slot.slotList.size() == 0
-
-		when:
-		slot = Slot.getSlot(null, "Ljava/util/HashMap;")
-
-		then:
-		slot.isArrayType == false
-		slot.isPrimitiveType == false
-		slot.isMap == true
-		slot.isList == false
-		slot.isCharSequence == false
 		slot.descriptor == "Ljava/util/HashMap;"
 		slot.slotList.size() == 0
 	}
 
-	def 'instance of List'() {
-		// descriptor / class から作るので generic の型パラメタは作成されない
-		setup:
-		def Slot slot
-
+	def 'object array class'() {
 		when:
-		slot = Slot.getSlot(null, ArrayList.class)
 
-		then:
-		slot.isArrayType == false
-		slot.isPrimitiveType == false
-		slot.isMap == false
-		slot.isList == true
-		slot.isCharSequence == false
-		slot.descriptor == "Ljava/util/ArrayList;"
-		slot.slotList.size() == 0
-
-		when:
-		slot = Slot.getSlot(null, "Ljava/util/ArrayList;")
-
-		then:
-		slot.isArrayType == false
-		slot.isPrimitiveType == false
-		slot.isMap == false
-		slot.isList == true
-		slot.isCharSequence == false
-		slot.descriptor == "Ljava/util/ArrayList;"
-		slot.slotList.size() == 0
-	}
-
-	def 'instance of CharSequence'() {
-		setup:
-		def Slot slot
-
-		when:
-		slot = Slot.getSlot(null, String.class)
-
-		then:
-		slot.isArrayType == false
-		slot.isPrimitiveType == false
-		slot.isMap == false
-		slot.isList == false
-		slot.isCharSequence == true
-		slot.descriptor == "Ljava/lang/String;"
-		slot.slotList.size() == 0
-
-		when:
-		slot = Slot.getSlot(null, "Ljava/lang/String;")
-
-		then:
-		slot.isArrayType == false
-		slot.isPrimitiveType == false
-		slot.isMap == false
-		slot.isList == false
-		slot.isCharSequence == true
-		slot.descriptor == "Ljava/lang/String;"
-		slot.slotList.size() == 0
-	}
-
-	def 'getSlot object array class'() {
-		setup:
-		def Slot slot
-
-		when:
-		slot = Slot.getSlot(null, Integer[].class)
-
-		then:
-		slot.getClassDescriptor() == "[Ljava/lang/Integer;"
+		def Slot slot = new Slot(null, "[Ljava/lang/Integer;")
 
 		then:
 		slot.isArrayType == true
@@ -147,36 +43,14 @@ class SlotSpec extends Specification {
 		then:
 		slot.slotList[0].isArrayType == false
 		slot.slotList[0].isPrimitiveType == false
+		slot.slotList[0].isBoxingType == true
 		slot.slotList[0].descriptor == "Ljava/lang/Integer;"
 		slot.slotList[0].slotList.size() == 0
-
-		when:
-		slot = Slot.getSlot(null, "[Ljava/lang/Long;")
-
-		then:
-		slot.getClassDescriptor() == "[Ljava/lang/Long;"
-
-		then:
-		slot.isArrayType == true
-		slot.descriptor == "["
-		slot.slotList.size() == 1
-
-		then:
-		slot.slotList[0].isArrayType == false
-		slot.slotList[0].isPrimitiveType == false
-		slot.slotList[0].descriptor == "Ljava/lang/Long;"
-		slot.slotList[0].slotList.size() == 0
 	}
 
-	def 'getSlot primitive array class'() {
-		setup:
-		def Slot slot
-
+	def 'primitive array class'() {
 		when:
-		slot = Slot.getSlot(null, int[][].class)
-
-		then:
-		slot.getClassDescriptor() == "[[I"
+		def Slot slot = new Slot(null, Type.getDescriptor(int[][]))
 
 		then:
 		slot.isArrayType == true
@@ -191,29 +65,8 @@ class SlotSpec extends Specification {
 		then:
 		slot.slotList[0].slotList[0].isArrayType == false
 		slot.slotList[0].slotList[0].isPrimitiveType == true
+		slot.slotList[0].slotList[0].isBoxingType == false
 		slot.slotList[0].slotList[0].descriptor == "I"
-		slot.slotList[0].slotList[0].slotList.size() == 0
-
-		when:
-		slot = Slot.getSlot(null, "[[J")
-
-		then:
-		slot.getClassDescriptor() == "[[J"
-
-		then:
-		slot.isArrayType == true
-		slot.descriptor == "["
-		slot.slotList.size() == 1
-
-		then:
-		slot.slotList[0].isArrayType == true
-		slot.slotList[0].descriptor == "["
-		slot.slotList[0].slotList.size() == 1
-
-		then:
-		slot.slotList[0].slotList[0].isArrayType == false
-		slot.slotList[0].slotList[0].isPrimitiveType == true
-		slot.slotList[0].slotList[0].descriptor == "J"
 		slot.slotList[0].slotList[0].slotList.size() == 0
 	}
 
@@ -222,46 +75,110 @@ class SlotSpec extends Specification {
 		def actual
 
 		setup:
-		def slot = Slot.getSlot(null, Object)
-		slot.slotList.add(Slot.getSlot('X', Object))
-		slot.slotList.add(Slot.getSlot('Y', Object))
-		slot.slotList.add(Slot.getSlot('Z', Object))
+		def slot = new Slot(null, Type.getDescriptor(Object))
+		slot.slotList.add(new Slot('X', Type.getDescriptor(Object)))
+		slot.slotList.add(new Slot('Y', Type.getDescriptor(Object)))
+		slot.slotList.add(new Slot('Z', Type.getDescriptor(Object)))
 
 		when:
 		actual = slot.rebind(['X':'TA', 'Y':'Ljava/lang/String;', 'Z':'[I'])
 
 		then:
 		actual.slotList.size() == 3
-		
+
 		then:
 		actual.slotList[0].typeParam == 'A'
 		actual.slotList[0].descriptor == 'Ljava/lang/Object;'
-		
+
 		then:
 		actual.slotList[1].typeParam == '='
 		actual.slotList[1].descriptor == 'Ljava/lang/String;'
-		
+
 		then:
 		actual.slotList[2].typeParam == '='
-		actual.slotList[2].getClassDescriptor() == '[I'
-		
+		actual.slotList[2].descriptor == '['
+		actual.slotList[2].slotList[0].descriptor == 'I'
+
 		when:
 		actual = actual.rebind(['A':'Ljava/lang/Integer;'])
-		
+
 		then:
 		actual.slotList.size() == 3
-		
+
 		then:
 		actual.slotList[0].typeParam == '='
 		actual.slotList[0].descriptor == 'Ljava/lang/Integer;'
-		
+
 		then:
 		actual.slotList[1].typeParam == '='
 		actual.slotList[1].descriptor == 'Ljava/lang/String;'
-		
+
 		then:
 		actual.slotList[2].typeParam == '='
-		actual.slotList[2].getClassDescriptor() == '[I'
+		actual.slotList[2].descriptor == '['
+		actual.slotList[2].slotList[0].descriptor == 'I'
+	}
+	
+	def "rebind with generic type"() {
+		def Slot actual
+
+		setup:
+		def slot = new Slot(null, 'Lfoo/bar/Hoge;')
+		slot.slotList.add(new Slot('X', Type.getDescriptor(Object)))
+
+		when:
+		actual = slot.rebind(['X':'[Ljava/util/List<Ljava/lang/String;>;'])
+
+		then:
+		actual.getClassDescriptor() == 'Lfoo/bar/Hoge<[Ljava/util/List<Ljava/lang/String;>;>;'
 		
+		then:
+		actual.descriptor == 'Lfoo/bar/Hoge;'
+		actual.slotList.size() == 1
+		
+		then:
+		actual.slotList[0].descriptor == '['
+		actual.slotList[0].slotList.size() == 1
+		
+		then:
+		actual.slotList[0].slotList[0].descriptor == 'Ljava/util/List;'
+		actual.slotList[0].slotList[0].slotList.size() == 1
+		
+		then:
+		actual.slotList[0].slotList[0].slotList[0].descriptor == 'Ljava/lang/String;'
+		actual.slotList[0].slotList[0].slotList[0].slotList.size() == 0
+	}
+
+	def "rebind with 未解決あり generic type"() {
+		def Slot actual
+
+		setup:
+		def slot = new Slot(null, 'Lfoo/bar/Hoge;')
+		slot.slotList.add(new Slot('X', Type.getDescriptor(Object)))
+
+		when:
+		actual = slot.rebind(['X':'Ljava/util/List<[TA;>;'])
+
+		then:
+		actual.getClassDescriptor() == 'Lfoo/bar/Hoge<Ljava/util/List<[TA;>;>;'
+		
+		then:
+		actual.descriptor == 'Lfoo/bar/Hoge;'
+		actual.slotList.size() == 1
+		
+		then:
+		actual.slotList[0].typeParam == '='
+		actual.slotList[0].descriptor == 'Ljava/util/List;'
+		actual.slotList[0].slotList.size() == 1
+		
+		then:
+		actual.slotList[0].slotList[0].typeParam == '='
+		actual.slotList[0].slotList[0].descriptor == '['
+		actual.slotList[0].slotList[0].slotList.size() == 1
+		
+		then:
+		actual.slotList[0].slotList[0].slotList[0].typeParam == 'A'
+		actual.slotList[0].slotList[0].slotList[0].descriptor == 'Ljava/lang/Object;'
+		actual.slotList[0].slotList[0].slotList[0].slotList.size() == 0
 	}
 }

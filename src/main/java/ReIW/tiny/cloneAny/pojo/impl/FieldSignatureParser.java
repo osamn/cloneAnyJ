@@ -1,21 +1,13 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
-import java.util.Stack;
 import java.util.function.Consumer;
 
-import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
-import org.objectweb.asm.signature.SignatureVisitor;
 
-import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
 import ReIW.tiny.cloneAny.pojo.Slot;
+import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 
-final class FieldSignatureParser extends DefaultSignatureVisitor {
-
-	private final Stack<Slot> stack = new Stack<>();
-	private final Consumer<Slot> cons;
-
-	private String typeParamName;
+final class FieldSignatureParser extends SignatureParser {
 
 	FieldSignatureParser(final Consumer<Slot> cons) {
 		this.cons = cons;
@@ -23,64 +15,16 @@ final class FieldSignatureParser extends DefaultSignatureVisitor {
 
 	void parse(final String descriptor, final String signature) {
 		if (signature == null) {
-			cons.accept(Slot.getSlot(null, descriptor));
+			cons.accept(new Slot(null, descriptor));
 		} else {
 			new SignatureReader(signature).accept(this);
 		}
 	}
 
 	@Override
-	public void visitClassType(String name) {
-		stack.push(Slot.getSlot(typeParamName, Type.getObjectType(name).getDescriptor()));
-	}
-
-	@Override
-	public void visitBaseType(char descriptor) {
-		stack.push(Slot.getSlot(typeParamName, Character.toString(descriptor)));
-		// primitive の場合 visitEnd に回らないので、ここで明示的に呼んでおく
-		visitEnd();
-	}
-
-	@Override
-	public SignatureVisitor visitArrayType() {
-		stack.push(Slot.getSlot(typeParamName, "["));
-		typeParamName = null;
-		return super.visitArrayType();
-	}
-
-	@Override
-	public SignatureVisitor visitTypeArgument(char wildcard) {
-		typeParamName = String.valueOf(wildcard);
-		return super.visitTypeArgument(wildcard);
-	}
-
-	@Override
-	public void visitTypeVariable(String name) {
-		if (stack.isEmpty()) {
-			cons.accept(Slot.getSlot(name, Object.class));
-		} else {
-			stack.peek().slotList.add(Slot.getSlot(name, Object.class));
-		}
-	}
-
-	@Override
-	public void visitEnd() {
-		Slot slot = unrollArray();
-		if (stack.isEmpty()) {
-			cons.accept(slot);
-		} else {
-			stack.peek().slotList.add(slot);
-		}
-		typeParamName = null;
-	}
-
-	private Slot unrollArray() {
-		Slot slot = stack.pop();
-		while (!stack.isEmpty() && stack.peek().isArrayType) {
-			stack.peek().slotList.add(slot);
-			slot = stack.pop();
-		}
-		return slot;
+	public void visitFormalTypeParameter(String name) {
+		// Field には独立した型パラメタはふつうに書けないはずなんでありえないっす
+		throw new UnboundFormalTypeParameterException();
 	}
 
 }

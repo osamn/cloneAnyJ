@@ -43,7 +43,7 @@ public interface Descriptors {
 		}
 	}
 
-	static boolean isBoxingType(String descriptor) {
+	static boolean isBoxingType(final String descriptor) {
 		if (descriptor == null) {
 			return false;
 		}
@@ -51,11 +51,28 @@ public interface Descriptors {
 			if (descriptor.contentEquals("Ljava/lang/String;")) {
 				return false;
 			}
-			return descriptor.contentEquals("Ljava/lang/Integer;") || descriptor.contentEquals("Ljava/lang/Boolean;")
-					|| descriptor.contentEquals("Ljava/lang/Character;") || descriptor.contentEquals("Ljava/lang/Byte;")
-					|| descriptor.contentEquals("Ljava/lang/Double;") || descriptor.contentEquals("Ljava/lang/Long;")
-					|| descriptor.contentEquals("Ljava/lang/Short;") || descriptor.contentEquals("Ljava/lang/Float;");
+			return descriptor.contentEquals("Ljava/lang/Integer;") // I
+					|| descriptor.contentEquals("Ljava/lang/Boolean;") // Z
+					|| descriptor.contentEquals("Ljava/lang/Character;") // C
+					|| descriptor.contentEquals("Ljava/lang/Byte;") // B
+					|| descriptor.contentEquals("Ljava/lang/Double;") // D
+					|| descriptor.contentEquals("Ljava/lang/Long;") // J
+					|| descriptor.contentEquals("Ljava/lang/Short;") // S
+					|| descriptor.contentEquals("Ljava/lang/Float;") // F
+			;
 		}
 		return false;
+	}
+
+	static boolean isPrimitiveType(final String descriptor) {
+		return descriptor.contentEquals("I") // int
+				|| descriptor.contentEquals("Z") // boolean
+				|| descriptor.contentEquals("C") // char
+				|| descriptor.contentEquals("B") // byte
+				|| descriptor.contentEquals("D") // double
+				|| descriptor.contentEquals("J") // long
+				|| descriptor.contentEquals("S") // short
+				|| descriptor.contentEquals("F") // float
+		;
 	}
 }
