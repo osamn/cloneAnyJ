@@ -20,7 +20,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 		then:
 		typeSlot.typeParam == null;
-		typeSlot.getClassDescriptor() == 'LReIW/tiny/cloneAny/pojo/impl/TypeSlotBuilderTester$Field;'
+		typeSlot.getTypeDescriptor() == 'LReIW/tiny/cloneAny/pojo/impl/TypeSlotBuilderTester$Field;'
 		typeSlot.slotList.size()== 0
 
 		then:

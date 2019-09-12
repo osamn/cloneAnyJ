@@ -23,14 +23,13 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 
 	private boolean completed;
 
-	TypeSlot(String typeParam, String descriptor, boolean isArrayType, boolean isPrimitiveType, boolean isMap,
-			boolean isList, boolean isCharSequence) {
-		super(typeParam, descriptor, isArrayType, isPrimitiveType, isMap, isList, isCharSequence);
+	TypeSlot(String typeParam, String descriptor) {
+		super(typeParam, descriptor);
 	}
 
 	@Override
 	public String getName() {
-		return Type.getType(this.getClassDescriptor()).getInternalName();
+		return Type.getType(this.getTypeDescriptor()).getInternalName();
 	}
 
 	@Override
@@ -45,7 +44,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 	 * のアクセサをとる場合はこっち
 	 */
 	public TypeAccessDef bind(final List<Slot> binds) {
-		return new BoundTypeDef(binds);
+		return new Binder(binds);
 	}
 
 	// complete から再帰的に継承元をたどることで
@@ -58,7 +57,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		completed = true;
 
 		// 親が Object.class だったら継承階層のルートまでたどってるので終了する
-		final String superDesc = superSlots.get(0).getClassDescriptor();
+		final String superDesc = superSlots.get(0).getTypeDescriptor();
 		if (superDesc.contentEquals("Ljava/lang/Object;")) {
 			return;
 		}
@@ -106,7 +105,7 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 			// if (thisSlot.descriptor.contentEquals("Ljava/lang/Object;")) {
 			if (typeParamSlot.isCertainBound()) {
 				// 型パラメタが解決されてるので、そいつをくっつける
-				map.put(superFormalSlot.typeParam, typeParamSlot.getClassDescriptor());
+				map.put(superFormalSlot.typeParam, typeParamSlot.getTypeDescriptor());
 			} else {
 				// 型パラメタをリネームする。目印として 'T' をつける
 				// 以下より T で始まる型引数はありえないため T を目印にしてるよ
@@ -120,11 +119,11 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		return map;
 	}
 
-	private final class BoundTypeDef implements TypeAccessDef {
+	private final class Binder implements TypeAccessDef {
 
 		private final List<Slot> binds;
 
-		private BoundTypeDef(final List<Slot> binds) {
+		private Binder(final List<Slot> binds) {
 			if (binds.size() != TypeSlot.this.slotList.size()) {
 				// this.slotList -> formal parameter なので binds と必ず長さが一致するはず
 				throw new IllegalArgumentException("Type parameters to bind should be match formal-parameters.");
@@ -141,7 +140,10 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		public Stream<Accessor> accessors() {
 			final HashMap<String, String> bindMap = new HashMap<>();
 			binds.forEach(withIndex((slot, i) -> {
-				bindMap.put(TypeSlot.this.slotList.get(i).typeParam, slot.getClassDescriptor());
+				final Slot formal = TypeSlot.this.slotList.get(i);
+				if (!formal.isCertainBound()) {
+					bindMap.put(formal.typeParam, slot.getTypeDescriptor());
+				}
 			}));
 			return TypeSlot.this.accessors().map(acc -> (SlotAccessor) acc).map(acc -> acc.rebind(bindMap));
 		}

@@ -88,6 +88,9 @@ class TypeSlotSpec extends Specification {
 		then:
 		ts.access.size() == 4
 
+		println ts.access.findAll {it in SingleSlotAccessor}.forEach {println it.slot}
+		println ts.access.forEach {println it}
+
 		then:
 		acc[0] == [
 			Accessor.Type.LumpSet,
@@ -106,7 +109,7 @@ class TypeSlotSpec extends Specification {
 			"()Ljava/lang/Object;"
 		]
 		ts.access[1].slot.typeParam == "B"
-		ts.access[1].slot.getClassDescriptor() == "Ljava/lang/Object;"
+		ts.access[1].slot.descriptor == "Ljava/lang/Object;"
 
 		then:
 		acc[2] == [
@@ -117,7 +120,7 @@ class TypeSlotSpec extends Specification {
 			"Ljava/lang/Object;"
 		]
 		ts.access[2].slot.typeParam == "="
-		ts.access[2].slot.getClassDescriptor() == "Ljava/lang/String;"
+		ts.access[2].slot.descriptor == "Ljava/lang/String;"
 
 		acc[3] == [
 			Accessor.Type.Set,
@@ -127,7 +130,7 @@ class TypeSlotSpec extends Specification {
 			"(Ljava/lang/Object;)V"
 		]
 		ts.access[3].slot.typeParam == "A"
-		ts.access[3].slot.getClassDescriptor() == "Ljava/lang/Object;"
+		ts.access[3].slot.descriptor == "Ljava/lang/Object;"
 	}
 
 	def "明示的な bind で継承元まで型引数が bind されてること"() {
@@ -144,15 +147,15 @@ class TypeSlotSpec extends Specification {
 
 		then:
 		access[1].slot.typeParam == "="
-		access[1].slot.getClassDescriptor() == "[[I"
+		access[1].slot.getTypeDescriptor() == "[[I"
 
 		then:
 		access[2].slot.typeParam == "="
-		access[2].slot.getClassDescriptor() == "Ljava/lang/String;"
+		access[2].slot.descriptor == "Ljava/lang/String;"
 		
 		then:
 		access[3].slot.typeParam == "="
-		access[3].slot.getClassDescriptor() == "Ljava/lang/Double;"
+		access[3].slot.descriptor == "Ljava/lang/Double;"
 	}
 	
 	
@@ -182,6 +185,6 @@ class TypeSlotSpec extends Specification {
 		acc.rel == '<init>'
 		acc.owner == Type.getInternalName(clazz)
 		acc.names == ['first', 'second']
-		acc.slots.collect {it.getClassDescriptor()} == ['[I', 'Ljava/lang/String;']
+		acc.slots.collect {it.getTypeDescriptor()} == ['[I', 'Ljava/lang/String;']
 	}
 }

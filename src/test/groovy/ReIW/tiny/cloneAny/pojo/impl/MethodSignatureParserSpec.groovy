@@ -15,7 +15,7 @@ class MethodSignatureParserSpec extends Specification {
 
 		then:
 		slot.typeParam == null
-		slot.descriptor == "Ljava/lang/String;"
+		slot.@descriptor == "Ljava/lang/String;"
 		slot.slotList == []
 	}
 
@@ -27,22 +27,23 @@ class MethodSignatureParserSpec extends Specification {
 
 		when:
 		new MethodSignatureParser(null, {slot = it}).parseArgumentsAndReturn("()[[Ljava/lang/String;", null)
+		println slot
 		slot_1 = slot.slotList[0]
 		slot_2 = slot_1.slotList[0]
 
 		then:
 		slot.typeParam == null
-		slot.descriptor == "["
+		slot.@descriptor == "["
 		slot.slotList.size() == 1
 
 		then:
 		slot_1.typeParam == null
-		slot_1.descriptor == "["
+		slot_1.@descriptor == "["
 		slot_1.slotList.size() == 1
 
 		then:
 		slot_2.typeParam == null
-		slot_2.descriptor == "Ljava/lang/String;"
+		slot_2.@descriptor == "Ljava/lang/String;"
 		slot_2.slotList == []
 	}
 
@@ -59,15 +60,15 @@ class MethodSignatureParserSpec extends Specification {
 
 		then:
 		slot.typeParam == null
-		slot.descriptor == "Ljava/util/Map;"
+		slot.@descriptor == "Ljava/util/Map;"
 		slot.slotList.size() == 2
 
 		slot_1.typeParam == "="
-		slot_1.descriptor == "Ljava/lang/String;"
+		slot_1.@descriptor == "Ljava/lang/String;"
 		slot_1.slotList == []
 
 		slot_2.typeParam == "="
-		slot_2.descriptor == "Ljava/lang/Integer;"
+		slot_2.@descriptor == "Ljava/lang/Integer;"
 		slot_2.slotList == []
 	}
 
@@ -84,15 +85,15 @@ class MethodSignatureParserSpec extends Specification {
 
 		then:
 		slot.typeParam == null
-		slot.descriptor == "Ljava/util/Map;"
+		slot.@descriptor == "Ljava/util/Map;"
 		slot.slotList.size() == 2
 
 		slot_1.typeParam == "K"
-		slot_1.descriptor == "Ljava/lang/Object;"
+		slot_1.@descriptor == "Ljava/lang/Object;"
 		slot_1.slotList == []
 
 		slot_2.typeParam == "="
-		slot_2.descriptor == "Ljava/lang/Integer;"
+		slot_2.@descriptor == "Ljava/lang/Integer;"
 		slot_2.slotList == []
 	}
 
@@ -115,27 +116,27 @@ class MethodSignatureParserSpec extends Specification {
 
 		then:
 		slot.typeParam == null
-		slot.descriptor == "["
+		slot.@descriptor == "["
 		slot.slotList.size() == 1
 
 		slot_1.typeParam == null
-		slot_1.descriptor == "["
+		slot_1.@descriptor == "["
 		slot_1.slotList.size() == 1
 
 		slot_2.typeParam == null
-		slot_2.descriptor == "Ljava/util/List;"
+		slot_2.@descriptor == "Ljava/util/List;"
 		slot_2.slotList.size() == 1
 
 		slot_3.typeParam == "="
-		slot_3.descriptor == "["
+		slot_3.@descriptor == "["
 		slot_3.slotList.size() == 1
 
 		slot_4.typeParam == null
-		slot_4.descriptor == "["
+		slot_4.@descriptor == "["
 		slot_4.slotList.size() == 1
 
 		slot_5.typeParam == null
-		slot_5.descriptor == "Ljava/lang/String;"
+		slot_5.@descriptor == "Ljava/lang/String;"
 		slot_5.slotList == []
 	}
 
@@ -151,12 +152,12 @@ class MethodSignatureParserSpec extends Specification {
 
 		then:
 		slot.typeParam == null
-		slot.descriptor == "["
+		slot.@descriptor == "["
 		slot.slotList.size() == 1
 
 		then:
 		slot_1.typeParam == null
-		slot_1.descriptor == "Ljava/lang/String;"
+		slot_1.@descriptor == "Ljava/lang/String;"
 		slot_1.slotList.size() == 0
 	}
 
@@ -175,19 +176,19 @@ class MethodSignatureParserSpec extends Specification {
 
 		then:
 		slot.typeParam == null
-		slot.descriptor == "["
+		slot.@descriptor == "["
 		slot.slotList.size() == 1
 
 		slot_1.typeParam == null
-		slot_1.descriptor == "Ljava/util/List;"
+		slot_1.@descriptor == "Ljava/util/List;"
 		slot_1.slotList.size() == 1
 
 		slot_2.typeParam == "="
-		slot_2.descriptor == "["
+		slot_2.@descriptor == "["
 		slot_2.slotList.size() == 1
 
 		slot_3.typeParam == null
-		slot_3.descriptor == "Ljava/lang/String;"
+		slot_3.@descriptor == "Ljava/lang/String;"
 		slot_3.slotList.size() == 0
 	}
 
@@ -203,17 +204,17 @@ class MethodSignatureParserSpec extends Specification {
 
 		then:
 		slots[0].typeParam == null
-		slots[0].descriptor == "Ljava/lang/String;"
+		slots[0].@descriptor == "Ljava/lang/String;"
 		slots[0].slotList.size() == 0
 
 		then:
 		slots[1].typeParam == null
-		slots[1].descriptor == "Ljava/lang/Integer;"
+		slots[1].@descriptor == "Ljava/lang/Integer;"
 		slots[1].slotList.size() == 0
 
 		then:
 		slots[2].typeParam == null
-		slots[2].descriptor == "I"
+		slots[2].@descriptor == "I"
 		slots[2].slotList.size() == 0
 	}
 	
@@ -229,26 +230,26 @@ class MethodSignatureParserSpec extends Specification {
 
 		then:
 		slots[0].typeParam == null
-		slots[0].descriptor == "["
+		slots[0].@descriptor == "["
 		slots[0].slotList.size() == 1
 		slots[0].slotList[0].typeParam == null
-		slots[0].slotList[0].descriptor == "Ljava/lang/String;"
+		slots[0].slotList[0].@descriptor == "Ljava/lang/String;"
 		slots[0].slotList[0].slotList.size() == 0
 
 		then:
 		slots[1].typeParam == null
-		slots[1].descriptor == "Ljava/util/List;"
+		slots[1].@descriptor == "Ljava/util/List;"
 		slots[1].slotList.size() == 1
 		slots[1].slotList[0].typeParam == "="
-		slots[1].slotList[0].descriptor == "Ljava/lang/Long;"
+		slots[1].slotList[0].@descriptor == "Ljava/lang/Long;"
 		slots[1].slotList[0].slotList.size() == 0
 
 		then:
 		slots[2].typeParam == null
-		slots[2].descriptor == "["
+		slots[2].@descriptor == "["
 		slots[2].slotList.size() == 1
 		slots[2].slotList[0].typeParam == null
-		slots[2].slotList[0].descriptor == "I"
+		slots[2].slotList[0].@descriptor == "I"
 		slots[2].slotList[0].slotList.size() == 0
 	}
 	
@@ -273,12 +274,12 @@ class MethodSignatureParserSpec extends Specification {
 
 		then:
 		slots[0].typeParam == null
-		slots[0].descriptor == "["
+		slots[0].@descriptor == "["
 		slots[0].slotList.size() == 1
 		
 		then:
 		slots[0].slotList[0].typeParam == null
-		slots[0].slotList[0].descriptor == 'J'
+		slots[0].slotList[0].@descriptor == 'J'
 		slots[0].slotList[0].slotList.size() == 0
 	}
 	
@@ -295,12 +296,12 @@ class MethodSignatureParserSpec extends Specification {
 
 		then:
 		slots[0].typeParam == null
-		slots[0].descriptor == "["
+		slots[0].@descriptor == "["
 		slots[0].slotList.size() == 1
 		
 		then:
 		slots[0].slotList[0].typeParam == null
-		slots[0].slotList[0].descriptor == 'I'
+		slots[0].slotList[0].@descriptor == 'I'
 		slots[0].slotList[0].slotList.size() == 0
 	}
 }

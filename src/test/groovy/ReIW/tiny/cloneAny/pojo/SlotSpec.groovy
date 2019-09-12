@@ -21,7 +21,7 @@ class SlotSpec extends Specification {
 	def 'generic なクラスだけど型パラメタの子スロットは追加されない'() {
 		// descriptor から作るので generic の型パラメタは作成されない
 		when:
-		def Slot slot = new Slot(null, Type.getDescriptor(HashMap))
+		def Slot slot = Slot.getSlot(null, Type.getDescriptor(HashMap))
 
 		then:
 		slot.isArrayType == false
@@ -33,7 +33,7 @@ class SlotSpec extends Specification {
 	def 'object array class'() {
 		when:
 
-		def Slot slot = new Slot(null, "[Ljava/lang/Integer;")
+		def Slot slot = Slot.getSlot(null, "[Ljava/lang/Integer;")
 
 		then:
 		slot.isArrayType == true
@@ -50,7 +50,7 @@ class SlotSpec extends Specification {
 
 	def 'primitive array class'() {
 		when:
-		def Slot slot = new Slot(null, Type.getDescriptor(int[][]))
+		def Slot slot = Slot.getSlot(null, Type.getDescriptor(int[][]))
 
 		then:
 		slot.isArrayType == true
@@ -130,7 +130,7 @@ class SlotSpec extends Specification {
 		actual = slot.rebind(['X':'[Ljava/util/List<Ljava/lang/String;>;'])
 
 		then:
-		actual.getClassDescriptor() == 'Lfoo/bar/Hoge<[Ljava/util/List<Ljava/lang/String;>;>;'
+		actual.getTypeSignature() == 'Lfoo/bar/Hoge<[Ljava/util/List<Ljava/lang/String;>;>;'
 		
 		then:
 		actual.descriptor == 'Lfoo/bar/Hoge;'
@@ -160,7 +160,7 @@ class SlotSpec extends Specification {
 		actual = slot.rebind(['X':'Ljava/util/List<[TA;>;'])
 
 		then:
-		actual.getClassDescriptor() == 'Lfoo/bar/Hoge<Ljava/util/List<[TA;>;>;'
+		actual.getTypeSignature() == 'Lfoo/bar/Hoge<Ljava/util/List<[TA;>;>;'
 		
 		then:
 		actual.descriptor == 'Lfoo/bar/Hoge;'

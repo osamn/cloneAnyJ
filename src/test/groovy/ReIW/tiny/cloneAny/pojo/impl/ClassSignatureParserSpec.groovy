@@ -73,17 +73,17 @@ class ClassSignatureParserSpec extends Specification {
 
 		then:
 		supers[0].typeParam == null
-		supers[0].descriptor == Type.getDescriptor(clazz)
+		supers[0].@descriptor == Type.getDescriptor(clazz)
 		supers[0].slotList == []
 
 		then:
 		supers[1].typeParam == null
-		supers[1].descriptor == Type.getDescriptor(intf1)
+		supers[1].@descriptor == Type.getDescriptor(intf1)
 		supers[1].slotList == []
 
 		then:
 		supers[2].typeParam == null
-		supers[2].descriptor == Type.getDescriptor(intf2)
+		supers[2].@descriptor == Type.getDescriptor(intf2)
 		supers[2].slotList == []
 	}
 
@@ -101,22 +101,22 @@ class ClassSignatureParserSpec extends Specification {
 
 		then:
 		supers[0].typeParam == null
-		supers[0].descriptor == "Ljava/lang/Object;"
+		supers[0].@descriptor == "Ljava/lang/Object;"
 		supers[0].slotList == []
 
 		then:
 		supers[1].typeParam == null
-		supers[1].descriptor == Type.getDescriptor(intf)
+		supers[1].@descriptor == Type.getDescriptor(intf)
 		supers[1].slotList.size() == 1
 
 		then:
 		supers[1].slotList[0].typeParam == "="
-		supers[1].slotList[0].descriptor == "["
+		supers[1].slotList[0].@descriptor == "["
 		supers[1].slotList[0].slotList.size() == 1
 
 		then:
 		supers[1].slotList[0].slotList[0].typeParam == null
-		supers[1].slotList[0].slotList[0].descriptor == "Ljava/lang/String;"
+		supers[1].slotList[0].slotList[0].@descriptor == "Ljava/lang/String;"
 		supers[1].slotList[0].slotList[0].slotList == []
 	}
 
@@ -159,27 +159,27 @@ class ClassSignatureParserSpec extends Specification {
 
 		then:
 		formals[0].typeParam == "A"
-		formals[0].descriptor == "Ljava/lang/Object;"
+		formals[0].@descriptor == "Ljava/lang/Object;"
 		formals[0].slotList == []
 
 		then:
 		supers[0].typeParam == null
-		supers[0].descriptor == Type.getDescriptor(clazz)
+		supers[0].@descriptor == Type.getDescriptor(clazz)
 		supers[0].slotList.size() == 2
 
 		then:
 		supers[0].slotList[0].typeParam == "A"
-		supers[0].slotList[0].descriptor == "Ljava/lang/Object;"
+		supers[0].slotList[0].@descriptor == "Ljava/lang/Object;"
 		supers[0].slotList[0].slotList == []
 
 		then:
 		supers[0].slotList[1].typeParam == "="
-		supers[0].slotList[1].descriptor == "["
+		supers[0].slotList[1].@descriptor == "["
 		supers[0].slotList[1].slotList.size() == 1
 
 		then:
 		supers[0].slotList[1].slotList[0].typeParam == null
-		supers[0].slotList[1].slotList[0].descriptor == "I"
+		supers[0].slotList[1].slotList[0].@descriptor == "I"
 		supers[0].slotList[1].slotList[0].slotList == []
 	}
 
@@ -197,22 +197,22 @@ class ClassSignatureParserSpec extends Specification {
 
 		then:
 		supers[0].typeParam == null
-		supers[0].descriptor == Type.getDescriptor(clazz)
+		supers[0].@descriptor == Type.getDescriptor(clazz)
 		supers[0].slotList.size() == 1
 
 		then:
 		supers[0].slotList[0].typeParam == "="
-		supers[0].slotList[0].descriptor == "Ljava/util/List;"
+		supers[0].slotList[0].@descriptor == "Ljava/util/List;"
 		supers[0].slotList[0].slotList.size() == 1
 
 		then:
 		supers[0].slotList[0].slotList[0].typeParam == "="
-		supers[0].slotList[0].slotList[0].descriptor == '['
+		supers[0].slotList[0].slotList[0].@descriptor == '['
 		supers[0].slotList[0].slotList[0].slotList.size() == 1
 		
 		then:
 		supers[0].slotList[0].slotList[0].slotList[0].typeParam == null
-		supers[0].slotList[0].slotList[0].slotList[0].descriptor == 'I'
+		supers[0].slotList[0].slotList[0].slotList[0].@descriptor == 'I'
 		supers[0].slotList[0].slotList[0].slotList[0].slotList == []
 		
 	}

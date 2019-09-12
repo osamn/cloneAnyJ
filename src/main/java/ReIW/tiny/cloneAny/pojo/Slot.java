@@ -3,47 +3,67 @@ package ReIW.tiny.cloneAny.pojo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
+import org.objectweb.asm.signature.SignatureVisitor;
 
-import ReIW.tiny.cloneAny.pojo.impl.SignatureParser;
+import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
 import ReIW.tiny.cloneAny.utils.Descriptors;
 
 /*
  * クラスのメンバの型情報を持つ人
- * ただし、型パラメタについては各 SignatureParser を経由しないと設定されないよ
  */
 public class Slot {
 
+	public static Slot getSlot(final String typeParam, final String descriptor, final String signature) {
+		if (signature != null) {
+			final SlotInitializer init = new SlotInitializer(typeParam);
+			init.accept(signature);
+			return init.slot;
+		} else if (descriptor.startsWith("[")) {
+			final SlotInitializer init = new SlotInitializer(typeParam);
+			init.accept(descriptor);
+			return init.slot;
+		}
+		return new Slot(typeParam, descriptor);
+	}
+
+	// 型パラメタとか配列とかも含めてスロットを作成する
+	public static Slot getSlot(final String typeParam, final String descOrSig) {
+		final char c = descOrSig.charAt(0);
+		// 配列か型パラメタ自体（TX; とかそんなの）もしくは型パラメタ付きのひとだったら
+		// SignatureReader 経由で解析してスロット作る
+		if (c == '[' || c == 'T' || descOrSig.contains("<")) {
+			final SlotInitializer init = new SlotInitializer(typeParam);
+			init.accept(descOrSig);
+			return init.slot;
+		} else {
+			// 全部上でやってもいいんだけど多少オーバーヘッド大きいし
+			// こっちのパターンのほうが多そうなんでわけておく
+			return new Slot(typeParam, descOrSig);
+		}
+	}
+
 	public final String typeParam;
 	public final String descriptor;
-
-	public final List<Slot> slotList = new ArrayList<>();
 
 	public final boolean isArrayType;
 	public final boolean isPrimitiveType;
 	public final boolean isBoxingType;
 
-	// generic じゃない配列は自分で階層までつくる
-	public Slot(final String typeParam, final String descriptor) {
-		if (descriptor.contains("<")) {
-			// generic はエラーにしとく
-			throw new IllegalArgumentException();
-		}
+	public final List<Slot> slotList = new ArrayList<>();
+
+	protected Slot(final String typeParam, final String descriptor) {
 		this.typeParam = typeParam;
-		if (descriptor.startsWith("[")) {
+		if (descriptor.contentEquals("[")) {
 			this.descriptor = "[";
 			this.isArrayType = true;
 			this.isPrimitiveType = false;
 			this.isBoxingType = false;
-
-			final String componentDesc = descriptor.substring(1);
-			// SignatureReader#visitArrayType から呼ばれるときは descriptor == "[" なので
-			// 子スロットを追加しないよ
-			if (!componentDesc.isEmpty()) {
-				this.slotList.add(new Slot(typeParam, componentDesc));
-			}
 		} else {
 			this.descriptor = descriptor;
 			this.isArrayType = false;
@@ -52,16 +72,23 @@ public class Slot {
 		}
 	}
 
-	public String getClassDescriptor() {
+	public String getTypeDescriptor() {
 		if (isArrayType) {
-			return descriptor + slotList.get(0).getClassDescriptor();
+			return descriptor + slotList.get(0).getTypeDescriptor();
+		}
+		return descriptor;
+	}
+
+	public String getTypeSignature() {
+		if (isArrayType) {
+			return descriptor + slotList.get(0).getTypeSignature();
 		}
 		if (slotList.size() > 0) {
 			// primitive はここには来ないので L...; 前提だよ
 			// L... と ; に分割して間に <generic> を埋め込む
 			final String body = descriptor.substring(0, descriptor.length() - 1);
 			return body + "<" + slotList.stream().map(s -> {
-				return s.getClassDescriptor();
+				return s.getTypeSignature();
 			}).collect(Collectors.joining()) + ">;";
 		} else {
 			if (typeParam == null || typeParam.contentEquals("=") || typeParam.contentEquals("+")
@@ -95,8 +122,8 @@ public class Slot {
 				slot.slotList.add(child.rebind(binds));
 			}
 			return slot;
-		} else {
-			// もともとが型パラメタの定義で子スロットがない場合
+		} else if (slotList.size() == 0){
+			// もともとが型パラメタの定義の場合
 			if (bound.startsWith("T")) {
 				// 型パラメタ名の再定義
 				// see TypeSlot#createBindMap
@@ -104,13 +131,11 @@ public class Slot {
 			} else {
 				// 型パラメタに型引数をくっつける
 				// certain bind
-				if (!bound.contains("<")) {
-					// generic じゃない場合はそのままくっつける
-					return new Slot("=", bound);
-				} else {
-					return new BoundSlotBuilder().parse(bound);
-				}
+				return Slot.getSlot("=", bound);
 			}
+		} else {
+			// コンパイラが作ってるものベースなので、ここに落ちることはない！
+			throw new IllegalArgumentException();
 		}
 	}
 
@@ -119,25 +144,99 @@ public class Slot {
 		return "Slot [typeParam=" + typeParam + ", descriptor=" + descriptor + ", slotList=" + slotList + "]";
 	}
 
-	private static final class BoundSlotBuilder extends SignatureParser {
-
+	private static class SlotInitializer extends SlotSignatureVisitor {
 		private Slot slot;
-		
-		private BoundSlotBuilder() {
-			this.typeParamName = "=";
-			this.cons = s -> this.slot = s;
+
+		SlotInitializer(final String typeParam) {
+			typeParamName = typeParam;
+			consumer = this::setSlot;
 		}
 
-		private Slot parse(final String signature) {
-			new SignatureReader(signature).accept(this);
-			return slot;
+		private void setSlot(final Slot slot) {
+			this.slot = slot;
 		}
 
 		@Override
 		public void visitFormalTypeParameter(String name) {
-			// 独立した型パラメタがあったらエラー
 			throw new UnboundFormalTypeParameterException();
+		}
+	}
+
+	public static abstract class SlotSignatureVisitor extends DefaultSignatureVisitor {
+
+		public static final Consumer<Slot> NOP = slot -> {
+		};
+
+		private final Stack<Slot> stack = new Stack<>();
+
+		protected String typeParamName;
+		protected Consumer<Slot> consumer;
+
+		protected Slot newSlot(final String typeParam, final String descriptor) {
+			return new Slot(typeParam, descriptor);
+		}
+
+		protected void accept(final String signature) {
+			new SignatureReader(signature).accept(this);
+		}
+
+		@Override
+		public void visitFormalTypeParameter(final String name) {
+			typeParamName = name;
+		}
+
+		@Override
+		public void visitClassType(final String name) {
+			stack.push(newSlot(typeParamName, Type.getObjectType(name).getDescriptor()));
+		}
+
+		@Override
+		public void visitBaseType(final char descriptor) {
+			stack.push(newSlot(typeParamName, Character.toString(descriptor)));
+			// primitive の場合 visitEnd に回らないので、ここで明示的に呼んでおく
+			visitEnd();
+		}
+
+		@Override
+		public SignatureVisitor visitArrayType() {
+			stack.push(newSlot(typeParamName, "["));
+			typeParamName = null;
+			return super.visitArrayType();
+		}
+
+		@Override
+		public SignatureVisitor visitTypeArgument(final char wildcard) {
+			typeParamName = String.valueOf(wildcard);
+			return super.visitTypeArgument(wildcard);
+		}
+
+		@Override
+		public void visitTypeVariable(final String name) {
+			stack.push(newSlot(name, "Ljava/lang/Object;"));
+			// visitEnd にいかないので明示的に読んでおく
+			visitEnd();
+		}
+
+		@Override
+		public void visitEnd() {
+			Slot slot = unrollArray();
+			if (stack.isEmpty()) {
+				consumer.accept(slot);
+			} else {
+				stack.peek().slotList.add(slot);
+			}
+			typeParamName = null;
+		}
+
+		private Slot unrollArray() {
+			Slot slot = stack.pop();
+			while (!stack.isEmpty() && stack.peek().isArrayType) {
+				stack.peek().slotList.add(slot);
+				slot = stack.pop();
+			}
+			return slot;
 		}
 
 	}
+
 }

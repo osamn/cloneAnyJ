@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -41,7 +40,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				hiveRef = new WeakReference<>(hive);
 			}
 		}
-		final TypeSlot td = hive.computeIfAbsent(clazz, new TypeSlotBuilder()::buildTypeSlot);
+		final TypeSlot td = hive.computeIfAbsent(clazz, new TypeSlotBuilder()::createInstance);
 		td.complete();
 		return td;
 	}
@@ -55,16 +54,14 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	private TypeSlotBuilder() {
 	}
 
-	private TypeSlot buildTypeSlot(final Class<?> clazz) {
+	private TypeSlot createInstance(final Class<?> clazz) {
 		try {
 			if (clazz.isArray()) {
 				// クラスファイルとして定義されているものが対象なんで配列型はありえない
 				throw new IllegalArgumentException("Top level class should not be array type.");
 			}
-			typeSlot = new TypeSlot(null, Type.getDescriptor(clazz), false, clazz.isPrimitive(),
-					Map.class.isAssignableFrom(clazz), List.class.isAssignableFrom(clazz),
-					CharSequence.class.isAssignableFrom(clazz));
-			new ClassReader(Type.getType(typeSlot.getClassDescriptor()).getInternalName()).accept(this, 0);
+			typeSlot = new TypeSlot(null, Type.getDescriptor(clazz));
+			new ClassReader(Type.getInternalName(clazz)).accept(this, 0);
 			return typeSlot;
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e);
@@ -82,9 +79,8 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		if (isAccessible(access)) {
 			// final なものは読み取り専用になるよ
 			final Accessor.Type type = AccessFlag.isFinal(access) ? Accessor.Type.ReadonlyField : Accessor.Type.Field;
-			new FieldSignatureParser(slot -> {
-				typeSlot.access.add(new SingleSlotAccessor(type, typeSlot.getName(), name, name, descriptor, slot));
-			}).parse(descriptor, signature);
+			final Slot slot = Slot.getSlot(null, descriptor, signature);
+			typeSlot.access.add(new SingleSlotAccessor(type, typeSlot.getName(), name, name, descriptor, slot));
 		}
 		return null;
 	}
@@ -98,8 +94,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				// ストリームでのコンストラクタ出現順を最初に持っていきたいのでコンストラクタは必ずリストの先頭に追加する
 				// コンストラクタの定義順とは逆になるけどそれは気にしないの;-)
 				typeSlot.access.add(0, acc);
-				new MethodSignatureParser(acc.slots::add, null).parseArgumentsAndReturn(descriptor,
-						signature);
+				new MethodSignatureParser(acc.slots::add, null).parseArgumentsAndReturn(descriptor, signature);
 				return new MethodParamNameMapper(acc.slots, acc.names::add);
 			} else {
 				try {
