@@ -29,7 +29,7 @@ public class OperandStreamBuilder {
 	private final TypeDef rhs;
 
 	// 左のアクセサのパラメタ名をキーにするマップ
-	// ここにない場合は Map#get からとる感じになる
+	// ここにない場合は lhs の Map#get からとる感じになる
 	private final Map<String, Accessor> sourceAccMap;
 
 	private final Accessor effectiveCtor;
@@ -89,10 +89,17 @@ public class OperandStreamBuilder {
 		}
 		Stream.Builder<Operand> builder = Stream.builder();
 
-		// TODO copy property to arg
-		// TODO copy Map#get to arg check exists
-		// コンストラクタ引数なんでマップにキーが存在しない場合はすぐエラーに
-		// used の設定わすれずに
+		effectiveCtor.slotInfo().forEach(inf -> {
+			final String name = inf.param;
+			final Accessor src = sourceAccMap.get(name);
+			if (src == null) {
+				// コンストラクタ引数なんでマップにキーが存在しない場合はすぐエラーに
+				// TODO copy Map#get to arg check exists
+			} else {
+				// TODO copy property to arg
+			}
+			used.add(name);
+		});
 
 		return builder.build();
 	}
@@ -100,9 +107,17 @@ public class OperandStreamBuilder {
 	public Stream<Operand> copyStream() {
 		Stream.Builder<Operand> builder = Stream.builder();
 
-		// TODO copy property to property
-		// TODO copy Map#get(propName) to property if exists
-		// used の設定わすれずに
+		effectiveDst.forEach(acc -> {
+			final String name = acc.getName();
+			final Accessor src = sourceAccMap.get(name);
+			if (src == null) {
+				// TODO copy Map#get(propName) to property if exists
+				// 場合によってはコピーしてないのに used に入っちゃうけどいい？
+			} else {
+				// TODO copy property to property
+			}
+			used.add(name);
+		});
 
 		/* rhs が Map の場合特別扱いで計算する */
 
@@ -114,7 +129,8 @@ public class OperandStreamBuilder {
 					// コピーの対象になっていない左側要素のアクセサをとって
 					.filter(entry -> !used.contains(entry.getKey())).map(Map.Entry::getValue)
 					// 変換可能なものだけ対象とする
-					.filter(acc -> canMove(Accessor.asSingle(acc).slot, valueSlot)) //
+					.filter(acc -> canMove(Accessor.asSingle(acc).slot, valueSlot))
+					// copy source property/filed to Map#put(name, val)
 					.forEach(acc -> {
 						// TODO copy property to Map#put(name, val)
 					});
@@ -157,14 +173,14 @@ public class OperandStreamBuilder {
 			// 型パラメタを除いて一緒なんでとりあえず true
 			return true;
 		}
-	
+
 		/* array が絡む場合は Slot#descriptor が型を示さないので先に処理する */
-	
+
 		// array -> array のチェック
 		if (lhs.isArrayType && rhs.isArrayType) {
 			return canMove(lhs.slotList.get(0), rhs.slotList.get(0));
 		}
-	
+
 		// array -> List のチェック
 		if (lhs.isArrayType) {
 			final TypeDef rhsDef = TypeDef.createInstance(rhs);
@@ -174,7 +190,7 @@ public class OperandStreamBuilder {
 			}
 			return false;
 		}
-	
+
 		// List -> array のチェック
 		if (rhs.isArrayType) {
 			final TypeDef lhsDef = TypeDef.createInstance(lhs);
@@ -183,9 +199,9 @@ public class OperandStreamBuilder {
 			}
 			return false;
 		}
-	
+
 		/* array じゃない場合は getTypeDescriptor じゃなくて descriptor を直に扱えるよ */
-	
+
 		// キャスト操作のチェック
 		if (lhs.isPrimitiveType && rhs.isPrimitiveType) {
 			// boolean はキャストでほかの primitive に持っていけないので特別扱い
@@ -198,7 +214,7 @@ public class OperandStreamBuilder {
 			// それ以外はキャスト可能
 			return true;
 		}
-	
+
 		// Box 操作のチェック
 		if (lhs.isPrimitiveType && rhs.isBoxingType) {
 			if (lhs.descriptor.contentEquals("Z") && rhs.descriptor.contentEquals("Ljava/lang/Boolean;")) {
@@ -208,7 +224,7 @@ public class OperandStreamBuilder {
 			}
 			return true;
 		}
-	
+
 		// Unbox 操作のチェック
 		if (lhs.isBoxingType && rhs.isPrimitiveType) {
 			if (lhs.descriptor.contentEquals("Ljava/lang/Boolean;") && rhs.descriptor.contentEquals("Z")) {
@@ -218,7 +234,7 @@ public class OperandStreamBuilder {
 			}
 			return true;
 		}
-	
+
 		// * -> String のチェック
 		if (rhs.descriptor.contentEquals("Ljava/lang/String;")) {
 			if (lhs.isPrimitiveType || lhs.isBoxingType) {
@@ -230,7 +246,7 @@ public class OperandStreamBuilder {
 			}
 			return false;
 		}
-	
+
 		// CharSequence -> primitive/boxing のチェック
 		if (rhs.isPrimitiveType || rhs.isBoxingType) {
 			final TypeDef lhsDef = TypeDef.createInstance(lhs);
@@ -239,7 +255,7 @@ public class OperandStreamBuilder {
 			}
 			return false;
 		}
-	
+
 		// あとは Operand 作るところで頑張る
 		return true;
 	}
