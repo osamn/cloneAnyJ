@@ -1,5 +1,9 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 interface TypeSlotTester {
 
 	class SimpleBase {
@@ -40,7 +44,9 @@ interface TypeSlotTester {
 
 	class GenericBase<X, Y, Z> {
 		public Z baseVal;
-		public void setBaseVal(X val) {}
+
+		public void setBaseVal(X val) {
+		}
 	}
 
 	class GenericExtends<A, B> extends GenericBase<A, B, String> {
@@ -48,10 +54,50 @@ interface TypeSlotTester {
 			return null;
 		}
 	}
-	
+
 	class GenericCtor<X, Y> {
 		public GenericCtor(Y first, X second) {
-			
+
 		}
 	}
+
+	abstract class ListOfString implements List<String> {
+
+	}
+
+	@SuppressWarnings("serial")
+	class ArrayListOfString extends ArrayList<String> {
+
+	}
+
+	@SuppressWarnings("serial")
+	class ArrayListOf<T> extends ArrayList<T> {
+
+	}
+
+	@SuppressWarnings("serial")
+	class ExArrayListOf<T> extends ArrayListOf<T> {
+
+	}
+
+	@SuppressWarnings("serial")
+	class MapOf<K, Z, V> extends HashMap<K, V> {
+		// 関係ない型パラメタのつけてみる
+	}
+
+	@SuppressWarnings("serial")
+	class ExMapOfStringKeyd<Z> extends MapOf<String, Z, Long> {
+
+	}
+
+	@SuppressWarnings("serial")
+	class ExMapOfIntegerKeyed<Z> extends MapOf<Integer, Z, Long> {
+
+	}
+
+	@SuppressWarnings("serial")
+	class ExMapOf<K, Z> extends MapOf<K, Z, Long> {
+
+	}
+
 }

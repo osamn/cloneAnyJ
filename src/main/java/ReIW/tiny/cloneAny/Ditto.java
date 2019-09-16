@@ -1,6 +1,6 @@
 package ReIW.tiny.cloneAny;
 
-import ReIW.tiny.cloneAny.impl.DittoBuilder;
+import ReIW.tiny.cloneAny.compile.DittoBuilder;
 
 public interface Ditto<Lhs, Rhs> {
 

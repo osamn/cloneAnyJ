@@ -8,11 +8,12 @@ public interface Accessor {
 		Field, ReadonlyField, Get, Set, LumpSet,
 	}
 
-	static class ParamInfo {
-		public final String name;
+	static class SlotInfo {
+		public final String param;
 		public final Slot slot;
-		public ParamInfo(String name, Slot slot) {
-			this.name = name;
+
+		public SlotInfo(final String paramName, final Slot slot) {
+			this.param = paramName;
 			this.slot = slot;
 		}
 	}
@@ -31,8 +32,13 @@ public interface Accessor {
 
 	String getDescriptor();
 
-	Slot getSlot();
+	Stream<SlotInfo> slotInfo();
 
-	Stream<ParamInfo> parameters();
-	
+	static SlotInfo asSingle(Accessor acc) {
+		if (acc.getType() == Type.LumpSet) {
+			throw new IllegalArgumentException();
+		}
+		return acc.slotInfo().findFirst().get();
+	}
+
 }

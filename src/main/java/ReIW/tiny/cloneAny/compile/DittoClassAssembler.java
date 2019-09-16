@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.impl;
+package ReIW.tiny.cloneAny.compile;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -9,9 +9,6 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Type;
 
-import ReIW.tiny.cloneAny.compile.AbstractDitto;
-import ReIW.tiny.cloneAny.compile.ConcreteDittoClassVisitor;
-import ReIW.tiny.cloneAny.compile.ImplementClassNameGetterVisitor;
 import ReIW.tiny.cloneAny.core.AssemblyDomain;
 import ReIW.tiny.cloneAny.core.AssemblyException;
 

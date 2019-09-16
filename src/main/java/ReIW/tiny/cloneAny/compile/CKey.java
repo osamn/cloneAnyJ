@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.impl;
+package ReIW.tiny.cloneAny.compile;
 
 import java.util.Objects;
 
@@ -14,7 +14,7 @@ public final class CKey {
 	private final int hash;
 
 	public CKey(final Class<?> lhs, final Class<?> rhs) {
-		this(Slot.fromClass(lhs), Slot.fromClass(rhs));
+		this(Slot.getSlot(null, Type.getDescriptor(lhs)), Slot.getSlot(null, Type.getDescriptor(rhs)));
 	}
 
 	public CKey(final Slot lhs, final Slot rhs) {

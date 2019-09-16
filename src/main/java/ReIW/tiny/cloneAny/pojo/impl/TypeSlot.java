@@ -12,24 +12,79 @@ import org.objectweb.asm.Type;
 
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Slot;
-import ReIW.tiny.cloneAny.pojo.TypeAccessDef;
+import ReIW.tiny.cloneAny.pojo.TypeDef;
 import ReIW.tiny.cloneAny.utils.Descriptors;
 
-public class TypeSlot extends Slot implements TypeAccessDef {
+public final class TypeSlot extends Slot implements TypeDef {
+
+	// -- builder が設定するものは package スコープ
 
 	final ArrayList<Slot> superSlots = new ArrayList<>();
 
 	final ArrayList<Accessor> access = new ArrayList<>();
 
+	Slot listSlot;
+
+	Slot mapSlot;
+
+	boolean charSequence;
+
+	boolean defaultCtor;
+
 	private boolean completed;
 
-	TypeSlot(String typeParam, String descriptor) {
+	TypeSlot(final String typeParam, final String descriptor) {
 		super(typeParam, descriptor);
 	}
 
 	@Override
 	public String getName() {
-		return Type.getType(this.getTypeDescriptor()).getInternalName();
+		return Type.getType(this.descriptor).getInternalName();
+	}
+
+	@Override
+	public boolean hasDefaultCtor() {
+		return defaultCtor;
+	}
+
+	@Override
+	public boolean isArrayType() {
+		return isArrayType;
+	}
+
+	@Override
+	public boolean isPrimitiveType() {
+		return isPrimitiveType;
+	}
+
+	@Override
+	public boolean isBoxingType() {
+		return isBoxingType;
+	}
+
+	@Override
+	public boolean isList() {
+		return listSlot != null;
+	}
+
+	@Override
+	public boolean isMap() {
+		return mapSlot != null && mapSlot.slotList.get(0).descriptor.contentEquals("Ljava/lang/String;");
+	}
+
+	@Override
+	public boolean isCharSequence() {
+		return charSequence;
+	}
+
+	@Override
+	public Slot elementSlot() {
+		return listSlot.slotList.get(0);
+	}
+
+	@Override
+	public Slot valueSlot() {
+		return mapSlot.slotList.get(1);
 	}
 
 	@Override
@@ -43,12 +98,15 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 	 * フィールドとかメソッドの戻りとか引数とかで直接 generic を指定しているタイプのアクセサから引っ張ってきた TypeDef
 	 * のアクセサをとる場合はこっち
 	 */
-	public TypeAccessDef bind(final List<Slot> binds) {
+	public TypeDef bind(final List<Slot> binds) {
+		if (binds.size() == 0) {
+			return this;
+		}
 		return new Binder(binds);
 	}
 
 	// complete から再帰的に継承元をたどることで
-	// 結果として継承階層上のすべての AccessEntry が含まれる形になる
+	// 結果として継承階層上のすべての Accessor が含まれる形になる
 	void complete() {
 		// 何回も呼ばれる可能性もあるのでガードしとく
 		if (completed) {
@@ -62,16 +120,23 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 			return;
 		}
 		// 親の TypeSlot を作って
-		final TypeSlot superType = TypeSlotBuilder.build(Descriptors.toClass(superDesc));
+		final TypeSlot superType = new TypeSlotBuilder().buildTypeSlot(Descriptors.toClass(superDesc));
 		superType.complete();
+		final HashMap<String, String> binds = createBindMap(superType);
 		// 親のアクセサを自分に持ってくる
-		pullAllUp(superType);
+		pullAllUp(binds, superType);
+		// リスト/マップのスロットをバインド済みにしておく
+		if (superType.listSlot != null) {
+			listSlot = superType.listSlot.rebind(binds);
+		}
+		if (superType.mapSlot != null) {
+			mapSlot = superType.mapSlot.rebind(binds);
+		}
 	}
 
 	// スーパークラス上で公開されたアクセスエントリを自分の型引数をバインドして
 	// 自分のエントリとして追加する
-	private void pullAllUp(final TypeSlot superType) {
-		final HashMap<String, String> binds = createBindMap(superType);
+	private void pullAllUp(final HashMap<String, String> binds, final TypeSlot superType) {
 		final HashSet<String> checkExists = new HashSet<>();
 		this.access.forEach(acc -> checkExists.add(acc.getRel() + acc.getDescriptor()));
 		superType.access.stream().map(acc -> (SlotAccessor) acc).forEach(acc -> {
@@ -119,16 +184,24 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		return map;
 	}
 
-	private final class Binder implements TypeAccessDef {
+	private final class Binder implements TypeDef {
 
-		private final List<Slot> binds;
+		private final HashMap<String, String> formalBindMap;
 
 		private Binder(final List<Slot> binds) {
 			if (binds.size() != TypeSlot.this.slotList.size()) {
 				// this.slotList -> formal parameter なので binds と必ず長さが一致するはず
 				throw new IllegalArgumentException("Type parameters to bind should be match formal-parameters.");
 			}
-			this.binds = binds;
+			formalBindMap = new HashMap<>();
+			// マップを作るのに binds 側の typeParam はみてないよ
+			// 単純に位置で対応表をつくるだけなので、定義順じゃないとずれるよ
+			binds.forEach(withIndex((slot, i) -> {
+				final Slot formal = TypeSlot.this.slotList.get(i);
+				if (!formal.isCertainBound()) {
+					formalBindMap.put(formal.typeParam, slot.getTypeDescriptor());
+				}
+			}));
 		}
 
 		@Override
@@ -137,15 +210,64 @@ public class TypeSlot extends Slot implements TypeAccessDef {
 		}
 
 		@Override
+		public boolean hasDefaultCtor() {
+			return TypeSlot.this.hasDefaultCtor();
+		}
+
+		@Override
+		public boolean isCertainBound() {
+			return TypeSlot.this.rebind(formalBindMap).isCertainBound();
+		}
+
+		@Override
+		public boolean isArrayType() {
+			return TypeSlot.this.isArrayType();
+		}
+
+		@Override
+		public boolean isPrimitiveType() {
+			return TypeSlot.this.isPrimitiveType();
+		}
+
+		@Override
+		public boolean isBoxingType() {
+			return TypeSlot.this.isBoxingType();
+		}
+
+		@Override
+		public boolean isList() {
+			return TypeSlot.this.isList();
+		}
+
+		@Override
+		public boolean isMap() {
+			if (TypeSlot.this.mapSlot != null) {
+				final Slot slot = TypeSlot.this.mapSlot.rebind(formalBindMap);
+				return slot.slotList.get(0).descriptor.contentEquals("Ljava/lang/String;");
+			}
+			return false;
+		}
+
+		@Override
+		public boolean isCharSequence() {
+			return TypeSlot.this.isCharSequence();
+		}
+
+		// List の要素スロット
+		@Override
+		public Slot elementSlot() {
+			return TypeSlot.this.elementSlot().rebind(formalBindMap);
+		}
+
+		// Map の value スロット
+		@Override
+		public Slot valueSlot() {
+			return TypeSlot.this.valueSlot().rebind(formalBindMap);
+		}
+
+		@Override
 		public Stream<Accessor> accessors() {
-			final HashMap<String, String> bindMap = new HashMap<>();
-			binds.forEach(withIndex((slot, i) -> {
-				final Slot formal = TypeSlot.this.slotList.get(i);
-				if (!formal.isCertainBound()) {
-					bindMap.put(formal.typeParam, slot.getTypeDescriptor());
-				}
-			}));
-			return TypeSlot.this.accessors().map(acc -> (SlotAccessor) acc).map(acc -> acc.rebind(bindMap));
+			return TypeSlot.this.accessors().map(acc -> (SlotAccessor) acc).map(acc -> acc.rebind(formalBindMap));
 		}
 
 	}

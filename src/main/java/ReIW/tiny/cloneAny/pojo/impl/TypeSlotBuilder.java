@@ -20,7 +20,6 @@ import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 import ReIW.tiny.cloneAny.pojo.UnboundMethodParameterNameException;
 import ReIW.tiny.cloneAny.utils.AccessFlag;
-import ReIW.tiny.cloneAny.utils.Descriptors;
 import ReIW.tiny.cloneAny.utils.Propertys;
 
 // TODO lombok 使ってるとき signature のこってるの？
@@ -31,30 +30,26 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	private static WeakReference<ConcurrentHashMap<Class<?>, TypeSlot>> hiveRef = new WeakReference<>(
 			new ConcurrentHashMap<>());
 
-	public static TypeSlot build(final Class<?> clazz) {
+	private TypeSlot typeSlot;
+
+	public TypeSlotBuilder() {
+	}
+
+	public TypeSlot buildTypeSlot(final Class<?> clazz) {
 		ConcurrentHashMap<Class<?>, TypeSlot> hive;
-		synchronized (hiveRef) {
+		synchronized (TypeSlotBuilder.class) {
 			hive = hiveRef.get();
 			if (hive == null) {
 				hive = new ConcurrentHashMap<>();
 				hiveRef = new WeakReference<>(hive);
 			}
 		}
-		final TypeSlot td = hive.computeIfAbsent(clazz, new TypeSlotBuilder()::createInstance);
+		final TypeSlot td = hive.computeIfAbsent(clazz, this::computeTypeSlot);
 		td.complete();
 		return td;
 	}
 
-	public static TypeSlot build(final String descriptor) {
-		return build(Descriptors.toClass(descriptor));
-	}
-
-	private TypeSlot typeSlot;
-
-	private TypeSlotBuilder() {
-	}
-
-	private TypeSlot createInstance(final Class<?> clazz) {
+	private TypeSlot computeTypeSlot(final Class<?> clazz) {
 		try {
 			if (clazz.isArray()) {
 				// クラスファイルとして定義されているものが対象なんで配列型はありえない
@@ -70,8 +65,16 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 
 	@Override
 	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-		new ClassSignatureParser(typeSlot.slotList::add, typeSlot.superSlots::add).parse(superName, interfaces,
-				signature);
+		new ClassSignatureParser(typeSlot.slotList::add, slot -> {
+			if (slot.descriptor.contentEquals("Ljava/util/List;")) {
+				typeSlot.listSlot = slot;
+			} else if (slot.descriptor.contentEquals("Ljava/util/Map;")) {
+				typeSlot.mapSlot = slot;
+			} else if (slot.descriptor.contentEquals("Ljava/lang/CharSequence;")) {
+				typeSlot.charSequence = true;
+			}
+			typeSlot.superSlots.add(slot);
+		}).parse(superName, interfaces, signature);
 	}
 
 	@Override
@@ -90,10 +93,11 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 			String[] exceptions) {
 		if (isAccessible(access)) {
 			if (name.contentEquals("<init>")) {
-				final MultiSlotAccessor acc = new MultiSlotAccessor(typeSlot.getName(), name, descriptor);
-				// ストリームでのコンストラクタ出現順を最初に持っていきたいのでコンストラクタは必ずリストの先頭に追加する
-				// コンストラクタの定義順とは逆になるけどそれは気にしないの;-)
-				typeSlot.access.add(0, acc);
+				if (descriptor.contentEquals("()V")) {
+					typeSlot.defaultCtor = true;
+				}
+				final MultiSlotAccessor acc = new MultiSlotAccessor(typeSlot.getName(), null, name, descriptor);
+				typeSlot.access.add(acc);
 				new MethodSignatureParser(acc.slots::add, null).parseArgumentsAndReturn(descriptor, signature);
 				return new MethodParamNameMapper(acc.slots, acc.names::add);
 			} else {

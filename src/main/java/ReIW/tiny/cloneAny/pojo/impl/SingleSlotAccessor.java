@@ -62,13 +62,8 @@ public final class SingleSlotAccessor extends SlotAccessor {
 	}
 
 	@Override
-	public Slot getSlot() {
-		return slot;
-	}
-
-	@Override
-	public Stream<ParamInfo> parameters() {
-		throw new UnsupportedOperationException();
+	public Stream<SlotInfo> slotInfo() {
+		return Stream.of(new SlotInfo(name,  slot));
 	}
 
 	@Override
