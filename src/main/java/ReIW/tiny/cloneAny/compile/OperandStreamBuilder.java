@@ -168,6 +168,8 @@ public class OperandStreamBuilder {
 	}
 
 	// Accessor として抽出されたスロットの変換可能性をみる
+	// Object -> Object の場合はここで true になっても右側のコンストラクタセッタあたりで
+	// うまく転記できなかったら runtime 時に例外になったりするよ
 	private static boolean canMove(final Slot lhs, final Slot rhs) {
 		if (lhs.getTypeDescriptor().contentEquals(rhs.getTypeDescriptor())) {
 			// 型パラメタを除いて一緒なんでとりあえず true

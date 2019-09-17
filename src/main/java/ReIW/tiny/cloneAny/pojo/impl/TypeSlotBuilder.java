@@ -44,9 +44,9 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				hiveRef = new WeakReference<>(hive);
 			}
 		}
-		final TypeSlot td = hive.computeIfAbsent(clazz, this::computeTypeSlot);
-		td.complete();
-		return td;
+		final TypeSlot ts = hive.computeIfAbsent(clazz, this::computeTypeSlot);
+		ts.complete();
+		return ts;
 	}
 
 	private TypeSlot computeTypeSlot(final Class<?> clazz) {

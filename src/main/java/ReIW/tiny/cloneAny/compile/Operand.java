@@ -46,16 +46,17 @@ public interface Operand {
 	class EndKeyLoop implements Operand {
 	}
 
-	class checkKeyExists implements Operand {
+	class CheckMapKeyExists implements Operand {
 		// なかったら例外なので終了側はいらないとおも
 	}
 
-	class ifKeyExists implements Operand {
+	class TestMapKeyExists implements Operand {
 		// if の開始
 	}
 
-	class fiKeyExists implements Operand {
+	class MapKeyNotExists implements Operand {
 		// if の終了
+		// たぶんここでラベルつかう感じかな
 	}
 
 	class MapGet implements Operand {
