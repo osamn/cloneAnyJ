@@ -1,11 +1,11 @@
 package ReIW.tiny.cloneAny.compile;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.WeakHashMap;
 
 import ReIW.tiny.cloneAny.Ditto;
 import ReIW.tiny.cloneAny.core.AssemblyException;
-import ReIW.tiny.cloneAny.pojo.Slot;
+import ReIW.tiny.cloneAny.pojo.TypeDef;
 
 public class DittoBuilder implements Ditto.Builder {
 
@@ -15,10 +15,10 @@ public class DittoBuilder implements Ditto.Builder {
 		return builder;
 	}
 
+	private final WeakHashMap<CKey, Object> cacheRef = new WeakHashMap<>();
+
 	private DittoBuilder() {
 	}
-
-	private final ConcurrentHashMap<CKey, Object> hive = new ConcurrentHashMap<>();
 
 	@Override
 	public <L> Ditto<L, L> get(final Class<L> clazz) {
@@ -28,17 +28,20 @@ public class DittoBuilder implements Ditto.Builder {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <L, R> Ditto<L, R> get(final Class<L> lhs, final Class<R> rhs) {
-		return (Ditto<L, R>) hive.computeIfAbsent(new CKey(lhs, rhs), this::compute);
+		final TypeDef lhsDef = TypeDef.createInstance(lhs);
+		final TypeDef rhsDef = TypeDef.createInstance(rhs);
+		return (Ditto<L, R>) get(lhsDef, rhsDef);
 	}
 
 	// こいつは内部的に使うやつなんで generic を明示する必要はないの
 	@SuppressWarnings("rawtypes")
-	protected Ditto get(final Slot lhs, final Slot rhs) {
-		return (Ditto) hive.computeIfAbsent(new CKey(lhs, rhs), this::compute);
+	protected Ditto get(final TypeDef lhsDef, final TypeDef rhsDef) {
+		final CKey key = new CKey(lhsDef, rhsDef);
+		return (Ditto) cacheRef.computeIfAbsent(key, DittoBuilder::compute);
 	}
 
-	private final Object compute(final CKey key) {
-		final Class<?> clazz = new DittoClassAssembler(key).createClass();
+	private static final Object compute(final CKey key) {
+		final Class<?> clazz = new DittoClassAssembler(key).loadLocalClass();
 		try {
 			return clazz.getDeclaredConstructor().newInstance();
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException

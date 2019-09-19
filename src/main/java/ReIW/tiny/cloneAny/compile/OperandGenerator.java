@@ -12,18 +12,8 @@ import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Accessor.SlotInfo;
 import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.TypeDef;
-import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 
-public class OperandStreamBuilder {
-
-	public static OperandStreamBuilder builder(final Class<?> lhs, final Class<?> rhs) {
-		final TypeDef lhsDef = TypeDef.createInstance(lhs);
-		final TypeDef rhsDef = TypeDef.createInstance(rhs);
-		if (!lhsDef.isCertainBound() || !rhsDef.isCertainBound()) {
-			throw new UnboundFormalTypeParameterException();
-		}
-		return new OperandStreamBuilder(lhsDef, rhsDef);
-	}
+public class OperandGenerator {
 
 	private final TypeDef lhs;
 	private final TypeDef rhs;
@@ -35,13 +25,13 @@ public class OperandStreamBuilder {
 	private final Accessor effectiveCtor;
 	private final List<Accessor> effectiveDst;
 
-	private OperandStreamBuilder(final TypeDef lhs, final TypeDef rhs) {
+	OperandGenerator(final TypeDef lhs, final TypeDef rhs) {
 		this.lhs = lhs;
 		this.rhs = rhs;
 		this.sourceAccMap = lhs.accessors().filter(acc -> acc.canRead())
 				.collect(Collectors.toMap(acc -> acc.getName(), acc -> acc));
 
-		final OperandStreamBuilder.MaxArgsAccessor ctorSelector = new OperandStreamBuilder.MaxArgsAccessor();
+		final OperandGenerator.MaxArgsAccessor ctorSelector = new OperandGenerator.MaxArgsAccessor();
 		this.effectiveDst = this.rhs.accessors().filter(this::selectDstWithEffectiveSrc).filter(acc -> {
 			// コンストラクタを別途よせておいて
 			if (acc.getType() == Accessor.Type.LumpSet) {

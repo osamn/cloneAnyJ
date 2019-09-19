@@ -10,6 +10,9 @@ public interface TypeDef {
 	/** internalName */
 	String getName();
 
+	/** generic parameter を含めた名称 */
+	String getSignaturedName();
+	
 	boolean hasDefaultCtor();
 	
 	boolean isCertainBound();

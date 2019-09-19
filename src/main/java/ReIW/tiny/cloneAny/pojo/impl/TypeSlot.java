@@ -43,6 +43,13 @@ public final class TypeSlot extends Slot implements TypeDef {
 	}
 
 	@Override
+	public String getSignaturedName() {
+		final StringBuilder buf = new StringBuilder();
+		buildSignaturedName(buf, this);
+		return buf.toString();
+	}
+
+	@Override
 	public boolean hasDefaultCtor() {
 		return defaultCtor;
 	}
@@ -184,6 +191,14 @@ public final class TypeSlot extends Slot implements TypeDef {
 		return map;
 	}
 
+	private static void buildSignaturedName(final StringBuilder buf, final Slot slot) {
+		buf.append(Type.getType(slot.descriptor).getInternalName().replace('/', '_'));
+		slot.slotList.forEach(s -> {
+			buf.append('$');
+			buildSignaturedName(buf, slot);
+		});
+	}
+
 	private final class Binder implements TypeDef {
 
 		private final HashMap<String, String> formalBindMap;
@@ -207,6 +222,13 @@ public final class TypeSlot extends Slot implements TypeDef {
 		@Override
 		public String getName() {
 			return TypeSlot.this.getName();
+		}
+
+		@Override
+		public String getSignaturedName() {
+			final StringBuilder buf = new StringBuilder();
+			buildSignaturedName(buf, TypeSlot.this.rebind(formalBindMap));
+			return buf.toString();
 		}
 
 		@Override

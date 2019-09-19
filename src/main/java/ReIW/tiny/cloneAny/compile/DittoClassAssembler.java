@@ -7,38 +7,39 @@ import java.lang.reflect.Method;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Type;
 
 import ReIW.tiny.cloneAny.core.AssemblyDomain;
 import ReIW.tiny.cloneAny.core.AssemblyException;
-
+import ReIW.tiny.cloneAny.pojo.TypeDef;
+import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 
 public final class DittoClassAssembler {
 
-	private final OperandStreamBuilder builder;
 	private final String clazzName;
-	private final String lhsName;
-	private final String rhsName;
+	private final TypeDef lhsDef;
+	private final TypeDef rhsDef;
 
 	private boolean trace;
 	private boolean verify;
 
 	DittoClassAssembler(final CKey key) {
-		// 実体化するクラスの名前
-		clazzName = key.getInternalName();
-		// AbstractDitto に埋め込む情報
-		lhsName = Type.getType(key.lhs.descriptor).getInternalName();
-		rhsName = Type.getType(key.rhs.descriptor).getInternalName();
-		// オペランドの元
-		builder = null ; //OperandStreamBuilder.builder(key.lhs, key.rhs);
+		this.clazzName = key.getClassName();
+		this.lhsDef = key.lhs;
+		this.rhsDef = key.rhs;
 	}
 
-	Class<?> createClass() {
+	Class<?> loadLocalClass() {
+		if (!lhsDef.isCertainBound() || !rhsDef.isCertainBound()) {
+			throw new UnboundFormalTypeParameterException();
+		}
 		final AssemblyDomain domain = AssemblyDomain.getDefaultAssemblyDomain();
 		try {
-			loadConcreteDitto(domain);
-			return domain.forName(clazzName);
-		} catch (IOException | ClassNotFoundException e) {
+			final Class<?> clazz = domain.findLocalClass(clazzName);
+			if (clazz == null) {
+				loadConcreteDitto(domain);
+			}
+			return domain.findLocalClass(clazzName);
+		} catch (IOException e) {
 			throw new AssemblyException(e);
 		}
 	}
@@ -55,11 +56,11 @@ public final class DittoClassAssembler {
 		// prepare visitor chain.
 		final ClassVisitor term = domain.getTerminalClassVisitor(this::inspectBytes);
 		final ClassVisitor cv0 = new ConcreteDittoClassVisitor(clazzName, term);
-		final ClassVisitor cv1 = new ImplementClassNameGetterVisitor(lhsName, rhsName, cv0);
-		//final ClassVisitor cv2 = new ImplementCopyOrCloneVisitor(builder.operands(true), cv1);
+		final ClassVisitor cv1 = new ImplementClassNameGetterVisitor(lhsDef.getName(), rhsDef.getName(), cv0);
+		final ClassVisitor cv2 = new ImplementCopyOrCloneVisitor(new OperandGenerator(lhsDef, rhsDef), cv1);
 		// クラスを構築してロードする
 		final ClassReader cr = new ClassReader(AbstractDitto.class.getName());
-		//cr.accept(cv2, ClassReader.SKIP_DEBUG);
+		cr.accept(cv2, ClassReader.SKIP_DEBUG);
 	}
 
 	private PrintWriter debugOut = new PrintWriter(System.out);

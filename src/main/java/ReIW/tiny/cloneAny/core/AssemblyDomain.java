@@ -50,13 +50,9 @@ public final class AssemblyDomain extends ClassLoader {
 		super(parent);
 	}
 
-	public Class<?> forName(final String name) throws ClassNotFoundException {
+	public Class<?> findLocalClass(final String name) {
 		final String clazzName = name.replace('/', '.'); // internal name の場合もあるためここで吸収しておく
-		final Class<?> clazz = findLoadedClass(clazzName);
-		if (clazz == null) {
-			throw new ClassNotFoundException(clazzName);
-		}
-		return clazz;
+		return findLoadedClass(clazzName);
 	}
 
 	public ClassVisitor getTerminalClassVisitor() {

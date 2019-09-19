@@ -12,11 +12,11 @@ import org.objectweb.asm.MethodVisitor;
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 
 final class ImplementCopyOrCloneVisitor extends DefaultClassVisitor {
-	private final Stream<Operand> ops;
+	private final OperandGenerator operands;
 
-	ImplementCopyOrCloneVisitor(final Stream<Operand> ops, final ClassVisitor cv) {
+	ImplementCopyOrCloneVisitor(final OperandGenerator operands, final ClassVisitor cv) {
 		super(cv);
-		this.ops = ops;
+		this.operands = operands;
 	}
 
 	@Override
@@ -25,9 +25,9 @@ final class ImplementCopyOrCloneVisitor extends DefaultClassVisitor {
 		if (name.contentEquals("copyOrClone")) {
 			final MethodVisitor mv = super.visitMethod(access, name, descriptor, null, exceptions);
 			mv.visitCode();
-			ops.forEach(op -> {
-				emitOperand(mv, op);
-			});
+			
+			
+			
 			mv.visitVarInsn(ALOAD, 2);
 			mv.visitInsn(ARETURN);
 			mv.visitEnd();
@@ -38,10 +38,4 @@ final class ImplementCopyOrCloneVisitor extends DefaultClassVisitor {
 		}
 	}
 
-	private void emitOperand(final MethodVisitor mv, final Operand op) {
-		mv.visitLabel(new Label());
-		// FIXME オペランドの埋め込み
-		// Map で "*" の場合は get でループ開始 put でループ終了にする
-
-	}
 }

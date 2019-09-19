@@ -2,47 +2,25 @@ package ReIW.tiny.cloneAny.compile;
 
 import java.util.Objects;
 
-import org.objectweb.asm.Type;
+import ReIW.tiny.cloneAny.pojo.TypeDef;
 
-import ReIW.tiny.cloneAny.pojo.Slot;
+final class CKey {
 
-public final class CKey {
-
-	final Slot lhs;
-	final Slot rhs;
+	final TypeDef lhs;
+	final TypeDef rhs;
 
 	private final int hash;
 
-	public CKey(final Class<?> lhs, final Class<?> rhs) {
-		this(Slot.getSlot(null, Type.getDescriptor(lhs)), Slot.getSlot(null, Type.getDescriptor(rhs)));
-	}
-
-	public CKey(final Slot lhs, final Slot rhs) {
+	CKey(final TypeDef lhs, final TypeDef rhs) {
 		this.lhs = lhs;
 		this.rhs = rhs;
 		// 各スロットはここに来た時点でもう決定済み
 		// なので hash 値は構築時ですべて決定できるはず
-		hash = Objects.hash(lhs, rhs);
+		hash = Objects.hash(lhs.getSignaturedName(), rhs.getSignaturedName());
 	}
-
-	public String getInternalName() {
-		return "$ditto$/" + slotName(lhs).replace('.', '_') + "$" + slotName(rhs).replace('.', '_');
-	}
-
-	private static String slotName(final Slot slot) {
-		StringBuilder buf = new StringBuilder();
-		writeSlotName(buf, slot);
-		return buf.toString();
-	}
-
-	private static void writeSlotName(final StringBuilder buf, final Slot slot) {
-		buf.append(Type.getType(slot.descriptor).getInternalName());
-		if (slot.slotList.size() > 0) {
-			for (Slot s : slot.slotList) {
-				buf.append('.');
-				writeSlotName(buf, s);
-			}
-		}
+	
+	String getClassName() {
+		return "$ditto." + lhs.getSignaturedName() + "." + rhs.getSignaturedName();
 	}
 
 	@Override
@@ -62,12 +40,12 @@ public final class CKey {
 		if (lhs == null) {
 			if (other.lhs != null)
 				return false;
-		} else if (!lhs.equals(other.lhs))
+		} else if (!lhs.getSignaturedName().contentEquals(other.lhs.getSignaturedName()))
 			return false;
 		if (rhs == null) {
 			if (other.rhs != null)
 				return false;
-		} else if (!rhs.equals(other.rhs))
+		} else if (!rhs.getSignaturedName().contentEquals(other.rhs.getSignaturedName()))
 			return false;
 		return true;
 	}
