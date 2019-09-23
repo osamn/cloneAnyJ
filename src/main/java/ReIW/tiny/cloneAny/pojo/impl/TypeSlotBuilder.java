@@ -96,7 +96,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				if (descriptor.contentEquals("()V")) {
 					typeSlot.defaultCtor = true;
 				}
-				final MultiSlotAccessor acc = new MultiSlotAccessor(typeSlot.getName(), null, name, descriptor);
+				final MultiSlotAccessor acc = new MultiSlotAccessor(typeSlot.getName(), name, name, descriptor);
 				typeSlot.access.add(acc);
 				new MethodSignatureParser(acc.slots::add, null).parseArgumentsAndReturn(descriptor, signature);
 				return new MethodParamNameMapper(acc.slots, acc.names::add);

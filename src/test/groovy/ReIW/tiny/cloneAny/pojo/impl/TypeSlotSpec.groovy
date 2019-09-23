@@ -19,15 +19,15 @@ class TypeSlotSpec extends Specification {
 		ts.access.size() == 6
 
 		then:
-		acc[0] == [Accessor.Type.LumpSet, Type.getInternalName(TypeSlotTester.Simple), "<init>", "<init>", "(Ljava/lang/String;)V"]
-		acc[1] == [Accessor.Type.Field, Type.getInternalName(TypeSlotTester.Simple), "thisField", "thisField", "Ljava/lang/String;"]
-		acc[2] == [Accessor.Type.Get, Type.getInternalName(TypeSlotTester.Simple), "thisVal", "getThisVal", "()D"]
+		acc[0] == [Accessor.Type.Field, Type.getInternalName(TypeSlotTester.Simple), "thisField", "thisField", "Ljava/lang/String;"]
+		acc[1] == [Accessor.Type.Get, Type.getInternalName(TypeSlotTester.Simple), "thisVal", "getThisVal", "()D"]
+		acc[2] == [Accessor.Type.LumpSet, Type.getInternalName(TypeSlotTester.Simple), "<init>", "<init>", "(Ljava/lang/String;)V"]
 		acc[3] == [Accessor.Type.Set, Type.getInternalName(TypeSlotTester.Simple), "superVal", "setSuperVal", "(Ljava/lang/String;)V"]
 		acc[4] == [Accessor.Type.ReadonlyField, Type.getInternalName(TypeSlotTester.SimpleBase), "superField", "superField", "Ljava/lang/String;"]
 		acc[5] == [Accessor.Type.Set, Type.getInternalName(TypeSlotTester.SimpleBase), "superVal", "setSuperVal", "(Ljava/lang/Long;)V"]
 
 		then:
-		ts.access[0].names == ["thisCtorArg"]
+		ts.access[2].slotInfo().collect {[it.param]} == [["thisCtorArg"]]
 	}
 
 	def "暗黙の bind で継承元まで型引数が bind されてること"() {
