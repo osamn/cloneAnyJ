@@ -4,7 +4,7 @@ import java.util.stream.Stream;
 
 public interface Accessor {
 
-	enum Type {
+	enum Kind {
 		Field, ReadonlyField, Get, Set, LumpSet,
 	}
 
@@ -18,7 +18,7 @@ public interface Accessor {
 		}
 	}
 
-	Type getType();
+	Kind getType();
 
 	boolean canRead();
 
@@ -35,7 +35,7 @@ public interface Accessor {
 	Stream<SlotInfo> slotInfo();
 
 	static SlotInfo asSingle(Accessor acc) {
-		if (acc.getType() == Type.LumpSet) {
+		if (acc.getType() == Kind.LumpSet) {
 			throw new IllegalArgumentException();
 		}
 		return acc.slotInfo().findFirst().get();

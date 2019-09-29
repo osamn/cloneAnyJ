@@ -11,9 +11,6 @@ public interface Operand {
 	class StoreRhs implements Operand {
 	}
 
-	class Dup implements Operand {
-	}
-
 	class New implements Operand {
 	}
 
@@ -75,15 +72,6 @@ public interface Operand {
 	}
 
 	class ListSet implements Operand {
-	}
-
-	class Cast implements Operand {
-	}
-
-	class Box implements Operand {
-	}
-
-	class Unbox implements Operand {
 	}
 
 	class Convert implements Operand {

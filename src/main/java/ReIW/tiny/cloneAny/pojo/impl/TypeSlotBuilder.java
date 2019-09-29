@@ -81,7 +81,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
 		if (isAccessible(access)) {
 			// final なものは読み取り専用になるよ
-			final Accessor.Type type = AccessFlag.isFinal(access) ? Accessor.Type.ReadonlyField : Accessor.Type.Field;
+			final Accessor.Kind type = AccessFlag.isFinal(access) ? Accessor.Kind.ReadonlyField : Accessor.Kind.Field;
 			final Slot slot = Slot.getSlot(null, descriptor, signature);
 			typeSlot.access.add(new SingleSlotAccessor(type, typeSlot.getName(), name, name, descriptor, slot));
 		}
@@ -104,12 +104,12 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				try {
 					if (Propertys.isGetter(name, descriptor)) {
 						new MethodSignatureParser(null, slot -> {
-							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Get, typeSlot.getName(),
+							typeSlot.access.add(new SingleSlotAccessor(Accessor.Kind.Get, typeSlot.getName(),
 									Propertys.getPropertyName(name), name, descriptor, slot));
 						}).parseArgumentsAndReturn(descriptor, signature);
 					} else if (Propertys.isSetter(name, descriptor)) {
 						new MethodSignatureParser(slot -> {
-							typeSlot.access.add(new SingleSlotAccessor(Accessor.Type.Set, typeSlot.getName(),
+							typeSlot.access.add(new SingleSlotAccessor(Accessor.Kind.Set, typeSlot.getName(),
 									Propertys.getPropertyName(name), name, descriptor, slot));
 						}, null).parseArgumentsAndReturn(descriptor, signature);
 					}

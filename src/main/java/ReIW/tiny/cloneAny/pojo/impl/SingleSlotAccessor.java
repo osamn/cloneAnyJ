@@ -8,7 +8,7 @@ import ReIW.tiny.cloneAny.pojo.Slot;
 
 public final class SingleSlotAccessor extends SlotAccessor {
 
-	private final Accessor.Type type;
+	private final Accessor.Kind type;
 	private final String owner;
 	private final String name;
 	private final String rel;
@@ -16,7 +16,7 @@ public final class SingleSlotAccessor extends SlotAccessor {
 
 	private final Slot slot;
 
-	SingleSlotAccessor(final Accessor.Type type, final String owner, final String name, final String rel,
+	SingleSlotAccessor(final Accessor.Kind type, final String owner, final String name, final String rel,
 			final String descriptor, final Slot slot) {
 		this.type = type;
 		this.owner = owner;
@@ -27,18 +27,18 @@ public final class SingleSlotAccessor extends SlotAccessor {
 	}
 
 	@Override
-	public Accessor.Type getType() {
+	public Accessor.Kind getType() {
 		return type;
 	}
 
 	@Override
 	public boolean canRead() {
-		return type == Accessor.Type.Get || type == Accessor.Type.Field || type == Accessor.Type.ReadonlyField;
+		return type == Accessor.Kind.Get || type == Accessor.Kind.Field || type == Accessor.Kind.ReadonlyField;
 	}
 
 	@Override
 	public boolean canWrite() {
-		return type == Accessor.Type.Set || type == Accessor.Type.Field || type == Accessor.Type.LumpSet;
+		return type == Accessor.Kind.Set || type == Accessor.Kind.Field || type == Accessor.Kind.LumpSet;
 	}
 
 	@Override

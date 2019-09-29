@@ -1,13 +1,38 @@
 package ReIW.tiny.cloneAny.compile;
 
+import static ReIW.tiny.cloneAny.pojo.Accessor.asSingle;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
 
+import ReIW.tiny.cloneAny.compile.Operand.ArrayGet;
+import ReIW.tiny.cloneAny.compile.Operand.ArraySet;
+import ReIW.tiny.cloneAny.compile.Operand.CheckMapKeyExists;
+import ReIW.tiny.cloneAny.compile.Operand.Convert;
+import ReIW.tiny.cloneAny.compile.Operand.EndIndexLoop;
+import ReIW.tiny.cloneAny.compile.Operand.EndKeyLoop;
+import ReIW.tiny.cloneAny.compile.Operand.FieldGet;
+import ReIW.tiny.cloneAny.compile.Operand.InvokeGet;
+import ReIW.tiny.cloneAny.compile.Operand.InvokeSpecial;
+import ReIW.tiny.cloneAny.compile.Operand.ListGet;
+import ReIW.tiny.cloneAny.compile.Operand.ListSet;
+import ReIW.tiny.cloneAny.compile.Operand.LoadLhs;
+import ReIW.tiny.cloneAny.compile.Operand.LoadRhs;
+import ReIW.tiny.cloneAny.compile.Operand.MapGet;
+import ReIW.tiny.cloneAny.compile.Operand.MapKeyNotExists;
+import ReIW.tiny.cloneAny.compile.Operand.MapPut;
+import ReIW.tiny.cloneAny.compile.Operand.New;
+import ReIW.tiny.cloneAny.compile.Operand.StartIndexLoop;
+import ReIW.tiny.cloneAny.compile.Operand.StartKeyLoop;
+import ReIW.tiny.cloneAny.compile.Operand.StoreRhs;
+import ReIW.tiny.cloneAny.compile.Operand.TestMapKeyExists;
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Accessor.SlotInfo;
 import ReIW.tiny.cloneAny.pojo.Slot;
@@ -32,14 +57,15 @@ public class OperandGenerator {
 				.collect(Collectors.toMap(acc -> acc.getName(), acc -> acc));
 
 		final OperandGenerator.MaxArgsAccessor ctorSelector = new OperandGenerator.MaxArgsAccessor();
-		this.effectiveDst = this.rhs.accessors().filter(this::selectDstWithEffectiveSrc).filter(acc -> {
-			// コンストラクタを別途よせておいて
-			if (acc.getType() == Accessor.Type.LumpSet) {
-				ctorSelector.set(acc);
-				return false;
-			}
-			return true;
-		}).collect(Collectors.toList());
+		this.effectiveDst = this.rhs.accessors().filter(acc -> acc.canWrite()).filter(this::selectDstWithEffectiveSrc)
+				.filter(acc -> {
+					// コンストラクタを別途よせておいて
+					if (acc.getType() == Accessor.Kind.LumpSet) {
+						ctorSelector.set(acc);
+						return false;
+					}
+					return true;
+				}).collect(Collectors.toList());
 		// 一番引数の長いコンストラクタをとる
 		this.effectiveCtor = ctorSelector.get();
 	}
@@ -49,62 +75,69 @@ public class OperandGenerator {
 	 * 
 	 * これにより、以降の処理で lhs の存在や変換可能性を見る必要がなくなるよ
 	 */
-	private boolean selectDstWithEffectiveSrc(final Accessor acc) {
-		if (!acc.canWrite()) {
-			return false;
-		}
+	private boolean selectDstWithEffectiveSrc(final Accessor dstAcc) {
 		// 右側のスロット情報すべてについて左側に move 可能なソースがあるか調べる
-		return acc.slotInfo().allMatch(inf -> {
+		return dstAcc.slotInfo().allMatch(srcInf -> {
 			// 左側にパラメタ名前が一致するアクセサがあるかみて
-			if (sourceAccMap.containsKey(inf.param)) {
-				final SlotInfo single = Accessor.asSingle(sourceAccMap.get(inf.param));
-				if (canMove(single.slot, inf.slot)) {
+			if (sourceAccMap.containsKey(srcInf.param)) {
+				final SlotInfo single = asSingle(sourceAccMap.get(srcInf.param));
+				if (canMove(single.slot, srcInf.slot)) {
 					// スロットが move 可能なのでおｋ
 					return true;
 				}
 			}
 			// じゃなければ左側がマップで、その value 型で move 可能か
 			if (lhs.isMap()) {
-				return canMove(lhs.valueSlot(), inf.slot);
+				return canMove(lhs.valueSlot(), srcInf.slot);
 			}
 			return false;
 		});
 	}
 
+	// Map からコピーするときにすでにコピーしてるものは抑止するために名前をとっておく
 	private final HashSet<String> used = new HashSet<>();
 
 	public Stream<Operand> initStream() {
 		if (effectiveCtor == null) {
 			return null;
 		}
-		Stream.Builder<Operand> builder = Stream.builder();
+		final ArrayList<Stream<Operand>> streams = new ArrayList<>();
+		streams.add(Stream.of(new New()));
 
-		effectiveCtor.slotInfo().forEach(inf -> {
-			final String name = inf.param;
-			final Accessor src = sourceAccMap.get(name);
-			if (src == null) {
-				// コンストラクタ引数なんでマップにキーが存在しない場合はすぐエラーに
-				// TODO copy Map#get to arg check exists
+		effectiveCtor.slotInfo().forEach(dstInf -> {
+			final String name = dstInf.param;
+			final Accessor srcAcc = sourceAccMap.get(name);
+			if (srcAcc != null) {
+				streams.add(readOps(srcAcc));
+				streams.add(convOps(asSingle(srcAcc).slot, dstInf.slot));
 			} else {
-				// TODO copy property to arg
+				// 対応する field or getter がないので Map からの転記
+				streams.add(Stream.of(new CheckMapKeyExists(), new MapGet()));
+				streams.add(convOps(lhs.valueSlot(), dstInf.slot));
 			}
 			used.add(name);
 		});
 
-		return builder.build();
+		streams.add(Stream.of(new InvokeSpecial(), new StoreRhs()));
+		return streams.stream().flatMap(Function.identity());
 	}
 
 	public Stream<Operand> copyStream() {
-		Stream.Builder<Operand> builder = Stream.builder();
+		final ArrayList<Stream<Operand>> streams = new ArrayList<>();
 
-		effectiveDst.forEach(acc -> {
-			final String name = acc.getName();
-			final Accessor src = sourceAccMap.get(name);
-			if (src == null) {
-				// TODO copy Map#get(propName) to property if exists
-				// 場合によってはコピーしてないのに used に入っちゃうけどいい？
+		effectiveDst.forEach(dstAcc -> {
+			final String name = dstAcc.getName();
+			final Accessor srcAcc = sourceAccMap.get(name);
+			if (srcAcc != null) {
+				streams.add(readOps(srcAcc));
+				streams.add(convOps(asSingle(srcAcc).slot, asSingle(dstAcc).slot));
+				streams.add(writeOps(dstAcc));
 			} else {
-				// TODO copy property to property
+				// 対応する field or getter がないので Map からの転記
+				streams.add(Stream.of(new TestMapKeyExists(), new MapGet()));
+				streams.add(convOps(lhs.valueSlot(), asSingle(dstAcc).slot));
+				streams.add(writeOps(dstAcc));
+				streams.add(Stream.of(new MapKeyNotExists()));
 			}
 			used.add(name);
 		});
@@ -116,55 +149,90 @@ public class OperandGenerator {
 			// any -> Map の場合、ここまでの処理でコピーしていない要素を右マップにコピーする
 			final Slot valueSlot = rhs.valueSlot();
 			sourceAccMap.entrySet().stream()
-					// コピーの対象になっていない左側要素のアクセサをとって
-					.filter(entry -> !used.contains(entry.getKey())).map(Map.Entry::getValue)
-					// 変換可能なものだけ対象とする
-					.filter(acc -> canMove(Accessor.asSingle(acc).slot, valueSlot))
+					// コピーの対象になっていない左側要素を選択して
+					.filter(entry -> !used.contains(entry.getKey()))
+					// そのアクセサをとって
+					.map(Map.Entry::getValue)
+					// 右の Map の値に変換可能なものだけ対象にして
+					.filter(acc -> canMove(asSingle(acc).slot, valueSlot))
 					// copy source property/filed to Map#put(name, val)
-					.forEach(acc -> {
-						// TODO copy property to Map#put(name, val)
+					.forEach(srcAcc -> {
+						streams.add(readOps(srcAcc));
+						streams.add(convOps(asSingle(srcAcc).slot, valueSlot));
+						streams.add(Stream.of(new MapPut()));
 					});
 		}
 
 		// Map -> Map
 		if (lhs.isMap() && rhs.isMap()) {
 			if (canMove(lhs.valueSlot(), rhs.valueSlot())) {
-				// TODO key loop copy Map#get(key) to Map#put(key, val) if not exists
-				// すでに設定されてる場合はコピーしないようにする感じで
+				// key loop copy Map#get(key) to Map#put(key, val) if not exists
 				// ここでは実行時に入るので used による抑止がきかないけどしょうがないよねってことで
+				streams.add(Stream.of(new StartKeyLoop(), new MapGet()));
+				streams.add(convOps(lhs.valueSlot(), rhs.valueSlot()));
+				streams.add(Stream.of(new MapPut(), new EndKeyLoop()));
 			}
 		}
 
 		/* list -> list の場合も特別扱い */
+		// top level で配列はありえないので List だけケアしてあげる
 
 		if (lhs.isList() && rhs.isList()) {
 			if (canMove(lhs.elementSlot(), rhs.elementSlot())) {
-				// TODO index loop copy lhs#get(i) to rhs.set(i)
+				streams.add(Stream.of(new StartIndexLoop(), new ListGet()));
+				streams.add(convOps(lhs.elementSlot(), rhs.elementSlot()));
+				streams.add(Stream.of(new ListSet(), new EndIndexLoop()));
 			}
 		}
-		return builder.build();
+
+		return streams.stream().flatMap(Function.identity());
 	}
 
-	private void readValue(final Stream.Builder<Operand> builder, final Accessor acc) {
-
+	private Stream<Operand> readOps(final Accessor src) {
+		final Stream.Builder<Operand> ops = Stream.builder();
+		ops.accept(new LoadLhs());
+		final Operand read = src.getType() == Accessor.Kind.Get ? new InvokeGet() : new FieldGet();
+		ops.accept(read);
+		return ops.build();
 	}
 
-	private void conv(final Stream.Builder<Operand> builder, final Slot lhs, final Slot rhs) {
-
+	private Stream<Operand> convOps(final Slot lhs, final Slot rhs) {
+		final TypeDef lhsDef = TypeDef.createInstance(lhs);
+		final TypeDef rhsDef = TypeDef.createInstance(rhs);
+		if (lhsDef.isArrayType() || lhsDef.isList()) {
+			final ArrayList<Stream<Operand>> list = new ArrayList<>();
+			final Operand getter = lhsDef.isArrayType() ? new ArrayGet() : new ListGet();
+			final Operand setter = rhsDef.isArrayType() ? new ArraySet() : new ListSet();
+			list.add(Stream.of(new StartIndexLoop(), getter));
+			list.add(convOps(lhsDef.elementSlot(), rhsDef.elementSlot()));
+			list.add(Stream.of(setter, new EndIndexLoop()));
+			return list.stream().flatMap(Function.identity());
+		} else {
+			return Stream.of(new Convert());
+		}
 	}
 
-	private void writeValue(final Stream.Builder<Operand> builder, final Accessor acc) {
-
+	private Stream<Operand> writeOps(final Accessor dst) {
+		final Stream.Builder<Operand> ops = Stream.builder();
+		ops.accept(new LoadRhs());
+		final Operand write = dst.getType() == Accessor.Kind.Set ? new InvokeGet() : new FieldGet();
+		ops.accept(write);
+		return ops.build();
 	}
 
 	// Accessor として抽出されたスロットの変換可能性をみる
 	// Object -> Object の場合はここで true になっても右側のコンストラクタセッタあたりで
 	// うまく転記できなかったら runtime 時に例外になったりするよ
 	private static boolean canMove(final Slot lhs, final Slot rhs) {
+		if (lhs == null || rhs == null) {
+			return false;
+		}
+		/*
 		if (lhs.getTypeDescriptor().contentEquals(rhs.getTypeDescriptor())) {
 			// 型パラメタを除いて一緒なんでとりあえず true
 			return true;
 		}
+		*/
 
 		/* array が絡む場合は Slot#descriptor が型を示さないので先に処理する */
 

@@ -19,12 +19,12 @@ class TypeSlotSpec extends Specification {
 		ts.access.size() == 6
 
 		then:
-		acc[0] == [Accessor.Type.Field, Type.getInternalName(TypeSlotTester.Simple), "thisField", "thisField", "Ljava/lang/String;"]
-		acc[1] == [Accessor.Type.Get, Type.getInternalName(TypeSlotTester.Simple), "thisVal", "getThisVal", "()D"]
-		acc[2] == [Accessor.Type.LumpSet, Type.getInternalName(TypeSlotTester.Simple), "<init>", "<init>", "(Ljava/lang/String;)V"]
-		acc[3] == [Accessor.Type.Set, Type.getInternalName(TypeSlotTester.Simple), "superVal", "setSuperVal", "(Ljava/lang/String;)V"]
-		acc[4] == [Accessor.Type.ReadonlyField, Type.getInternalName(TypeSlotTester.SimpleBase), "superField", "superField", "Ljava/lang/String;"]
-		acc[5] == [Accessor.Type.Set, Type.getInternalName(TypeSlotTester.SimpleBase), "superVal", "setSuperVal", "(Ljava/lang/Long;)V"]
+		acc[0] == [Accessor.Kind.Field, Type.getInternalName(TypeSlotTester.Simple), "thisField", "thisField", "Ljava/lang/String;"]
+		acc[1] == [Accessor.Kind.Get, Type.getInternalName(TypeSlotTester.Simple), "thisVal", "getThisVal", "()D"]
+		acc[2] == [Accessor.Kind.LumpSet, Type.getInternalName(TypeSlotTester.Simple), "<init>", "<init>", "(Ljava/lang/String;)V"]
+		acc[3] == [Accessor.Kind.Set, Type.getInternalName(TypeSlotTester.Simple), "superVal", "setSuperVal", "(Ljava/lang/String;)V"]
+		acc[4] == [Accessor.Kind.ReadonlyField, Type.getInternalName(TypeSlotTester.SimpleBase), "superField", "superField", "Ljava/lang/String;"]
+		acc[5] == [Accessor.Kind.Set, Type.getInternalName(TypeSlotTester.SimpleBase), "superVal", "setSuperVal", "(Ljava/lang/Long;)V"]
 
 		then:
 		ts.access[2].slotInfo().collect {[it.param]} == [["thisCtorArg"]]
@@ -42,19 +42,19 @@ class TypeSlotSpec extends Specification {
 		ts.access.size() == 4
 
 		then:
-		acc[0] == [Accessor.Type.LumpSet, Type.getInternalName(TypeSlotTester.GenericExtends), "<init>", "<init>", "()V"]
+		acc[0] == [Accessor.Kind.LumpSet, Type.getInternalName(TypeSlotTester.GenericExtends), "<init>", "<init>", "()V"]
 
 		then:
-		acc[1] == [Accessor.Type.Get, Type.getInternalName(TypeSlotTester.GenericExtends), "extendsVal", "getExtendsVal", "()Ljava/lang/Object;"]
+		acc[1] == [Accessor.Kind.Get, Type.getInternalName(TypeSlotTester.GenericExtends), "extendsVal", "getExtendsVal", "()Ljava/lang/Object;"]
 		ts.access[1].slot.typeParam == "B"
 		ts.access[1].slot.descriptor == "Ljava/lang/Object;"
 
 		then:
-		acc[2] == [Accessor.Type.Field, Type.getInternalName(TypeSlotTester.GenericBase), "baseVal", "baseVal", "Ljava/lang/Object;"]
+		acc[2] == [Accessor.Kind.Field, Type.getInternalName(TypeSlotTester.GenericBase), "baseVal", "baseVal", "Ljava/lang/Object;"]
 		ts.access[2].slot.typeParam == "="
 		ts.access[2].slot.descriptor == "Ljava/lang/String;"
 
-		acc[3] == [Accessor.Type.Set, Type.getInternalName(TypeSlotTester.GenericBase), "baseVal", "setBaseVal", "(Ljava/lang/Object;)V"]
+		acc[3] == [Accessor.Kind.Set, Type.getInternalName(TypeSlotTester.GenericBase), "baseVal", "setBaseVal", "(Ljava/lang/Object;)V"]
 		ts.access[3].slot.typeParam == "A"
 		ts.access[3].slot.descriptor == "Ljava/lang/Object;"
 	}

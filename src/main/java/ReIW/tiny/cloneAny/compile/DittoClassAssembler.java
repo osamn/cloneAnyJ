@@ -13,7 +13,7 @@ import ReIW.tiny.cloneAny.core.AssemblyException;
 import ReIW.tiny.cloneAny.pojo.TypeDef;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 
-public final class DittoClassAssembler {
+final class DittoClassAssembler {
 
 	private final String clazzName;
 	private final TypeDef lhsDef;
@@ -22,25 +22,29 @@ public final class DittoClassAssembler {
 	private boolean trace;
 	private boolean verify;
 
-	DittoClassAssembler(final CKey key) {
-		this.clazzName = key.getClassName();
-		this.lhsDef = key.lhs;
-		this.rhsDef = key.rhs;
+	DittoClassAssembler(final String className, final TypeDef lhs, final TypeDef rhs) {
+		this.clazzName = className;
+		this.lhsDef = lhs;
+		this.rhsDef = rhs;
 	}
 
-	Class<?> loadLocalClass() {
-		if (!lhsDef.isCertainBound() || !rhsDef.isCertainBound()) {
-			throw new UnboundFormalTypeParameterException();
-		}
+	Class<?> ensureDittoClass() {
 		final AssemblyDomain domain = AssemblyDomain.getDefaultAssemblyDomain();
-		try {
-			final Class<?> clazz = domain.findLocalClass(clazzName);
-			if (clazz == null) {
-				loadConcreteDitto(domain);
+		synchronized (domain) {
+			try {
+				final Class<?> clazz = domain.findLocalClass(clazzName);
+				if (clazz == null) {
+					if (!lhsDef.isCertainBound() || !rhsDef.isCertainBound()) {
+						throw new UnboundFormalTypeParameterException();
+					}
+					loadConcreteDitto(domain);
+					return domain.findLocalClass(clazzName);
+				} else {
+					return clazz;
+				}
+			} catch (IOException e) {
+				throw new AssemblyException(e);
 			}
-			return domain.findLocalClass(clazzName);
-		} catch (IOException e) {
-			throw new AssemblyException(e);
 		}
 	}
 

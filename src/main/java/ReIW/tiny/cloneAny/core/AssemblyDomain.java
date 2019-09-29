@@ -50,6 +50,7 @@ public final class AssemblyDomain extends ClassLoader {
 		super(parent);
 	}
 
+	// this に直接ロードされたクラスを取得する
 	public Class<?> findLocalClass(final String name) {
 		final String clazzName = name.replace('/', '.'); // internal name の場合もあるためここで吸収しておく
 		return findLoadedClass(clazzName);

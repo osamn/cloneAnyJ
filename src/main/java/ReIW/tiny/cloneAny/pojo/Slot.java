@@ -148,8 +148,8 @@ public class Slot {
 		private Slot slot;
 
 		SlotInitializer(final String typeParam) {
-			typeParamName = typeParam;
-			consumer = this::setSlot;
+			super.typeParamName = typeParam;
+			super.consumer = this::setSlot;
 		}
 
 		private void setSlot(final Slot slot) {

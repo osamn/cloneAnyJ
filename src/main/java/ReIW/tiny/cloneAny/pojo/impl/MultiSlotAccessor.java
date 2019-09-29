@@ -10,7 +10,7 @@ import static ReIW.tiny.cloneAny.utils.Functions.withIndex;
 
 public final class MultiSlotAccessor extends SlotAccessor {
 
-	private final Accessor.Type type;
+	private final Accessor.Kind type;
 	private final String owner;
 	private final String name;
 	private final String rel;
@@ -21,7 +21,7 @@ public final class MultiSlotAccessor extends SlotAccessor {
 	public final ArrayList<Slot> slots = new ArrayList<>();
 
 	MultiSlotAccessor(String owner, String name, String rel, String descriptor) {
-		this.type = Accessor.Type.LumpSet;
+		this.type = Accessor.Kind.LumpSet;
 		this.owner = owner;
 		this.name = name;
 		this.rel = rel;
@@ -29,7 +29,7 @@ public final class MultiSlotAccessor extends SlotAccessor {
 	}
 
 	@Override
-	public Accessor.Type getType() {
+	public Accessor.Kind getType() {
 		return type;
 	}
 

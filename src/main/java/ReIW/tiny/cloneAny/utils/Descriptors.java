@@ -75,4 +75,29 @@ public interface Descriptors {
 				|| descriptor.contentEquals("F") // float
 		;
 	}
+
+	static String getBoxingType(final String primitiveDesc) {
+		final char c = primitiveDesc.charAt(0);
+		switch (c) {
+		case 'I':
+			return "Ljava/lang/Integer;";
+		case 'Z':
+			return "Ljava/lang/Boolean;";
+		case 'C':
+			return "Ljava/lang/Character;";
+		case 'B':
+			return "Ljava/lang/Byte;";
+		case 'D':
+			return "Ljava/lang/Double;";
+		case 'J':
+			return "Ljava/lang/Long;";
+		case 'S':
+			return "Ljava/lang/Short;";
+		case 'F':
+			return "Ljava/lang/Float;";
+		default:
+			return null;
+		}
+
+	}
 }

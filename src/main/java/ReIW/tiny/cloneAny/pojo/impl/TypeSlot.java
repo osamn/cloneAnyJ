@@ -86,6 +86,9 @@ public final class TypeSlot extends Slot implements TypeDef {
 
 	@Override
 	public Slot elementSlot() {
+		if (isArrayType) {
+			return slotList.get(0);
+		}
 		return listSlot.slotList.get(0);
 	}
 
@@ -122,7 +125,8 @@ public final class TypeSlot extends Slot implements TypeDef {
 		completed = true;
 
 		// 親が Object.class だったら継承階層のルートまでたどってるので終了する
-		final String superDesc = superSlots.get(0).getTypeDescriptor();
+		// 継承元が配列はありえないので array を考慮する必要ないので getTypeDescriptor じゃなくておｋ
+		final String superDesc = superSlots.get(0).descriptor;
 		if (superDesc.contentEquals("Ljava/lang/Object;")) {
 			return;
 		}
@@ -147,7 +151,7 @@ public final class TypeSlot extends Slot implements TypeDef {
 		final HashSet<String> checkExists = new HashSet<>();
 		this.access.forEach(acc -> checkExists.add(acc.getRel() + acc.getDescriptor()));
 		superType.access.stream().map(acc -> (SlotAccessor) acc).forEach(acc -> {
-			if (acc.getType() == Accessor.Type.LumpSet) {
+			if (acc.getType() == Accessor.Kind.LumpSet) {
 				// ただしスーパークラスのコンストラクタは除外しとく
 				return;
 			}

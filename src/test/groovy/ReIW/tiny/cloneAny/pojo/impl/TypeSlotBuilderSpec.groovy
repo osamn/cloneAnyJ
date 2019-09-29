@@ -11,7 +11,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 		then:
 		typeSlot.access.size() == 1
-		typeSlot.access[0].getType() == Accessor.Type.Field
+		typeSlot.access[0].getType() == Accessor.Kind.Field
 		typeSlot.access[0].getName() == "publicField"
 		typeSlot.access[0].getDescriptor() == "Ljava/lang/String;"
 		typeSlot.access[0].slot.descriptor == "Ljava/lang/String;"
@@ -35,7 +35,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 		then:
 		typeSlot.access.size() == 1
-		typeSlot.access[0].getType() == Accessor.Type.ReadonlyField
+		typeSlot.access[0].getType() == Accessor.Kind.ReadonlyField
 		typeSlot.access[0].getName() == "publicField"
 		// primitive も問題ないよね
 		typeSlot.access[0].getDescriptor() == "I"
@@ -48,7 +48,7 @@ class TypeSlotBuilderSpec extends Specification {
 
 		then:
 		typeSlot.access.size() == 1
-		typeSlot.access[0].getType() == Accessor.Type.Get
+		typeSlot.access[0].getType() == Accessor.Kind.Get
 		typeSlot.access[0].getName() == "public"
 		typeSlot.access[0].getRel() == "getPublic"
 		typeSlot.access[0].getDescriptor() == "()Ljava/lang/Integer;"
@@ -63,14 +63,14 @@ class TypeSlotBuilderSpec extends Specification {
 		typeSlot.access.size() == 2
 
 		then:
-		typeSlot.access[0].getType() == Accessor.Type.Set
+		typeSlot.access[0].getType() == Accessor.Kind.Set
 		typeSlot.access[0].getName() == "foo"
 		typeSlot.access[0].getRel() == "setFoo"
 		typeSlot.access[0].getDescriptor() == "(Ljava/lang/String;)V"
 		typeSlot.access[0].slot.descriptor == "Ljava/lang/String;"
 
 		then:
-		typeSlot.access[1].getType() == Accessor.Type.Set
+		typeSlot.access[1].getType() == Accessor.Kind.Set
 		typeSlot.access[1].getName() == "foo"
 		typeSlot.access[1].getRel() == "setFoo"
 		typeSlot.access[1].getDescriptor() == "(Ljava/lang/Integer;)V"
@@ -85,7 +85,7 @@ class TypeSlotBuilderSpec extends Specification {
 		typeSlot.access.size() == 2
 
 		then:
-		typeSlot.access[0].getType() == Accessor.Type.LumpSet
+		typeSlot.access[0].getType() == Accessor.Kind.LumpSet
 		typeSlot.access[0].getName() == "<init>"
 		typeSlot.access[0].getRel() == "<init>"
 		typeSlot.access[0].getDescriptor() == "(Ljava/lang/String;)V"
@@ -95,7 +95,7 @@ class TypeSlotBuilderSpec extends Specification {
 		[["hoge", null, "Ljava/lang/String;", []]]
 
 		then:
-		typeSlot.access[1].getType() == Accessor.Type.LumpSet
+		typeSlot.access[1].getType() == Accessor.Kind.LumpSet
 		typeSlot.access[1].getName() == "<init>"
 		typeSlot.access[1].getRel() == "<init>"
 		typeSlot.access[1].getDescriptor() == "(ZLjava/lang/Integer;)V"
@@ -113,7 +113,7 @@ class TypeSlotBuilderSpec extends Specification {
 		typeSlot.access.size() == 1
 
 		then:
-		typeSlot.access[0].getType() == Accessor.Type.LumpSet
+		typeSlot.access[0].getType() == Accessor.Kind.LumpSet
 		typeSlot.access[0].getName() == "<init>"
 		typeSlot.access[0].getRel() == "<init>"
 		typeSlot.access[0].getDescriptor() == "()V"

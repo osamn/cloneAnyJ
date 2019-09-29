@@ -7,15 +7,15 @@ import ReIW.tiny.cloneAny.Ditto;
 import ReIW.tiny.cloneAny.core.AssemblyException;
 import ReIW.tiny.cloneAny.pojo.TypeDef;
 
-public class DittoBuilder implements Ditto.Builder {
+public final class DittoBuilder implements Ditto.Builder {
 
-	public static Ditto.Builder builder = new DittoBuilder();
+	private static Ditto.Builder builder = new DittoBuilder();
 
 	public static Ditto.Builder getInstance() {
 		return builder;
 	}
 
-	private final WeakHashMap<CKey, Object> cacheRef = new WeakHashMap<>();
+	private final WeakHashMap<String, Object> cacheRef = new WeakHashMap<>();
 
 	private DittoBuilder() {
 	}
@@ -30,18 +30,12 @@ public class DittoBuilder implements Ditto.Builder {
 	public <L, R> Ditto<L, R> get(final Class<L> lhs, final Class<R> rhs) {
 		final TypeDef lhsDef = TypeDef.createInstance(lhs);
 		final TypeDef rhsDef = TypeDef.createInstance(rhs);
-		return (Ditto<L, R>) get(lhsDef, rhsDef);
+		return (Ditto<L, R>) cacheRef.computeIfAbsent(getClassName(lhsDef, rhsDef),
+				name -> compute(name, lhsDef, rhsDef));
 	}
 
-	// こいつは内部的に使うやつなんで generic を明示する必要はないの
-	@SuppressWarnings("rawtypes")
-	protected Ditto get(final TypeDef lhsDef, final TypeDef rhsDef) {
-		final CKey key = new CKey(lhsDef, rhsDef);
-		return (Ditto) cacheRef.computeIfAbsent(key, DittoBuilder::compute);
-	}
-
-	private static final Object compute(final CKey key) {
-		final Class<?> clazz = new DittoClassAssembler(key).loadLocalClass();
+	private static final Object compute(final String className, final TypeDef lhsDef, final TypeDef rhsDef) {
+		final Class<?> clazz = new DittoClassAssembler(className, lhsDef, rhsDef).ensureDittoClass();
 		try {
 			return clazz.getDeclaredConstructor().newInstance();
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
@@ -49,4 +43,9 @@ public class DittoBuilder implements Ditto.Builder {
 			throw new AssemblyException(e);
 		}
 	}
+
+	private static String getClassName(TypeDef lhs, TypeDef rhs) {
+		return "$ditto." + lhs.getSignaturedName() + "_" + rhs.getSignaturedName();
+	}
+
 }
