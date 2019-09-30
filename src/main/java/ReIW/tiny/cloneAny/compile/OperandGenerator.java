@@ -34,7 +34,6 @@ import ReIW.tiny.cloneAny.compile.Operand.StartKeyLoop;
 import ReIW.tiny.cloneAny.compile.Operand.StoreRhs;
 import ReIW.tiny.cloneAny.compile.Operand.TestMapKeyExists;
 import ReIW.tiny.cloneAny.pojo.Accessor;
-import ReIW.tiny.cloneAny.pojo.Accessor.SlotInfo;
 import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.TypeDef;
 
@@ -75,20 +74,20 @@ public class OperandGenerator {
 	 * 
 	 * これにより、以降の処理で lhs の存在や変換可能性を見る必要がなくなるよ
 	 */
-	private boolean selectDstWithEffectiveSrc(final Accessor dstAcc) {
+	private boolean selectDstWithEffectiveSrc(final Accessor rhsAcc) {
 		// 右側のスロット情報すべてについて左側に move 可能なソースがあるか調べる
-		return dstAcc.slotInfo().allMatch(srcInf -> {
+		return rhsAcc.slotInfo().allMatch(rhsInfo -> {
 			// 左側にパラメタ名前が一致するアクセサがあるかみて
-			if (sourceAccMap.containsKey(srcInf.param)) {
-				final SlotInfo single = asSingle(sourceAccMap.get(srcInf.param));
-				if (canMove(single.slot, srcInf.slot)) {
+			if (sourceAccMap.containsKey(rhsInfo.param)) {
+				final Accessor lhsAcc = sourceAccMap.get(rhsInfo.param);
+				if (canMove(asSingle(lhsAcc).slot, rhsInfo.slot)) {
 					// スロットが move 可能なのでおｋ
 					return true;
 				}
 			}
 			// じゃなければ左側がマップで、その value 型で move 可能か
 			if (lhs.isMap()) {
-				return canMove(lhs.valueSlot(), srcInf.slot);
+				return canMove(lhs.valueSlot(), rhsInfo.slot);
 			}
 			return false;
 		});
@@ -104,16 +103,16 @@ public class OperandGenerator {
 		final ArrayList<Stream<Operand>> streams = new ArrayList<>();
 		streams.add(Stream.of(new New()));
 
-		effectiveCtor.slotInfo().forEach(dstInf -> {
-			final String name = dstInf.param;
-			final Accessor srcAcc = sourceAccMap.get(name);
-			if (srcAcc != null) {
-				streams.add(readOps(srcAcc));
-				streams.add(convOps(asSingle(srcAcc).slot, dstInf.slot));
+		effectiveCtor.slotInfo().forEach(rhsInfo -> {
+			final String name = rhsInfo.param;
+			if (sourceAccMap.containsKey(name)) {
+				final Accessor rhsAcc = sourceAccMap.get(name);
+				streams.add(readOps(rhsAcc));
+				streams.add(convOps(asSingle(rhsAcc).slot, rhsInfo.slot));
 			} else {
 				// 対応する field or getter がないので Map からの転記
 				streams.add(Stream.of(new CheckMapKeyExists(), new MapGet()));
-				streams.add(convOps(lhs.valueSlot(), dstInf.slot));
+				streams.add(convOps(lhs.valueSlot(), rhsInfo.slot));
 			}
 			used.add(name);
 		});
@@ -127,8 +126,8 @@ public class OperandGenerator {
 
 		effectiveDst.forEach(dstAcc -> {
 			final String name = dstAcc.getName();
-			final Accessor srcAcc = sourceAccMap.get(name);
-			if (srcAcc != null) {
+			if (sourceAccMap.containsKey(name)) {
+				final Accessor srcAcc = sourceAccMap.get(name);
 				streams.add(readOps(srcAcc));
 				streams.add(convOps(asSingle(srcAcc).slot, asSingle(dstAcc).slot));
 				streams.add(writeOps(dstAcc));
@@ -200,13 +199,13 @@ public class OperandGenerator {
 		final TypeDef lhsDef = TypeDef.createInstance(lhs);
 		final TypeDef rhsDef = TypeDef.createInstance(rhs);
 		if (lhsDef.isArrayType() || lhsDef.isList()) {
-			final ArrayList<Stream<Operand>> list = new ArrayList<>();
+			final ArrayList<Stream<Operand>> streams = new ArrayList<>();
 			final Operand getter = lhsDef.isArrayType() ? new ArrayGet() : new ListGet();
 			final Operand setter = rhsDef.isArrayType() ? new ArraySet() : new ListSet();
-			list.add(Stream.of(new StartIndexLoop(), getter));
-			list.add(convOps(lhsDef.elementSlot(), rhsDef.elementSlot()));
-			list.add(Stream.of(setter, new EndIndexLoop()));
-			return list.stream().flatMap(Function.identity());
+			streams.add(Stream.of(new StartIndexLoop(), getter));
+			streams.add(convOps(lhsDef.elementSlot(), rhsDef.elementSlot()));
+			streams.add(Stream.of(setter, new EndIndexLoop()));
+			return streams.stream().flatMap(Function.identity());
 		} else {
 			return Stream.of(new Convert());
 		}
@@ -228,11 +227,9 @@ public class OperandGenerator {
 			return false;
 		}
 		/*
-		if (lhs.getTypeDescriptor().contentEquals(rhs.getTypeDescriptor())) {
-			// 型パラメタを除いて一緒なんでとりあえず true
-			return true;
-		}
-		*/
+		 * if (lhs.getTypeDescriptor().contentEquals(rhs.getTypeDescriptor())) { //
+		 * 型パラメタを除いて一緒なんでとりあえず true return true; }
+		 */
 
 		/* array が絡む場合は Slot#descriptor が型を示さないので先に処理する */
 
