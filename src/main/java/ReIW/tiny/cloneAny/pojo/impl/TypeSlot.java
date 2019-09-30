@@ -31,6 +31,7 @@ public final class TypeSlot extends Slot implements TypeDef {
 
 	boolean defaultCtor;
 
+	// 階層含めて完了したか？
 	private boolean completed;
 
 	TypeSlot(final String typeParam, final String descriptor) {
@@ -196,7 +197,7 @@ public final class TypeSlot extends Slot implements TypeDef {
 	}
 
 	private static void buildSignaturedName(final StringBuilder buf, final Slot slot) {
-		buf.append(Type.getType(slot.descriptor).getInternalName().replace('/', '_'));
+		buf.append(slot.descriptor.replace('/', '_'));
 		slot.slotList.forEach(s -> {
 			buf.append('$');
 			buildSignaturedName(buf, slot);

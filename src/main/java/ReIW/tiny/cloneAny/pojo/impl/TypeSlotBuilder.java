@@ -26,6 +26,34 @@ import ReIW.tiny.cloneAny.utils.Propertys;
 
 public final class TypeSlotBuilder extends DefaultClassVisitor {
 
+	/* とくに Builder 経由じゃなくていいものをあらかじめ定義しとく */
+	// こいつらは complete も pullUp もしないし completed にならないけどいいよね
+
+	private static final TypeSlot BOOLEAN = new TypeSlot(null, "Ljava/lang/Boolean;");
+	private static final TypeSlot BYTE = new TypeSlot(null, "Ljava/lang/Byte;");
+	private static final TypeSlot CHARACTER = new TypeSlot(null, "Ljava/lang/Character;");
+	private static final TypeSlot DOUBLE = new TypeSlot(null, "Ljava/lang/Double;");
+	private static final TypeSlot FLOAT = new TypeSlot(null, "Ljava/lang/Float;");
+	private static final TypeSlot INTEGER = new TypeSlot(null, "Ljava/lang/Integer;");
+	private static final TypeSlot LONG = new TypeSlot(null, "Ljava/lang/Long;");
+	private static final TypeSlot SHORT = new TypeSlot(null, "Ljava/lang/Short;");
+
+	private static final TypeSlot Z_ = new TypeSlot(null, "Z");
+	private static final TypeSlot B_ = new TypeSlot(null, "B");
+	private static final TypeSlot C_ = new TypeSlot(null, "C");
+	private static final TypeSlot D_ = new TypeSlot(null, "D");
+	private static final TypeSlot F_ = new TypeSlot(null, "F");
+	private static final TypeSlot I_ = new TypeSlot(null, "I");
+	private static final TypeSlot J_ = new TypeSlot(null, "J");
+	private static final TypeSlot S_ = new TypeSlot(null, "S");
+
+	private static final TypeSlot STRING;
+
+	static {
+		STRING = new TypeSlot(null, "Ljava/lang/String;");
+		STRING.charSequence = true;
+	}
+
 	// いつまでも hive 抱えててもいかんので GC で回収されるように弱参照をもっておく
 	private static WeakReference<ConcurrentHashMap<Class<?>, TypeSlot>> hiveRef = new WeakReference<>(
 			new ConcurrentHashMap<>());
@@ -36,6 +64,54 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	}
 
 	public TypeSlot buildTypeSlot(final Class<?> clazz) {
+		if (clazz.isArray()) {
+			// クラスファイルとして定義されているものが対象なんで配列型はありえない
+			throw new IllegalArgumentException("Top level class should not be array type.");
+		}
+
+		// 前もって定義してるものだったらそのまま返す
+		// 一応なんとなく頻度順にしてみたり、判定に小細工してみたりしたけどいらんかも
+		if (clazz == int.class) {
+			return I_;
+		} else if (clazz == String.class) {
+			return STRING;
+		} else if (clazz == boolean.class) {
+			return Z_;
+		} else if (clazz == Integer.class) {
+			return INTEGER;
+		} else {
+			if (clazz.isPrimitive()) {
+				if (clazz == char.class)
+					return C_;
+				if (clazz == byte.class)
+					return B_;
+				if (clazz == double.class)
+					return D_;
+				if (clazz == long.class)
+					return J_;
+				if (clazz == short.class)
+					return S_;
+				if (clazz == float.class)
+					return F_;
+			} else if (Number.class.isAssignableFrom(clazz)) {
+				if (clazz == Byte.class)
+					return BYTE;
+				if (clazz == Double.class)
+					return DOUBLE;
+				if (clazz == Long.class)
+					return LONG;
+				if (clazz == Short.class)
+					return SHORT;
+				if (clazz == Float.class)
+					return FLOAT;
+			} else if (clazz == Boolean.class) {
+				return BOOLEAN;
+			} else if (clazz == Character.class) {
+				return CHARACTER;
+			}
+		}
+
+		// それ以外の場合は TypeSlot を hive からとりだすよ
 		ConcurrentHashMap<Class<?>, TypeSlot> hive;
 		synchronized (TypeSlotBuilder.class) {
 			hive = hiveRef.get();
@@ -49,12 +125,9 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		return ts;
 	}
 
+	/** TypeSlot を新規に計算するよ */
 	private TypeSlot computeTypeSlot(final Class<?> clazz) {
 		try {
-			if (clazz.isArray()) {
-				// クラスファイルとして定義されているものが対象なんで配列型はありえない
-				throw new IllegalArgumentException("Top level class should not be array type.");
-			}
 			typeSlot = new TypeSlot(null, Type.getDescriptor(clazz));
 			new ClassReader(Type.getInternalName(clazz)).accept(this, 0);
 			return typeSlot;
