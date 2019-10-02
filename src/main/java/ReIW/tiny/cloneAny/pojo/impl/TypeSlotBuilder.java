@@ -4,6 +4,7 @@ import static ReIW.tiny.cloneAny.utils.Descriptors.toInternalName;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,91 +29,59 @@ import ReIW.tiny.cloneAny.utils.Propertys;
 
 public final class TypeSlotBuilder extends DefaultClassVisitor {
 
-	/* とくに Builder 経由じゃなくていいものをあらかじめ定義しとく */
-	// 継承とかもみないし accessor もないものだけなんで complete はしないよ
-	// completed が立ってないけどとくにもんだいないよね
-
-	private static final TypeSlot BOOLEAN = new TypeSlot(null, "Ljava/lang/Boolean;");
-	private static final TypeSlot BYTE = new TypeSlot(null, "Ljava/lang/Byte;");
-	private static final TypeSlot CHARACTER = new TypeSlot(null, "Ljava/lang/Character;");
-	private static final TypeSlot DOUBLE = new TypeSlot(null, "Ljava/lang/Double;");
-	private static final TypeSlot FLOAT = new TypeSlot(null, "Ljava/lang/Float;");
-	private static final TypeSlot INTEGER = new TypeSlot(null, "Ljava/lang/Integer;");
-	private static final TypeSlot LONG = new TypeSlot(null, "Ljava/lang/Long;");
-	private static final TypeSlot SHORT = new TypeSlot(null, "Ljava/lang/Short;");
-
-	private static final TypeSlot Z_ = new TypeSlot(null, "Z");
-	private static final TypeSlot B_ = new TypeSlot(null, "B");
-	private static final TypeSlot C_ = new TypeSlot(null, "C");
-	private static final TypeSlot D_ = new TypeSlot(null, "D");
-	private static final TypeSlot F_ = new TypeSlot(null, "F");
-	private static final TypeSlot I_ = new TypeSlot(null, "I");
-	private static final TypeSlot J_ = new TypeSlot(null, "J");
-	private static final TypeSlot S_ = new TypeSlot(null, "S");
-
-	private static final TypeSlot STRING = new TypeSlot(null, "Ljava/lang/String;");
+	private static final HashMap<String, TypeSlot> systemTypes = new HashMap<>();
 
 	static {
-		STRING.charSequence = true;
+		/* java.lang 配下とか、とくに Builder 経由じゃなくていいものをあらかじめ定義しとく */
+		// 継承とかもみないし accessor もないものだけなんで complete はしないよ
+		// completed が立ってないけどとくにもんだいないよね
+
+		systemTypes.put("Ljava/lang/Boolean;", new TypeSlot(null, "Ljava/lang/Boolean;"));
+		systemTypes.put("Ljava/lang/Byte;", new TypeSlot(null, "Ljava/lang/Byte;"));
+		systemTypes.put("Ljava/lang/Character;", new TypeSlot(null, "Ljava/lang/Character;"));
+		systemTypes.put("Ljava/lang/Double;", new TypeSlot(null, "Ljava/lang/Double;"));
+		systemTypes.put("Ljava/lang/Float;", new TypeSlot(null, "Ljava/lang/Float;"));
+		systemTypes.put("Ljava/lang/Integer;", new TypeSlot(null, "Ljava/lang/Integer;"));
+		systemTypes.put("Ljava/lang/Long;", new TypeSlot(null, "Ljava/lang/Long;"));
+		systemTypes.put("Ljava/lang/Short;", new TypeSlot(null, "Ljava/lang/Short;"));
+		systemTypes.put("Z", new TypeSlot(null, "Z"));
+		systemTypes.put("B", new TypeSlot(null, "B"));
+		systemTypes.put("C", new TypeSlot(null, "C"));
+		systemTypes.put("D", new TypeSlot(null, "D"));
+		systemTypes.put("F", new TypeSlot(null, "F"));
+		systemTypes.put("I", new TypeSlot(null, "I"));
+		systemTypes.put("J", new TypeSlot(null, "J"));
+		systemTypes.put("S", new TypeSlot(null, "S"));
+
+		final TypeSlot stringType = new TypeSlot(null, "Ljava/lang/String;");
+		stringType.charSequence = true;
+		systemTypes.put("Ljava/lang/String;", stringType);
 	}
 
 	// いつまでも hive 抱えててもいかんので GC で回収されるように弱参照をもっておく
-	private static WeakReference<ConcurrentHashMap<Class<?>, TypeSlot>> hiveRef = new WeakReference<>(
+	private static WeakReference<ConcurrentHashMap<String, TypeSlot>> hiveRef = new WeakReference<>(
 			new ConcurrentHashMap<>());
 
 	public TypeSlotBuilder() {
 	}
-
+	
 	public TypeSlot buildTypeSlot(final Class<?> clazz) {
-		if (clazz.isArray()) {
+		return buildTypeSlot(Type.getDescriptor(clazz));
+	}
+
+	public TypeSlot buildTypeSlot(final String descriptor) {
+		if (descriptor.startsWith("[")) {
 			// クラスファイルとして定義されているものが対象なんで配列型はありえない
 			throw new IllegalArgumentException("Top level class should not be array type.");
 		}
 
 		// 前もって定義してるものだったらそのまま返す
-		// 一応なんとなく頻度順にしてみたり、判定に小細工してみたりしたけどいらんかも
-		if (clazz == int.class) {
-			return I_;
-		} else if (clazz == String.class) {
-			return STRING;
-		} else if (clazz == boolean.class) {
-			return Z_;
-		} else if (clazz == Integer.class) {
-			return INTEGER;
-		} else {
-			if (clazz.isPrimitive()) {
-				if (clazz == char.class)
-					return C_;
-				if (clazz == byte.class)
-					return B_;
-				if (clazz == double.class)
-					return D_;
-				if (clazz == long.class)
-					return J_;
-				if (clazz == short.class)
-					return S_;
-				if (clazz == float.class)
-					return F_;
-			} else if (Number.class.isAssignableFrom(clazz)) {
-				if (clazz == Byte.class)
-					return BYTE;
-				if (clazz == Double.class)
-					return DOUBLE;
-				if (clazz == Long.class)
-					return LONG;
-				if (clazz == Short.class)
-					return SHORT;
-				if (clazz == Float.class)
-					return FLOAT;
-			} else if (clazz == Boolean.class) {
-				return BOOLEAN;
-			} else if (clazz == Character.class) {
-				return CHARACTER;
-			}
+		if (systemTypes.containsKey(descriptor)) {
+			return systemTypes.get(descriptor);
 		}
 
 		// それ以外の場合は TypeSlot を hive からとりだすよ
-		ConcurrentHashMap<Class<?>, TypeSlot> hive;
+		ConcurrentHashMap<String, TypeSlot> hive;
 		synchronized (TypeSlotBuilder.class) {
 			hive = hiveRef.get();
 			if (hive == null) {
@@ -120,7 +89,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				hiveRef = new WeakReference<>(hive);
 			}
 		}
-		final TypeSlot ts = hive.computeIfAbsent(clazz, this::computeTypeSlot);
+		final TypeSlot ts = hive.computeIfAbsent(descriptor, this::computeTypeSlot);
 		ts.complete();
 		return ts;
 	}
@@ -128,10 +97,10 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	private TypeSlot typeSlot;
 
 	/** TypeSlot を新規に計算するよ */
-	private TypeSlot computeTypeSlot(final Class<?> clazz) {
+	private TypeSlot computeTypeSlot(final String descriptor) {
 		try {
-			typeSlot = new TypeSlot(null, Type.getDescriptor(clazz));
-			new ClassReader(Type.getInternalName(clazz)).accept(this, 0);
+			typeSlot = new TypeSlot(null, descriptor);
+			new ClassReader(Type.getType(descriptor).getInternalName()).accept(this, 0);
 			return typeSlot;
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e);

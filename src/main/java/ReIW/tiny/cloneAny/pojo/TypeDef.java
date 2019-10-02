@@ -2,8 +2,9 @@ package ReIW.tiny.cloneAny.pojo;
 
 import java.util.stream.Stream;
 
+import org.objectweb.asm.Type;
+
 import ReIW.tiny.cloneAny.pojo.impl.TypeSlotBuilder;
-import ReIW.tiny.cloneAny.utils.Descriptors;
 
 public interface TypeDef {
 
@@ -15,19 +16,22 @@ public interface TypeDef {
 
 	boolean isCharSequence();
 
-	Slot elementSlot(); // List/Array の要素のスロット
+	/** Array/List の要素スロット */
+	Slot elementSlot();
 
-	Slot valueSlot(); // Map の value のスロット
+	/** Map の value スロット */
+	Slot valueSlot();
 
 	Stream<Accessor> accessors();
 	
+	/** このインスタンスを表すスロット */
 	Slot toSlot();
 
 	static TypeDef createInstance(final Class<?> clazz) {
-		return new TypeSlotBuilder().buildTypeSlot(clazz);
+		return new TypeSlotBuilder().buildTypeSlot(Type.getDescriptor(clazz));
 	}
 
 	static TypeDef createInstance(final Slot slot) {
-		return new TypeSlotBuilder().buildTypeSlot(Descriptors.toClass(slot.descriptor)).bind(slot.slotList);
+		return new TypeSlotBuilder().buildTypeSlot(slot.descriptor).bind(slot.slotList);
 	}
 }

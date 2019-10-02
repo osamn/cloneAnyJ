@@ -1,7 +1,6 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
 import static ReIW.tiny.cloneAny.utils.Consumers.withIndex;
-import static ReIW.tiny.cloneAny.utils.Descriptors.toClass;
 import static ReIW.tiny.cloneAny.utils.Descriptors.toInternalName;
 
 import java.util.ArrayList;
@@ -111,7 +110,7 @@ public final class TypeSlot extends Slot implements TypeDef {
 		}
 
 		// 親の TypeSlot を作って
-		final TypeSlot superType = new TypeSlotBuilder().buildTypeSlot(toClass(superDesc));
+		final TypeSlot superType = new TypeSlotBuilder().buildTypeSlot(superDesc);
 		superType.complete();
 		final HashMap<String, String> binds = createBindMap(superType);
 		// 親のアクセサを自分に持ってくる

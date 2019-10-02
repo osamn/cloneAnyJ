@@ -101,7 +101,6 @@ public class Slot {
 			return this;
 		}
 
-		// とりあえず自身の型引数を bind したコピーを作る
 		final String bound = binds.get(typeParam);
 		if (bound == null) {
 			// 自分の typeParam が再定義されていない

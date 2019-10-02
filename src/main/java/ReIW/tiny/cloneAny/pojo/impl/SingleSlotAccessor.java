@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Slot;
 
-public final class SingleSlotAccessor extends SlotAccessor {
+public final class SingleSlotAccessor implements SlotAccessor {
 
 	private final Accessor.Kind type;
 	private final String owner;
@@ -67,7 +67,7 @@ public final class SingleSlotAccessor extends SlotAccessor {
 	}
 
 	@Override
-	SlotAccessor chown(final String newOwner) {
+	public SlotAccessor chown(final String newOwner) {
 		if (this.owner.contentEquals(owner)) {
 			return this;
 		}
@@ -75,7 +75,7 @@ public final class SingleSlotAccessor extends SlotAccessor {
 	}
 
 	@Override
-	SlotAccessor rebind(final Map<String, String> binds) {
+	public SlotAccessor rebind(final Map<String, String> binds) {
 		if (binds.size() == 0) {
 			return this;
 		}
