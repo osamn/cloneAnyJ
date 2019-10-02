@@ -13,6 +13,9 @@ import org.objectweb.asm.signature.SignatureVisitor;
 import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
 import ReIW.tiny.cloneAny.utils.Descriptors;
 
+
+// TODO typeParam が + とか - の場合は実行時型をつかって Ditto つくる必要あるよね
+
 /*
  * クラスのメンバの型情報を持つ人
  */

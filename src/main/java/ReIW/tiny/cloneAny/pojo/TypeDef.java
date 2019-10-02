@@ -2,8 +2,6 @@ package ReIW.tiny.cloneAny.pojo;
 
 import java.util.stream.Stream;
 
-import org.objectweb.asm.Type;
-
 import ReIW.tiny.cloneAny.pojo.impl.TypeSlotBuilder;
 
 public interface TypeDef {
@@ -28,7 +26,7 @@ public interface TypeDef {
 	Slot toSlot();
 
 	static TypeDef createInstance(final Class<?> clazz) {
-		return new TypeSlotBuilder().buildTypeSlot(Type.getDescriptor(clazz));
+		return new TypeSlotBuilder().buildTypeSlot(clazz);
 	}
 
 	static TypeDef createInstance(final Slot slot) {
