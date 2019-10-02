@@ -1,5 +1,7 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
+import static ReIW.tiny.cloneAny.utils.Descriptors.toInternalName;
+
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
@@ -27,7 +29,8 @@ import ReIW.tiny.cloneAny.utils.Propertys;
 public final class TypeSlotBuilder extends DefaultClassVisitor {
 
 	/* とくに Builder 経由じゃなくていいものをあらかじめ定義しとく */
-	// こいつらは complete も pullUp もしないし completed にならないけどいいよね
+	// 継承とかもみないし accessor もないものだけなんで complete はしないよ
+	// completed が立ってないけどとくにもんだいないよね
 
 	private static final TypeSlot BOOLEAN = new TypeSlot(null, "Ljava/lang/Boolean;");
 	private static final TypeSlot BYTE = new TypeSlot(null, "Ljava/lang/Byte;");
@@ -47,18 +50,15 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	private static final TypeSlot J_ = new TypeSlot(null, "J");
 	private static final TypeSlot S_ = new TypeSlot(null, "S");
 
-	private static final TypeSlot STRING;
+	private static final TypeSlot STRING = new TypeSlot(null, "Ljava/lang/String;");
 
 	static {
-		STRING = new TypeSlot(null, "Ljava/lang/String;");
 		STRING.charSequence = true;
 	}
 
 	// いつまでも hive 抱えててもいかんので GC で回収されるように弱参照をもっておく
 	private static WeakReference<ConcurrentHashMap<Class<?>, TypeSlot>> hiveRef = new WeakReference<>(
 			new ConcurrentHashMap<>());
-
-	private TypeSlot typeSlot;
 
 	public TypeSlotBuilder() {
 	}
@@ -125,6 +125,8 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		return ts;
 	}
 
+	private TypeSlot typeSlot;
+
 	/** TypeSlot を新規に計算するよ */
 	private TypeSlot computeTypeSlot(final Class<?> clazz) {
 		try {
@@ -156,7 +158,8 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 			// final なものは読み取り専用になるよ
 			final Accessor.Kind type = AccessFlag.isFinal(access) ? Accessor.Kind.ReadonlyField : Accessor.Kind.Field;
 			final Slot slot = Slot.getSlot(null, descriptor, signature);
-			typeSlot.access.add(new SingleSlotAccessor(type, typeSlot.getName(), name, name, descriptor, slot));
+			typeSlot.access.add(
+					new SingleSlotAccessor(type, toInternalName(typeSlot.descriptor), name, name, descriptor, slot));
 		}
 		return null;
 	}
@@ -169,7 +172,8 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				if (descriptor.contentEquals("()V")) {
 					typeSlot.defaultCtor = true;
 				}
-				final MultiSlotAccessor acc = new MultiSlotAccessor(typeSlot.getName(), name, name, descriptor);
+				final MultiSlotAccessor acc = new MultiSlotAccessor(toInternalName(typeSlot.descriptor), name, name,
+						descriptor);
 				typeSlot.access.add(acc);
 				new MethodSignatureParser(acc.slots::add, null).parseArgumentsAndReturn(descriptor, signature);
 				return new MethodParamNameMapper(acc.slots, acc.names::add);
@@ -177,13 +181,15 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				try {
 					if (Propertys.isGetter(name, descriptor)) {
 						new MethodSignatureParser(null, slot -> {
-							typeSlot.access.add(new SingleSlotAccessor(Accessor.Kind.Get, typeSlot.getName(),
-									Propertys.getPropertyName(name), name, descriptor, slot));
+							typeSlot.access
+									.add(new SingleSlotAccessor(Accessor.Kind.Get, toInternalName(typeSlot.descriptor),
+											Propertys.getPropertyName(name), name, descriptor, slot));
 						}).parseArgumentsAndReturn(descriptor, signature);
 					} else if (Propertys.isSetter(name, descriptor)) {
 						new MethodSignatureParser(slot -> {
-							typeSlot.access.add(new SingleSlotAccessor(Accessor.Kind.Set, typeSlot.getName(),
-									Propertys.getPropertyName(name), name, descriptor, slot));
+							typeSlot.access
+									.add(new SingleSlotAccessor(Accessor.Kind.Set, toInternalName(typeSlot.descriptor),
+											Propertys.getPropertyName(name), name, descriptor, slot));
 						}, null).parseArgumentsAndReturn(descriptor, signature);
 					}
 				} catch (UnboundFormalTypeParameterException e) {

@@ -12,6 +12,7 @@ import ReIW.tiny.cloneAny.core.AssemblyDomain;
 import ReIW.tiny.cloneAny.core.AssemblyException;
 import ReIW.tiny.cloneAny.pojo.TypeDef;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
+import static ReIW.tiny.cloneAny.utils.Descriptors.*;
 
 final class DittoClassAssembler {
 
@@ -34,7 +35,7 @@ final class DittoClassAssembler {
 			try {
 				final Class<?> clazz = domain.findLocalClass(clazzName);
 				if (clazz == null) {
-					if (!lhsDef.isCertainBound() || !rhsDef.isCertainBound()) {
+					if (!lhsDef.toSlot().isCertainBound() || !rhsDef.toSlot().isCertainBound()) {
 						throw new UnboundFormalTypeParameterException();
 					}
 					loadConcreteDitto(domain);
@@ -60,7 +61,8 @@ final class DittoClassAssembler {
 		// prepare visitor chain.
 		final ClassVisitor term = domain.getTerminalClassVisitor(this::inspectBytes);
 		final ClassVisitor cv0 = new ConcreteDittoClassVisitor(clazzName, term);
-		final ClassVisitor cv1 = new ImplementClassNameGetterVisitor(lhsDef.getName(), rhsDef.getName(), cv0);
+		final ClassVisitor cv1 = new ImplementClassNameGetterVisitor(toInternalName(lhsDef.toSlot().descriptor),
+				toInternalName(rhsDef.toSlot().descriptor), cv0);
 		final ClassVisitor cv2 = new ImplementCopyOrCloneVisitor(new OperandGenerator(lhsDef, rhsDef), cv1);
 		// クラスを構築してロードする
 		final ClassReader cr = new ClassReader(AbstractDitto.class.getName());

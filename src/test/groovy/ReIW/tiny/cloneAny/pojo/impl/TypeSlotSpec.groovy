@@ -62,7 +62,7 @@ class TypeSlotSpec extends Specification {
 	def "明示的な bind で継承元まで型引数が bind されてること"() {
 		when:
 		def ts = new TypeSlotBuilder().buildTypeSlot(TypeSlotTester.GenericExtends)
-				.bind([Slot.getSlot(null, "Ljava/lang/Double;"), Slot.getSlot(null, "[[I")])
+				.bind([Slot.getSlot(null, "Ljava/lang/Double;", null), Slot.getSlot(null, "[[I", null)])
 		def access = ts.accessors().toArray()
 
 		then:
@@ -89,7 +89,7 @@ class TypeSlotSpec extends Specification {
 		// なので明示的な bind だけ考えればいいよ
 		when:
 		def ts = new TypeSlotBuilder().buildTypeSlot(clazz)
-				.bind([Slot.getSlot(null, "Ljava/lang/String;"), Slot.getSlot(null, "[I")])
+				.bind([Slot.getSlot(null, "Ljava/lang/String;", null), Slot.getSlot(null, "[I", null)])
 		def access = ts.accessors().toArray()
 
 		then:

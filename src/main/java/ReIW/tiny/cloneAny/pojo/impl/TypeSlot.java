@@ -1,6 +1,8 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
 import static ReIW.tiny.cloneAny.utils.Consumers.withIndex;
+import static ReIW.tiny.cloneAny.utils.Descriptors.toClass;
+import static ReIW.tiny.cloneAny.utils.Descriptors.toInternalName;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,12 +10,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.objectweb.asm.Type;
-
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.TypeDef;
-import ReIW.tiny.cloneAny.utils.Descriptors;
 
 public final class TypeSlot extends Slot implements TypeDef {
 
@@ -39,35 +38,8 @@ public final class TypeSlot extends Slot implements TypeDef {
 	}
 
 	@Override
-	public String getName() {
-		return Type.getType(this.descriptor).getInternalName();
-	}
-
-	@Override
-	public String getSignaturedName() {
-		final StringBuilder buf = new StringBuilder();
-		buildSignaturedName(buf, this);
-		return buf.toString();
-	}
-
-	@Override
 	public boolean hasDefaultCtor() {
 		return defaultCtor;
-	}
-
-	@Override
-	public boolean isArrayType() {
-		return isArrayType;
-	}
-
-	@Override
-	public boolean isPrimitiveType() {
-		return isPrimitiveType;
-	}
-
-	@Override
-	public boolean isBoxingType() {
-		return isBoxingType;
 	}
 
 	@Override
@@ -103,6 +75,11 @@ public final class TypeSlot extends Slot implements TypeDef {
 		return access.stream();
 	}
 
+	@Override
+	public Slot toSlot() {
+		return this;
+	}
+
 	/**
 	 * 未解決の型パラメタを指定引数で解決したアクセサのストリームを作るためのラッパをつくる.
 	 * 
@@ -126,13 +103,15 @@ public final class TypeSlot extends Slot implements TypeDef {
 		completed = true;
 
 		// 親が Object.class だったら継承階層のルートまでたどってるので終了する
-		// 継承元が配列はありえないので array を考慮する必要ないので getTypeDescriptor じゃなくておｋ
+		// 継承元が配列はありえないので array を考慮する必要ない
+		// なんで getTypeDescriptor じゃなくておｋ
 		final String superDesc = superSlots.get(0).descriptor;
 		if (superDesc.contentEquals("Ljava/lang/Object;")) {
 			return;
 		}
+
 		// 親の TypeSlot を作って
-		final TypeSlot superType = new TypeSlotBuilder().buildTypeSlot(Descriptors.toClass(superDesc));
+		final TypeSlot superType = new TypeSlotBuilder().buildTypeSlot(toClass(superDesc));
 		superType.complete();
 		final HashMap<String, String> binds = createBindMap(superType);
 		// 親のアクセサを自分に持ってくる
@@ -159,7 +138,7 @@ public final class TypeSlot extends Slot implements TypeDef {
 			// 同じエントリがないように name + rel で確認する
 			// override したときとか同じエントリが階層上位にあったりするので
 			if (checkExists.add(acc.getRel() + acc.getDescriptor())) {
-				final SlotAccessor sa = acc.chown(getName()).rebind(binds);
+				final SlotAccessor sa = acc.chown(toInternalName(descriptor)).rebind(binds);
 				access.add(sa);
 			}
 		});
@@ -196,14 +175,6 @@ public final class TypeSlot extends Slot implements TypeDef {
 		return map;
 	}
 
-	private static void buildSignaturedName(final StringBuilder buf, final Slot slot) {
-		buf.append(slot.descriptor.replace('/', '_'));
-		slot.slotList.forEach(s -> {
-			buf.append('$');
-			buildSignaturedName(buf, slot);
-		});
-	}
-
 	private final class Binder implements TypeDef {
 
 		private final HashMap<String, String> formalBindMap;
@@ -225,40 +196,8 @@ public final class TypeSlot extends Slot implements TypeDef {
 		}
 
 		@Override
-		public String getName() {
-			return TypeSlot.this.getName();
-		}
-
-		@Override
-		public String getSignaturedName() {
-			final StringBuilder buf = new StringBuilder();
-			buildSignaturedName(buf, TypeSlot.this.rebind(formalBindMap));
-			return buf.toString();
-		}
-
-		@Override
 		public boolean hasDefaultCtor() {
 			return TypeSlot.this.hasDefaultCtor();
-		}
-
-		@Override
-		public boolean isCertainBound() {
-			return TypeSlot.this.rebind(formalBindMap).isCertainBound();
-		}
-
-		@Override
-		public boolean isArrayType() {
-			return TypeSlot.this.isArrayType();
-		}
-
-		@Override
-		public boolean isPrimitiveType() {
-			return TypeSlot.this.isPrimitiveType();
-		}
-
-		@Override
-		public boolean isBoxingType() {
-			return TypeSlot.this.isBoxingType();
 		}
 
 		@Override
@@ -295,6 +234,11 @@ public final class TypeSlot extends Slot implements TypeDef {
 		@Override
 		public Stream<Accessor> accessors() {
 			return TypeSlot.this.accessors().map(acc -> (SlotAccessor) acc).map(acc -> acc.rebind(formalBindMap));
+		}
+
+		@Override
+		public Slot toSlot() {
+			return TypeSlot.this.rebind(formalBindMap);
 		}
 
 	}

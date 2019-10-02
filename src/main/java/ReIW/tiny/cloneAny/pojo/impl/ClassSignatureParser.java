@@ -20,11 +20,11 @@ final class ClassSignatureParser extends Slot.SlotSignatureVisitor {
 
 	void parse(final String superName, final String[] interfaces, final String signature) {
 		if (signature == null) {
-			// signature がない場合は、自クラスも継承元も non generic なので
-			// ルートは配列になることがないのでそのまま Slot 作る
-			supers.accept(Slot.getSlot(null, Type.getObjectType(superName).getDescriptor()));
+			// signature がない場合は、自クラスも継承元も non generic だし
+			// getSlot でシグネチャなしでつくる
+			supers.accept(Slot.getSlot(null, Type.getObjectType(superName).getDescriptor(), null));
 			if (interfaces != null) {
-				Arrays.stream(interfaces).map(intf -> Slot.getSlot(null, Type.getObjectType(intf).getDescriptor()))
+				Arrays.stream(interfaces).map(intf -> Slot.getSlot(null, Type.getObjectType(intf).getDescriptor(), null))
 						.forEach(supers);
 			}
 		} else {

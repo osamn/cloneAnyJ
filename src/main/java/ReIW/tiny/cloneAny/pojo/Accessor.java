@@ -24,21 +24,26 @@ public interface Accessor {
 
 	boolean canWrite();
 
+	/** Field/Method の持ち主の internalName */
 	String getOwner();
 
+	/** プロパティ名 */
 	String getName();
 
+	/** Field/Method 名 */
 	String getRel();
 
+	/** Field/Method の descriptor */
+	// Field の場合は asSingle した Slot#getTypeDescriptor とおなじなはず
 	String getDescriptor();
 
 	Stream<SlotInfo> slotInfo();
 
-	static SlotInfo asSingle(Accessor acc) {
+	static Slot asSingle(Accessor acc) {
 		if (acc.getType() == Kind.LumpSet) {
 			throw new IllegalArgumentException();
 		}
-		return acc.slotInfo().findFirst().get();
+		return acc.slotInfo().findFirst().get().slot;
 	}
 
 }

@@ -5,6 +5,7 @@ import java.util.WeakHashMap;
 
 import ReIW.tiny.cloneAny.Ditto;
 import ReIW.tiny.cloneAny.core.AssemblyException;
+import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.TypeDef;
 
 public final class DittoBuilder implements Ditto.Builder {
@@ -45,7 +46,22 @@ public final class DittoBuilder implements Ditto.Builder {
 	}
 
 	private static String getClassName(TypeDef lhs, TypeDef rhs) {
-		return "$ditto." + lhs.getSignaturedName() + "_" + rhs.getSignaturedName();
+		return "$ditto." + getTypeIdentifier(lhs) + "_" + getTypeIdentifier(lhs);
+	}
+
+	private static String getTypeIdentifier(final TypeDef type) {
+		Slot slot = type.toSlot();
+		final StringBuilder buf = new StringBuilder();
+		buildSignaturedName(buf, slot);
+		return buf.toString();
+	}
+
+	private static void buildSignaturedName(final StringBuilder buf, final Slot slot) {
+		buf.append(slot.descriptor.replace('/', '_'));
+		slot.slotList.forEach(s -> {
+			buf.append('$');
+			buildSignaturedName(buf, slot);
+		});
 	}
 
 }

@@ -98,6 +98,9 @@ public interface Descriptors {
 		default:
 			return null;
 		}
+	}
 
+	static String toInternalName(final String descriptor) {
+		return Type.getType(descriptor).getInternalName();
 	}
 }

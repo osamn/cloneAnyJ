@@ -7,33 +7,21 @@ import ReIW.tiny.cloneAny.utils.Descriptors;
 
 public interface TypeDef {
 
-	/** internalName */
-	String getName();
-
-	/** generic parameter を含めた名称 */
-	String getSignaturedName();
-	
 	boolean hasDefaultCtor();
 	
-	boolean isCertainBound();
-
-	boolean isArrayType();
-
-	boolean isPrimitiveType();
-
-	boolean isBoxingType();
-
 	boolean isList();
 
 	boolean isMap();
 
 	boolean isCharSequence();
 
-	Slot elementSlot(); // List
+	Slot elementSlot(); // List/Array の要素のスロット
 
-	Slot valueSlot(); // Map
+	Slot valueSlot(); // Map の value のスロット
 
 	Stream<Accessor> accessors();
+	
+	Slot toSlot();
 
 	static TypeDef createInstance(final Class<?> clazz) {
 		return new TypeSlotBuilder().buildTypeSlot(clazz);
