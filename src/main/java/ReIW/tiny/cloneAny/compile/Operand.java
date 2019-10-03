@@ -96,4 +96,8 @@ public interface Operand {
 
 	}
 
+	class ToStringConv implements Operand {
+		
+		// CharSequence -> String 専用
+	}
 }
