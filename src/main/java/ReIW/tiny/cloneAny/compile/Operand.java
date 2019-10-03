@@ -23,18 +23,9 @@ public interface Operand {
 			this.desctiptor = descriptor;
 		}
 		// INVOKESPECIAL owner <init> desctiptor
-	}
-
-	class LoadLhs implements Operand {
-		// ALOAD 1
-	}
-
-	class LoadRhs implements Operand {
-		// ALOAD 2
-	}
-
-	class StoreRhs implements Operand {
+		// if (rhs == null) のなかでの場合は
 		// ASTORE 2
+		// も必要だけど、これは if 作る側でやる
 	}
 
 	class InvokeGet implements Operand {
@@ -47,16 +38,21 @@ public interface Operand {
 			this.name = name;
 			this.desctiptor = desctiptor;
 		}
+		// ALOAD 1
 		// INVOKEVIRTUAL owner name desctiptor
 	}
 
 	class InvokeSet implements Operand {
+		// ALOAD 2
+		// INVOKEVIRTUAL owner name desctiptor
 	}
 
 	class FieldGet implements Operand {
+		// ALOAD 1
 	}
 
 	class FieldSet implements Operand {
+		// ALOAD 2
 	}
 
 	class Convert implements Operand {
@@ -65,6 +61,7 @@ public interface Operand {
 
 		// box unbox とか cast とか
 		// Ditto とるコードに展開されるよ
+		// box unbox は intValue とか Integer.valueOf とかになるんであとで考える
 		Convert(Slot lhs, Slot rhs) {
 			this.lhs = lhs;
 			this.rhs = rhs;
@@ -73,11 +70,15 @@ public interface Operand {
 
 	class ListToList implements Operand {
 		Convert conv;
-
+		// 右側を default ctor でつくる
+		// で左の size() loop
 	}
 
 	class ListToArray implements Operand {
 		Convert conv;
+		// 左の size()
+		// 右の配列 NEWARRAY
+		// 左の size() loop
 	}
 
 	class ArrayToList implements Operand {
