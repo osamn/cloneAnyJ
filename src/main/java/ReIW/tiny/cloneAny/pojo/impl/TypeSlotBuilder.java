@@ -3,11 +3,12 @@ package ReIW.tiny.cloneAny.pojo.impl;
 import static ReIW.tiny.cloneAny.utils.Descriptors.toInternalName;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.function.Consumer;
 
 import org.objectweb.asm.ClassReader;
@@ -77,9 +78,8 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		systemTypes.put("Ljava/lang/Character;", new TypeSlot(null, "Ljava/lang/Character;"));
 	}
 
-	// いつまでも hive 抱えててもいかんので GC で回収されるように弱参照をもっておく
-	private static WeakReference<ConcurrentHashMap<String, TypeSlot>> hiveRef = new WeakReference<>(
-			new ConcurrentHashMap<>());
+	// TypeSlot は一過性なんで WeakHashMap にしておく
+	private static final Map<String, TypeSlot> hive = Collections.synchronizedMap(new WeakHashMap<>());
 
 	public TypeSlotBuilder() {
 	}
@@ -100,14 +100,6 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		}
 
 		// それ以外の場合は TypeSlot を hive からとりだすよ
-		ConcurrentHashMap<String, TypeSlot> hive;
-		synchronized (TypeSlotBuilder.class) {
-			hive = hiveRef.get();
-			if (hive == null) {
-				hive = new ConcurrentHashMap<>();
-				hiveRef = new WeakReference<>(hive);
-			}
-		}
 		final TypeSlot ts = hive.computeIfAbsent(descriptor, this::computeTypeSlot);
 		ts.complete();
 		return ts;
