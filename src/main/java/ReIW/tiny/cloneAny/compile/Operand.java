@@ -49,10 +49,12 @@ public interface Operand {
 
 	class FieldGet implements Operand {
 		// ALOAD 1
+		// GETFIELD
 	}
 
 	class FieldSet implements Operand {
 		// ALOAD 2
+		// PUTFIELD
 	}
 
 	class Convert implements Operand {
@@ -69,35 +71,31 @@ public interface Operand {
 	}
 
 	class ListToList implements Operand {
-		Convert conv;
+		Convert convOp;
 		// 右側を default ctor でつくる
 		// で左の size() loop
 	}
 
 	class ListToArray implements Operand {
-		Convert conv;
+		Convert convOp;
 		// 左の size()
 		// 右の配列 NEWARRAY
 		// 左の size() loop
 	}
 
 	class ArrayToList implements Operand {
-		Convert conv;
+		Convert convOp;
 
 	}
 
 	class ArrayToArray implements Operand {
-		Convert conv;
+		Convert convOp;
 
 	}
 
 	class MapToMap implements Operand {
-		Convert conv;
+		Convert convOp;
 
 	}
 
-	class ToStringConv implements Operand {
-		
-		// CharSequence -> String 専用
-	}
 }
