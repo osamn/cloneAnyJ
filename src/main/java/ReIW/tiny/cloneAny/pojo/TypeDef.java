@@ -16,6 +16,8 @@ public interface TypeDef {
 	
 	boolean isNumber();
 
+	boolean isDecendantOf(String descriptor);
+	
 	/** Array/List の要素スロット */
 	Slot elementSlot();
 

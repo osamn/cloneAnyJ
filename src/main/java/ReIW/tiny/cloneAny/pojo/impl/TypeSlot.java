@@ -15,19 +15,19 @@ import ReIW.tiny.cloneAny.pojo.TypeDef;
 
 public final class TypeSlot extends Slot implements TypeDef {
 
+	private Slot listSlot;
+
+	private Slot mapSlot;
+
+	private boolean charSequence;
+
+	private boolean number;
+
 	// -- builder が設定するものは package スコープ
 
-	final ArrayList<Slot> superSlots = new ArrayList<>();
+	final List<Slot> superSlots = new ArrayList<>();
 
-	final ArrayList<Accessor> access = new ArrayList<>();
-
-	Slot listSlot;
-
-	Slot mapSlot;
-
-	boolean charSequence;
-	
-	boolean number;
+	final List<Accessor> access = new ArrayList<>();
 
 	boolean defaultCtor;
 
@@ -35,7 +35,12 @@ public final class TypeSlot extends Slot implements TypeDef {
 	private boolean completed;
 
 	TypeSlot(final String typeParam, final String descriptor) {
+		this(typeParam, descriptor, false);
+	}
+
+	private TypeSlot(final String typeParam, final String descriptor, final boolean completed) {
 		super(typeParam, descriptor);
+		this.completed = completed;
 	}
 
 	@Override
@@ -69,6 +74,11 @@ public final class TypeSlot extends Slot implements TypeDef {
 			return slotList.get(0);
 		}
 		return listSlot.slotList.get(0);
+	}
+
+	@Override
+	public boolean isDecendantOf(final String descriptor) {
+		return superSlots.stream().anyMatch(slot -> slot.descriptor.contentEquals(descriptor));
 	}
 
 	@Override
@@ -108,27 +118,24 @@ public final class TypeSlot extends Slot implements TypeDef {
 		}
 		completed = true;
 
-		// 親が Object.class だったら継承階層のルートまでたどってるので終了する
+		// 親がなかったら継承階層のルートまでたどってるので終了する
 		// 継承元が配列はありえないので array を考慮する必要ない
 		// なんで getTypeDescriptor じゃなくておｋ
-		final String superDesc = superSlots.get(0).descriptor;
-		if (superDesc.contentEquals("Ljava/lang/Object;")) {
+		if (superSlots.size() == 0) {
 			return;
 		}
 
+		// Object.class も処理するからね
+
+		final String superDesc = superSlots.get(0).descriptor;
 		// 親の TypeSlot を作って
 		final TypeSlot superType = new TypeSlotBuilder().buildTypeSlot(superDesc);
 		superType.complete();
 		final HashMap<String, String> binds = createBindMap(superType);
-		// 親のアクセサを自分に持ってくる
+		// 親のアクセサとか継承情報を自分に持ってくる
 		pullAllUp(binds, superType);
-		// リスト/マップのスロットをバインド済みにしておく
-		if (superType.listSlot != null) {
-			listSlot = superType.listSlot.rebind(binds);
-		}
-		if (superType.mapSlot != null) {
-			mapSlot = superType.mapSlot.rebind(binds);
-		}
+		// クラス階層からじゃないと取れないものを設定する
+		setupHierachicalOptions();
 	}
 
 	// スーパークラス上で公開されたアクセスエントリを自分の型引数をバインドして
@@ -136,7 +143,7 @@ public final class TypeSlot extends Slot implements TypeDef {
 	private void pullAllUp(final HashMap<String, String> binds, final TypeSlot superType) {
 		final HashSet<String> checkExists = new HashSet<>();
 		this.access.forEach(acc -> checkExists.add(acc.getRel() + acc.getDescriptor()));
-		superType.access.stream().map(acc -> (SlotAccessor) acc).forEach(acc -> {
+		superType.access.forEach(acc -> {
 			if (acc.getType() == Accessor.Kind.LumpSet) {
 				// ただしスーパークラスのコンストラクタは除外しとく
 				return;
@@ -144,8 +151,28 @@ public final class TypeSlot extends Slot implements TypeDef {
 			// 同じエントリがないように name + rel で確認する
 			// override したときとか同じエントリが階層上位にあったりするので
 			if (checkExists.add(acc.getRel() + acc.getDescriptor())) {
-				final SlotAccessor sa = acc.chown(toInternalName(descriptor)).rebind(binds);
-				access.add(sa);
+				final SlotAccessor slotAcc = (SlotAccessor) acc;
+				access.add(slotAcc.chown(toInternalName(descriptor)).rebind(binds));
+			}
+		});
+		// 親階層の継承クラス、実装インターフェースをすべてマージする
+		superType.superSlots.forEach(slot -> {
+			this.superSlots.add(slot.rebind(binds));
+		});
+	}
+
+	private void setupHierachicalOptions() {
+		this.superSlots.forEach(slot -> {
+			if (slot.descriptor.contentEquals("Ljava/util/List;")) {
+				this.listSlot = slot;
+			} else if (slot.descriptor.contentEquals("Ljava/util/Map;")) {
+				this.mapSlot = slot;
+			} else if (slot.descriptor.contentEquals("Ljava/lang/CharSequence;")) {
+				this.charSequence = true;
+			} else if (slot.descriptor.contentEquals("Ljava/lang/Number;")) {
+				// ほとんどくることはないとおもう
+				// BidDecimal とか AtomicInteger とかそんなやつ
+				this.number = true;
 			}
 		});
 	}
@@ -230,6 +257,11 @@ public final class TypeSlot extends Slot implements TypeDef {
 			return TypeSlot.this.isNumber();
 		}
 
+		@Override
+		public boolean isDecendantOf(String descriptor) {
+			return TypeSlot.this.isDecendantOf(descriptor);
+		}
+
 		// List の要素スロット
 		@Override
 		public Slot elementSlot() {
@@ -252,6 +284,53 @@ public final class TypeSlot extends Slot implements TypeDef {
 			return TypeSlot.this.rebind(formalBindMap);
 		}
 
+	}
+
+	static final HashMap<String, TypeSlot> systemTypes = new HashMap<>();
+
+	static {
+		/* java.lang 配下とか、とくに Builder 経由じゃなくていいものを complete 済みであらかじめ定義しとく */
+		systemTypes.put("Ljava/lang/Object;", new TypeSlot(null, "Ljava/lang/Object;", true));
+
+		systemTypes.put("Z", new TypeSlot(null, "Z", true));
+		systemTypes.put("B", new TypeSlot(null, "B", true));
+		systemTypes.put("C", new TypeSlot(null, "C", true));
+		systemTypes.put("D", new TypeSlot(null, "D", true));
+		systemTypes.put("F", new TypeSlot(null, "F", true));
+		systemTypes.put("I", new TypeSlot(null, "I", true));
+		systemTypes.put("J", new TypeSlot(null, "J", true));
+		systemTypes.put("S", new TypeSlot(null, "S", true));
+
+		final TypeSlot integerType = new TypeSlot(null, "Ljava/lang/Integer;", true);
+		integerType.number = true;
+		systemTypes.put("Ljava/lang/Integer;", integerType);
+
+		final TypeSlot byteType = new TypeSlot(null, "Ljava/lang/Byte;", true);
+		byteType.number = true;
+		systemTypes.put("Ljava/lang/Byte;", byteType);
+
+		final TypeSlot doubleType = new TypeSlot(null, "Ljava/lang/Double;", true);
+		doubleType.number = true;
+		systemTypes.put("Ljava/lang/Double;", doubleType);
+
+		final TypeSlot floatType = new TypeSlot(null, "Ljava/lang/Float;", true);
+		floatType.number = true;
+		systemTypes.put("Ljava/lang/Float;", floatType);
+
+		final TypeSlot longType = new TypeSlot(null, "Ljava/lang/Long;", true);
+		longType.number = true;
+		systemTypes.put("Ljava/lang/Long;", longType);
+
+		final TypeSlot shortType = new TypeSlot(null, "Ljava/lang/Short;", true);
+		shortType.number = true;
+		systemTypes.put("Ljava/lang/Short;", shortType);
+
+		final TypeSlot stringType = new TypeSlot(null, "Ljava/lang/String;", true);
+		stringType.charSequence = true;
+		systemTypes.put("Ljava/lang/String;", stringType);
+
+		systemTypes.put("Ljava/lang/Boolean;", new TypeSlot(null, "Ljava/lang/Boolean;", true));
+		systemTypes.put("Ljava/lang/Character;", new TypeSlot(null, "Ljava/lang/Character;", true));
 	}
 
 }

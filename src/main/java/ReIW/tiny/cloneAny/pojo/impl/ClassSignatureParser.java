@@ -20,6 +20,9 @@ final class ClassSignatureParser extends Slot.SlotSignatureVisitor {
 
 	void parse(final String superName, final String[] interfaces, final String signature) {
 		if (signature == null) {
+			if (superName == null ) {
+				return;
+			}
 			// signature がない場合は、自クラスも継承元も non generic だし
 			// getSlot でシグネチャなしでつくる
 			supers.accept(Slot.getSlot(null, Type.getObjectType(superName).getDescriptor(), null));
