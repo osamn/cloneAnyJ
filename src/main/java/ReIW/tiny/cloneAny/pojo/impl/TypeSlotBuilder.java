@@ -91,6 +91,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	public TypeSlot buildTypeSlot(final String descriptor) {
 		if (descriptor.startsWith("[")) {
 			// クラスファイルとして定義されているものが対象なんで配列型はありえない
+			// TODO 配列クラスは許さないといかんかも
 			throw new IllegalArgumentException("Top level class should not be array type.");
 		}
 
