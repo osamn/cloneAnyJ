@@ -13,6 +13,8 @@ public interface TypeDef {
 	boolean isMap();
 
 	boolean isCharSequence();
+	
+	boolean isNumber();
 
 	/** Array/List の要素スロット */
 	Slot elementSlot();

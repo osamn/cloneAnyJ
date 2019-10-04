@@ -36,14 +36,6 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		// 継承とかもみないし accessor もないものだけなんで complete はしないよ
 		// completed が立ってないけどとくにもんだいないよね
 
-		systemTypes.put("Ljava/lang/Boolean;", new TypeSlot(null, "Ljava/lang/Boolean;"));
-		systemTypes.put("Ljava/lang/Byte;", new TypeSlot(null, "Ljava/lang/Byte;"));
-		systemTypes.put("Ljava/lang/Character;", new TypeSlot(null, "Ljava/lang/Character;"));
-		systemTypes.put("Ljava/lang/Double;", new TypeSlot(null, "Ljava/lang/Double;"));
-		systemTypes.put("Ljava/lang/Float;", new TypeSlot(null, "Ljava/lang/Float;"));
-		systemTypes.put("Ljava/lang/Integer;", new TypeSlot(null, "Ljava/lang/Integer;"));
-		systemTypes.put("Ljava/lang/Long;", new TypeSlot(null, "Ljava/lang/Long;"));
-		systemTypes.put("Ljava/lang/Short;", new TypeSlot(null, "Ljava/lang/Short;"));
 		systemTypes.put("Z", new TypeSlot(null, "Z"));
 		systemTypes.put("B", new TypeSlot(null, "B"));
 		systemTypes.put("C", new TypeSlot(null, "C"));
@@ -53,9 +45,36 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		systemTypes.put("J", new TypeSlot(null, "J"));
 		systemTypes.put("S", new TypeSlot(null, "S"));
 
+		final TypeSlot integerType = new TypeSlot(null, "Ljava/lang/Integer;");
+		integerType.number = true;
+		systemTypes.put("Ljava/lang/Integer;", integerType);
+
+		final TypeSlot byteType = new TypeSlot(null, "Ljava/lang/Byte;");
+		byteType.number = true;
+		systemTypes.put("Ljava/lang/Byte;", byteType);
+
+		final TypeSlot doubleType = new TypeSlot(null, "Ljava/lang/Double;");
+		doubleType.number = true;
+		systemTypes.put("Ljava/lang/Double;", doubleType);
+
+		final TypeSlot floatType = new TypeSlot(null, "Ljava/lang/Float;");
+		floatType.number = true;
+		systemTypes.put("Ljava/lang/Float;", floatType);
+
+		final TypeSlot longType = new TypeSlot(null, "Ljava/lang/Long;");
+		longType.number = true;
+		systemTypes.put("Ljava/lang/Long;", longType);
+
+		final TypeSlot shortType = new TypeSlot(null, "Ljava/lang/Short;");
+		shortType.number = true;
+		systemTypes.put("Ljava/lang/Short;", shortType);
+
 		final TypeSlot stringType = new TypeSlot(null, "Ljava/lang/String;");
 		stringType.charSequence = true;
 		systemTypes.put("Ljava/lang/String;", stringType);
+
+		systemTypes.put("Ljava/lang/Boolean;", new TypeSlot(null, "Ljava/lang/Boolean;"));
+		systemTypes.put("Ljava/lang/Character;", new TypeSlot(null, "Ljava/lang/Character;"));
 	}
 
 	// いつまでも hive 抱えててもいかんので GC で回収されるように弱参照をもっておく
@@ -64,7 +83,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 
 	public TypeSlotBuilder() {
 	}
-	
+
 	public TypeSlot buildTypeSlot(final Class<?> clazz) {
 		return buildTypeSlot(Type.getDescriptor(clazz));
 	}
@@ -116,6 +135,10 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 				typeSlot.mapSlot = slot;
 			} else if (slot.descriptor.contentEquals("Ljava/lang/CharSequence;")) {
 				typeSlot.charSequence = true;
+			} else if (slot.descriptor.contentEquals("Ljava/lang/Number;")) {
+				// ほとんどくることはないとおもう
+				// BidDecimal とか AtomicInteger とかそんなやつ
+				typeSlot.number = true;
 			}
 			typeSlot.superSlots.add(slot);
 		}).parse(superName, interfaces, signature);

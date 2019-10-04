@@ -26,6 +26,8 @@ public final class TypeSlot extends Slot implements TypeDef {
 	Slot mapSlot;
 
 	boolean charSequence;
+	
+	boolean number;
 
 	boolean defaultCtor;
 
@@ -54,6 +56,11 @@ public final class TypeSlot extends Slot implements TypeDef {
 	@Override
 	public boolean isCharSequence() {
 		return charSequence;
+	}
+
+	@Override
+	public boolean isNumber() {
+		return number;
 	}
 
 	@Override
@@ -216,6 +223,11 @@ public final class TypeSlot extends Slot implements TypeDef {
 		@Override
 		public boolean isCharSequence() {
 			return TypeSlot.this.isCharSequence();
+		}
+
+		@Override
+		public boolean isNumber() {
+			return TypeSlot.this.isNumber();
 		}
 
 		// List の要素スロット
