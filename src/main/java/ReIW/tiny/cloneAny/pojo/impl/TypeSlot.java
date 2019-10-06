@@ -77,7 +77,7 @@ public final class TypeSlot extends Slot implements TypeDef {
 	}
 
 	@Override
-	public boolean isDecendantOf(final String descriptor) {
+	public boolean hasAncestor(final String descriptor) {
 		return superSlots.stream().anyMatch(slot -> slot.descriptor.contentEquals(descriptor));
 	}
 
@@ -258,8 +258,8 @@ public final class TypeSlot extends Slot implements TypeDef {
 		}
 
 		@Override
-		public boolean isDecendantOf(String descriptor) {
-			return TypeSlot.this.isDecendantOf(descriptor);
+		public boolean hasAncestor(String descriptor) {
+			return TypeSlot.this.hasAncestor(descriptor);
 		}
 
 		// List の要素スロット
