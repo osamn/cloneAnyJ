@@ -98,6 +98,8 @@ public class Slot {
 		return "Slot [typeParam=" + typeParam + ", descriptor=" + descriptor + ", slotList=" + slotList + "]";
 	}
 	
+	// このスコープは private にしないこと
+	// SlotTestHelper.groovy で使ってるので
 	static class SlotBuilder extends SlotLikeSignatureVisitor<Slot> {
 		private Slot slot;
 
