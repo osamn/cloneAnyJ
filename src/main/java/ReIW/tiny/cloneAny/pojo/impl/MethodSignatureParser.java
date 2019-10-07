@@ -8,8 +8,10 @@ import org.objectweb.asm.signature.SignatureVisitor;
 import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 
-final class MethodSignatureParser extends Slot.SlotSignatureVisitor {
+final class MethodSignatureParser extends SlotLikeSignatureVisitor<Slot> {
 
+	private static final Consumer<Slot> NOP = v -> {
+	};
 	private final Consumer<Slot> argCons;
 	private final Consumer<Slot> retCons;
 
@@ -20,6 +22,11 @@ final class MethodSignatureParser extends Slot.SlotSignatureVisitor {
 
 	void parseArgumentsAndReturn(final String descriptor, final String signature) {
 		new SignatureReader(signature == null ? descriptor : signature).accept(this);
+	}
+
+	@Override
+	protected Slot newSlotLike(final String typeParam, final String descriptor) {
+		return new Slot(typeParam, descriptor);
 	}
 
 	@Override

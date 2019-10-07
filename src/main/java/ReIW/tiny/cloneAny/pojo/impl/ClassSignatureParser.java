@@ -9,7 +9,7 @@ import org.objectweb.asm.signature.SignatureVisitor;
 
 import ReIW.tiny.cloneAny.pojo.Slot;
 
-final class ClassSignatureParser extends Slot.SlotSignatureVisitor {
+final class ClassSignatureParser extends SlotLikeSignatureVisitor<Slot> {
 
 	private final Consumer<Slot> supers;
 
@@ -20,19 +20,24 @@ final class ClassSignatureParser extends Slot.SlotSignatureVisitor {
 
 	void parse(final String superName, final String[] interfaces, final String signature) {
 		if (signature == null) {
-			if (superName == null ) {
+			if (superName == null) {
 				return;
 			}
 			// signature がない場合は、自クラスも継承元も non generic だし
 			// getSlot でシグネチャなしでつくる
-			supers.accept(Slot.getSlot(null, Type.getObjectType(superName).getDescriptor(), null));
+			supers.accept(Slot.getSlot(Type.getObjectType(superName).getDescriptor(), null));
 			if (interfaces != null) {
-				Arrays.stream(interfaces).map(intf -> Slot.getSlot(null, Type.getObjectType(intf).getDescriptor(), null))
+				Arrays.stream(interfaces).map(intf -> Slot.getSlot(Type.getObjectType(intf).getDescriptor(), null))
 						.forEach(supers);
 			}
 		} else {
 			new SignatureReader(signature).accept(this);
 		}
+	}
+
+	@Override
+	protected Slot newSlotLike(final String typeParam, final String descriptor) {
+		return new Slot(typeParam, descriptor);
 	}
 
 	@Override

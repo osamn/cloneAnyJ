@@ -41,12 +41,6 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	}
 
 	public TypeSlot buildTypeSlot(final String descriptor) {
-		if (descriptor.startsWith("[")) {
-			// クラスファイルとして定義されているものが対象なんで配列型はありえない
-			// TODO 配列クラスは許さないといかんかも
-			throw new IllegalArgumentException("Top level class should not be array type.");
-		}
-
 		// 前もって定義してるものだったらそのまま返す
 		if (systemTypes.containsKey(descriptor)) {
 			return systemTypes.get(descriptor);
@@ -63,12 +57,30 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	/** TypeSlot を新規に計算するよ */
 	private TypeSlot computeTypeSlot(final String descriptor) {
 		try {
-			typeSlot = new TypeSlot(null, descriptor);
+			final TypeSlotInitializer init = new TypeSlotInitializer();
+			init.accept(descriptor);
+			typeSlot = init.slot;
 			new ClassReader(Type.getType(descriptor).getInternalName()).accept(this, 0);
 			return typeSlot;
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e);
 		}
+	}
+
+	private static class TypeSlotInitializer extends SlotLikeSignatureVisitor<TypeSlot> {
+		private TypeSlot slot;
+
+		private TypeSlotInitializer() {
+			super.consumer = (val) -> {
+				this.slot = val;
+			};
+		}
+
+		@Override
+		protected TypeSlot newSlotLike(final String typeParam, final String descriptor) {
+			return new TypeSlot(typeParam, descriptor);
+		}
+
 	}
 
 	@Override
@@ -82,7 +94,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		if (isAccessible(access)) {
 			// final なものは読み取り専用になるよ
 			final Accessor.Kind type = AccessFlag.isFinal(access) ? Accessor.Kind.ReadonlyField : Accessor.Kind.Field;
-			final Slot slot = Slot.getSlot(null, descriptor, signature);
+			final Slot slot = Slot.getSlot(descriptor, signature);
 			typeSlot.access.add(
 					new SingleSlotAccessor(type, toInternalName(typeSlot.descriptor), name, name, descriptor, slot));
 		}

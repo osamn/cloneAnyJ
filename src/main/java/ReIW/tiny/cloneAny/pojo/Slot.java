@@ -3,16 +3,9 @@ package ReIW.tiny.cloneAny.pojo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
-import java.util.function.Consumer;
 
-import org.objectweb.asm.Type;
-import org.objectweb.asm.signature.SignatureReader;
-import org.objectweb.asm.signature.SignatureVisitor;
-
-import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
+import ReIW.tiny.cloneAny.pojo.impl.SlotLikeSignatureVisitor;
 import ReIW.tiny.cloneAny.utils.Descriptors;
-
 
 // TODO typeParam が + とか - の場合は実行時型をつかって Ditto つくる必要あるよね
 
@@ -21,17 +14,17 @@ import ReIW.tiny.cloneAny.utils.Descriptors;
  */
 public class Slot {
 
-	public static Slot getSlot(final String typeParam, final String descriptor, final String signature) {
+	public static Slot getSlot(final String descriptor, final String signature) {
 		if (signature != null) {
-			final SlotInitializer init = new SlotInitializer(typeParam);
+			final SlotInitializer init = new SlotInitializer(null);
 			init.accept(signature);
 			return init.slot;
 		} else if (descriptor.startsWith("[")) {
-			final SlotInitializer init = new SlotInitializer(typeParam);
+			final SlotInitializer init = new SlotInitializer(null);
 			init.accept(descriptor);
 			return init.slot;
 		} else {
-			return new Slot(typeParam, descriptor);
+			return new Slot(null, descriptor);
 		}
 	}
 
@@ -44,7 +37,7 @@ public class Slot {
 
 	public final List<Slot> slotList = new ArrayList<>();
 
-	protected Slot(final String typeParam, final String descriptor) {
+	public Slot(final String typeParam, final String descriptor) {
 		this.typeParam = typeParam;
 		if (descriptor.contentEquals("[")) {
 			this.descriptor = "[";
@@ -67,29 +60,6 @@ public class Slot {
 			return descriptor + slotList.get(0).getTypeDescriptor();
 		}
 		return descriptor;
-	}
-
-	// TODO あとでさくじょ
-	@Deprecated
-	public String getTypeSignature() {
-		if (isArrayType) {
-			return descriptor + slotList.get(0).getTypeSignature();
-		}
-		if (slotList.size() > 0) {
-			// primitive はここには来ないので L...; 前提だよ
-			// L... と ; に分割して間に <generic> を埋め込む
-			final String body = descriptor.substring(0, descriptor.length() - 1);
-			return body + "<" + slotList.stream().map(s -> {
-				return s.getTypeSignature();
-			}).collect(java.util.stream.Collectors.joining()) + ">;";
-		} else {
-			if (typeParam == null || typeParam.contentEquals("=") || typeParam.contentEquals("+")
-					|| typeParam.contentEquals("-")) {
-				return descriptor;
-			} else {
-				return "T" + typeParam + ";";
-			}
-		}
 	}
 
 	public boolean isCertainBound() {
@@ -123,12 +93,11 @@ public class Slot {
 			} else {
 				// 型パラメタに型引数をくっつける
 				// certain bind
-				if (bound.startsWith("[")) {
-					// 配列なんでパースしてつくる
-					return Slot.getSlot("=", bound, null);
-				} else if (bound.indexOf('<') >= 0) {
-					// signature としてパースする
-					return Slot.getSlot("=", null, bound);
+				if (bound.startsWith("[") || bound.indexOf('<') >= 0) {
+					// 配列もしくはシグネチャなんでパースしてつくる
+					final SlotInitializer init = new SlotInitializer("=");
+					init.accept(bound);
+					return init.slot;
 				} else {
 					// そのまま Slot つくればおｋ
 					return new Slot("=", bound);
@@ -145,7 +114,7 @@ public class Slot {
 		return "Slot [typeParam=" + typeParam + ", descriptor=" + descriptor + ", slotList=" + slotList + "]";
 	}
 
-	private static class SlotInitializer extends SlotSignatureVisitor {
+	private static class SlotInitializer extends SlotLikeSignatureVisitor<Slot> {
 		private Slot slot;
 
 		private SlotInitializer(final String typeParam) {
@@ -156,84 +125,8 @@ public class Slot {
 		}
 
 		@Override
-		public void visitFormalTypeParameter(String name) {
-			throw new UnboundFormalTypeParameterException();
-		}
-	}
-
-	public static abstract class SlotSignatureVisitor extends DefaultSignatureVisitor {
-
-		public static final Consumer<Slot> NOP = slot -> {
-		};
-
-		private final Stack<Slot> stack = new Stack<>();
-
-		protected String typeParamName;
-		protected Consumer<Slot> consumer;
-
-		protected Slot newSlot(final String typeParam, final String descriptor) {
+		protected Slot newSlotLike(final String typeParam, final String descriptor) {
 			return new Slot(typeParam, descriptor);
-		}
-
-		protected void accept(final String signature) {
-			new SignatureReader(signature).accept(this);
-		}
-
-		@Override
-		public void visitFormalTypeParameter(final String name) {
-			typeParamName = name;
-		}
-
-		@Override
-		public void visitClassType(final String name) {
-			stack.push(newSlot(typeParamName, Type.getObjectType(name).getDescriptor()));
-		}
-
-		@Override
-		public void visitBaseType(final char descriptor) {
-			stack.push(newSlot(typeParamName, Character.toString(descriptor)));
-			// primitive の場合 visitEnd に回らないので、ここで明示的に呼んでおく
-			visitEnd();
-		}
-
-		@Override
-		public SignatureVisitor visitArrayType() {
-			stack.push(newSlot(typeParamName, "["));
-			typeParamName = null;
-			return super.visitArrayType();
-		}
-
-		@Override
-		public SignatureVisitor visitTypeArgument(final char wildcard) {
-			typeParamName = String.valueOf(wildcard);
-			return super.visitTypeArgument(wildcard);
-		}
-
-		@Override
-		public void visitTypeVariable(final String name) {
-			stack.push(newSlot(name, "Ljava/lang/Object;"));
-			// visitEnd にいかないので明示的に読んでおく
-			visitEnd();
-		}
-
-		@Override
-		public void visitEnd() {
-			Slot slot = unrollArray();
-			if (stack.isEmpty()) {
-				consumer.accept(slot);
-			} else {
-				stack.peek().slotList.add(slot);
-			}
-			typeParamName = null;
-		}
-
-		private Slot unrollArray() {
-			Slot slot = stack.pop();
-			while (!stack.isEmpty() && stack.peek().isArrayType) {
-				stack.peek().slotList.add(slot);
-				slot = stack.pop();
-			}
-			return slot;
 		}
 
 	}
