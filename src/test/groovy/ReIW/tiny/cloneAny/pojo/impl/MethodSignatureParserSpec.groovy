@@ -27,7 +27,6 @@ class MethodSignatureParserSpec extends Specification {
 
 		when:
 		new MethodSignatureParser(null, {slot = it}).parseArgumentsAndReturn("()[[Ljava/lang/String;", null)
-		println slot
 		slot_1 = slot.slotList[0]
 		slot_2 = slot_1.slotList[0]
 

@@ -14,20 +14,6 @@ import ReIW.tiny.cloneAny.utils.Descriptors;
  */
 public class Slot {
 
-	public static Slot getSlot(final String descriptor, final String signature) {
-		if (signature != null) {
-			final SlotInitializer init = new SlotInitializer(null);
-			init.accept(signature);
-			return init.slot;
-		} else if (descriptor.startsWith("[")) {
-			final SlotInitializer init = new SlotInitializer(null);
-			init.accept(descriptor);
-			return init.slot;
-		} else {
-			return new Slot(null, descriptor);
-		}
-	}
-
 	public final String typeParam;
 	public final String descriptor;
 
@@ -95,9 +81,7 @@ public class Slot {
 				// certain bind
 				if (bound.startsWith("[") || bound.indexOf('<') >= 0) {
 					// 配列もしくはシグネチャなんでパースしてつくる
-					final SlotInitializer init = new SlotInitializer("=");
-					init.accept(bound);
-					return init.slot;
+					return new SlotBuilder("=").build(bound);
 				} else {
 					// そのまま Slot つくればおｋ
 					return new Slot("=", bound);
@@ -113,15 +97,20 @@ public class Slot {
 	public String toString() {
 		return "Slot [typeParam=" + typeParam + ", descriptor=" + descriptor + ", slotList=" + slotList + "]";
 	}
-
-	private static class SlotInitializer extends SlotLikeSignatureVisitor<Slot> {
+	
+	private static class SlotBuilder extends SlotLikeSignatureVisitor<Slot> {
 		private Slot slot;
 
-		private SlotInitializer(final String typeParam) {
+		private SlotBuilder(final String typeParam) {
 			super.typeParamName = typeParam;
 			super.consumer = (val) -> {
 				this.slot = val;
 			};
+		}
+
+		private Slot build(final String signature) {
+			this.accept(signature);
+			return slot;
 		}
 
 		@Override
@@ -129,6 +118,18 @@ public class Slot {
 			return new Slot(typeParam, descriptor);
 		}
 
+	}
+
+	// テスト側で使ってるの
+	// ケアするのめんどうなんでのこしとく
+	// TODO そのうち削除する
+	@SuppressWarnings("unused")
+	private static Slot getSlot(final String descriptor, final String signature) {
+		if (signature != null) {
+			return new SlotBuilder(null).build(signature);
+		} else {
+			return new SlotBuilder(null).build(descriptor);
+		}
 	}
 
 }

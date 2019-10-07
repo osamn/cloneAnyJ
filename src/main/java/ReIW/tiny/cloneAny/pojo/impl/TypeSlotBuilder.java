@@ -1,10 +1,10 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
-import static ReIW.tiny.cloneAny.pojo.impl.TypeSlot.systemTypes;
 import static ReIW.tiny.cloneAny.utils.Descriptors.toInternalName;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +30,58 @@ import ReIW.tiny.cloneAny.utils.Propertys;
 
 public final class TypeSlotBuilder extends DefaultClassVisitor {
 
+	private static final Map<String, TypeSlot> systemTypes;
+
+	static {
+		final HashMap<String, TypeSlot> types = new HashMap<>();
+		/* java.lang 配下とか、とくに Builder 経由じゃなくていいものを complete 済みであらかじめ定義しとく */
+		types.put("Ljava/lang/Object;", new TypeSlot(null, "Ljava/lang/Object;", true));
+
+		types.put("Z", new TypeSlot(null, "Z", true));
+		types.put("B", new TypeSlot(null, "B", true));
+		types.put("C", new TypeSlot(null, "C", true));
+		types.put("D", new TypeSlot(null, "D", true));
+		types.put("F", new TypeSlot(null, "F", true));
+		types.put("I", new TypeSlot(null, "I", true));
+		types.put("J", new TypeSlot(null, "J", true));
+		types.put("S", new TypeSlot(null, "S", true));
+
+		final TypeSlot integerType = new TypeSlot(null, "Ljava/lang/Integer;", true);
+		integerType.number = true;
+		types.put("Ljava/lang/Integer;", integerType);
+
+		final TypeSlot byteType = new TypeSlot(null, "Ljava/lang/Byte;", true);
+		byteType.number = true;
+		types.put("Ljava/lang/Byte;", byteType);
+
+		final TypeSlot doubleType = new TypeSlot(null, "Ljava/lang/Double;", true);
+		doubleType.number = true;
+		types.put("Ljava/lang/Double;", doubleType);
+
+		final TypeSlot floatType = new TypeSlot(null, "Ljava/lang/Float;", true);
+		floatType.number = true;
+		types.put("Ljava/lang/Float;", floatType);
+
+		final TypeSlot longType = new TypeSlot(null, "Ljava/lang/Long;", true);
+		longType.number = true;
+		types.put("Ljava/lang/Long;", longType);
+
+		final TypeSlot shortType = new TypeSlot(null, "Ljava/lang/Short;", true);
+		shortType.number = true;
+		types.put("Ljava/lang/Short;", shortType);
+
+		final TypeSlot stringType = new TypeSlot(null, "Ljava/lang/String;", true);
+		stringType.charSequence = true;
+		types.put("Ljava/lang/String;", stringType);
+
+		types.put("Ljava/lang/Boolean;", new TypeSlot(null, "Ljava/lang/Boolean;", true));
+		types.put("Ljava/lang/Character;", new TypeSlot(null, "Ljava/lang/Character;", true));
+
+		systemTypes = Collections.unmodifiableMap(types);
+	}
+
 	// TypeSlot は一過性なんで WeakHashMap にしておく
+	// ついでに synchronized でかこっておく
 	private static final Map<String, TypeSlot> hive = Collections.synchronizedMap(new WeakHashMap<>());
 
 	public TypeSlotBuilder() {
@@ -78,7 +129,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 
 		@Override
 		protected TypeSlot newSlotLike(final String typeParam, final String descriptor) {
-			return new TypeSlot(typeParam, descriptor);
+			return new TypeSlot(typeParam, descriptor, false);
 		}
 
 	}
@@ -90,13 +141,14 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	}
 
 	@Override
-	public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+	public FieldVisitor visitField(final int access, final String name, final String descriptor, final String signature,
+			final Object value) {
 		if (isAccessible(access)) {
 			// final なものは読み取り専用になるよ
 			final Accessor.Kind type = AccessFlag.isFinal(access) ? Accessor.Kind.ReadonlyField : Accessor.Kind.Field;
-			final Slot slot = Slot.getSlot(descriptor, signature);
-			typeSlot.access.add(
-					new SingleSlotAccessor(type, toInternalName(typeSlot.descriptor), name, name, descriptor, slot));
+			new FieldSignatureParser(slot -> typeSlot.access.add(
+					new SingleSlotAccessor(type, toInternalName(typeSlot.descriptor), name, name, descriptor, slot)))
+							.parse(descriptor, signature);
 		}
 		return null;
 	}

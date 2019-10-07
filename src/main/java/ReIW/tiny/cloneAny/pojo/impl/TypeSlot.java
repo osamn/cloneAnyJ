@@ -15,14 +15,6 @@ import ReIW.tiny.cloneAny.pojo.TypeDef;
 
 public final class TypeSlot extends Slot implements TypeDef {
 
-	private Slot listSlot;
-
-	private Slot mapSlot;
-
-	private boolean charSequence;
-
-	private boolean number;
-
 	// -- builder が設定するものは package スコープ
 
 	final List<Slot> superSlots = new ArrayList<>();
@@ -31,14 +23,18 @@ public final class TypeSlot extends Slot implements TypeDef {
 
 	boolean defaultCtor;
 
+	boolean charSequence;
+
+	boolean number;
+
 	// 階層含めて完了したか？
 	private boolean completed;
 
-	TypeSlot(final String typeParam, final String descriptor) {
-		this(typeParam, descriptor, false);
-	}
+	private Slot listSlot;
 
-	private TypeSlot(final String typeParam, final String descriptor, final boolean completed) {
+	private Slot mapSlot;
+
+	TypeSlot(final String typeParam, final String descriptor, final boolean completed) {
 		super(typeParam, descriptor);
 		this.completed = completed;
 	}
@@ -284,53 +280,6 @@ public final class TypeSlot extends Slot implements TypeDef {
 			return TypeSlot.this.rebind(formalBindMap);
 		}
 
-	}
-
-	static final HashMap<String, TypeSlot> systemTypes = new HashMap<>();
-
-	static {
-		/* java.lang 配下とか、とくに Builder 経由じゃなくていいものを complete 済みであらかじめ定義しとく */
-		systemTypes.put("Ljava/lang/Object;", new TypeSlot(null, "Ljava/lang/Object;", true));
-
-		systemTypes.put("Z", new TypeSlot(null, "Z", true));
-		systemTypes.put("B", new TypeSlot(null, "B", true));
-		systemTypes.put("C", new TypeSlot(null, "C", true));
-		systemTypes.put("D", new TypeSlot(null, "D", true));
-		systemTypes.put("F", new TypeSlot(null, "F", true));
-		systemTypes.put("I", new TypeSlot(null, "I", true));
-		systemTypes.put("J", new TypeSlot(null, "J", true));
-		systemTypes.put("S", new TypeSlot(null, "S", true));
-
-		final TypeSlot integerType = new TypeSlot(null, "Ljava/lang/Integer;", true);
-		integerType.number = true;
-		systemTypes.put("Ljava/lang/Integer;", integerType);
-
-		final TypeSlot byteType = new TypeSlot(null, "Ljava/lang/Byte;", true);
-		byteType.number = true;
-		systemTypes.put("Ljava/lang/Byte;", byteType);
-
-		final TypeSlot doubleType = new TypeSlot(null, "Ljava/lang/Double;", true);
-		doubleType.number = true;
-		systemTypes.put("Ljava/lang/Double;", doubleType);
-
-		final TypeSlot floatType = new TypeSlot(null, "Ljava/lang/Float;", true);
-		floatType.number = true;
-		systemTypes.put("Ljava/lang/Float;", floatType);
-
-		final TypeSlot longType = new TypeSlot(null, "Ljava/lang/Long;", true);
-		longType.number = true;
-		systemTypes.put("Ljava/lang/Long;", longType);
-
-		final TypeSlot shortType = new TypeSlot(null, "Ljava/lang/Short;", true);
-		shortType.number = true;
-		systemTypes.put("Ljava/lang/Short;", shortType);
-
-		final TypeSlot stringType = new TypeSlot(null, "Ljava/lang/String;", true);
-		stringType.charSequence = true;
-		systemTypes.put("Ljava/lang/String;", stringType);
-
-		systemTypes.put("Ljava/lang/Boolean;", new TypeSlot(null, "Ljava/lang/Boolean;", true));
-		systemTypes.put("Ljava/lang/Character;", new TypeSlot(null, "Ljava/lang/Character;", true));
 	}
 
 }

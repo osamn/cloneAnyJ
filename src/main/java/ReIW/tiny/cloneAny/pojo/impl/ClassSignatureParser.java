@@ -24,10 +24,12 @@ final class ClassSignatureParser extends SlotLikeSignatureVisitor<Slot> {
 				return;
 			}
 			// signature がない場合は、自クラスも継承元も non generic だし
-			// getSlot でシグネチャなしでつくる
-			supers.accept(Slot.getSlot(Type.getObjectType(superName).getDescriptor(), null));
+			// superName とか interfaces の中身とかに配列 '[' がくることはない
+			// はずなんで new Slot で
+			supers.accept(new Slot(null, Type.getObjectType(superName).getDescriptor()));
 			if (interfaces != null) {
-				Arrays.stream(interfaces).map(intf -> Slot.getSlot(Type.getObjectType(intf).getDescriptor(), null))
+				Arrays.stream(interfaces)
+						.map(intfName -> new Slot(null, Type.getObjectType(intfName).getDescriptor()))
 						.forEach(supers);
 			}
 		} else {
