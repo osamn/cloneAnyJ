@@ -98,7 +98,7 @@ public class Slot {
 		return "Slot [typeParam=" + typeParam + ", descriptor=" + descriptor + ", slotList=" + slotList + "]";
 	}
 	
-	private static class SlotBuilder extends SlotLikeSignatureVisitor<Slot> {
+	static class SlotBuilder extends SlotLikeSignatureVisitor<Slot> {
 		private Slot slot;
 
 		private SlotBuilder(final String typeParam) {
@@ -116,19 +116,6 @@ public class Slot {
 		@Override
 		protected Slot newSlotLike(final String typeParam, final String descriptor) {
 			return new Slot(typeParam, descriptor);
-		}
-
-	}
-
-	// テスト側で使ってるの
-	// ケアするのめんどうなんでのこしとく
-	// TODO そのうち削除する
-	@SuppressWarnings("unused")
-	private static Slot getSlot(final String descriptor, final String signature) {
-		if (signature != null) {
-			return new SlotBuilder(null).build(signature);
-		} else {
-			return new SlotBuilder(null).build(descriptor);
 		}
 	}
 

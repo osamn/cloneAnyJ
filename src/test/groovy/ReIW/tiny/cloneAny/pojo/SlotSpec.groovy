@@ -4,7 +4,7 @@ import org.objectweb.asm.Type
 
 import spock.lang.Specification
 
-class SlotSpec extends Specification {
+class SlotSpec extends Specification implements SlotTestHelper {
 
 	def 'getSlot simple object class'() {
 		when:
@@ -21,7 +21,7 @@ class SlotSpec extends Specification {
 	def 'generic なクラスだけど型パラメタの子スロットは追加されない'() {
 		// descriptor から作るので generic の型パラメタは作成されない
 		when:
-		def Slot slot = Slot.getSlot(Type.getDescriptor(HashMap), null)
+		def Slot slot = getSlot(Type.getDescriptor(HashMap), null)
 
 		then:
 		slot.isArrayType == false
@@ -33,7 +33,7 @@ class SlotSpec extends Specification {
 	def 'object array class'() {
 		when:
 
-		def Slot slot = Slot.getSlot("[Ljava/lang/Integer;", null)
+		def Slot slot = getSlot("[Ljava/lang/Integer;", null)
 
 		then:
 		slot.isArrayType == true
@@ -50,7 +50,7 @@ class SlotSpec extends Specification {
 
 	def 'primitive array class'() {
 		when:
-		def Slot slot = Slot.getSlot(Type.getDescriptor(int[][]), null)
+		def Slot slot = getSlot(Type.getDescriptor(int[][]), null)
 
 		then:
 		slot.isArrayType == true

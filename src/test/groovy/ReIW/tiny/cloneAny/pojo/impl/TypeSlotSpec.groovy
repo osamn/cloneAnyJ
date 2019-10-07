@@ -3,10 +3,11 @@ package ReIW.tiny.cloneAny.pojo.impl
 import org.objectweb.asm.Type
 
 import ReIW.tiny.cloneAny.pojo.Accessor
+import ReIW.tiny.cloneAny.pojo.SlotTestHelper
 import ReIW.tiny.cloneAny.pojo.Slot
 import spock.lang.Specification
 
-class TypeSlotSpec extends Specification {
+class TypeSlotSpec extends Specification implements SlotTestHelper {
 
 	def "継承元のアクセスが抽出されること"() {
 		when:
@@ -62,7 +63,7 @@ class TypeSlotSpec extends Specification {
 	def "明示的な bind で継承元まで型引数が bind されてること"() {
 		when:
 		def ts = new TypeSlotBuilder().buildTypeSlot(TypeSlotTester.GenericExtends)
-				.bind([Slot.getSlot("Ljava/lang/Double;", null), Slot.getSlot("[[I", null)])
+				.bind([getSlot("Ljava/lang/Double;", null), getSlot("[[I", null)])
 		def access = ts.accessors().toArray()
 
 		then:
@@ -89,7 +90,7 @@ class TypeSlotSpec extends Specification {
 		// なので明示的な bind だけ考えればいいよ
 		when:
 		def ts = new TypeSlotBuilder().buildTypeSlot(clazz)
-				.bind([Slot.getSlot("Ljava/lang/String;", null), Slot.getSlot("[I", null)])
+				.bind([getSlot("Ljava/lang/String;", null), getSlot("[I", null)])
 		def access = ts.accessors().toArray()
 
 		then:
