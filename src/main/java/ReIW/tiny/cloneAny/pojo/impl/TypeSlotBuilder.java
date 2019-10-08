@@ -35,6 +35,10 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	static {
 		final HashMap<String, TypeSlot> types = new HashMap<>();
 		/* java.lang 配下とか、とくに Builder 経由じゃなくていいものを complete 済みであらかじめ定義しとく */
+		// ここで定義してるものは全部 immutable として取り扱う
+		// Date 系は例外だけど copy に展開するところで new Date(d.getTime()) ぐらいに変換したる
+		// TODO Date と java.sql.Date/Time/Timestamp LocalDate ZonedDateTime も追加する
+
 		types.put("Ljava/lang/Object;", new TypeSlot(null, "Ljava/lang/Object;", true));
 
 		types.put("Z", new TypeSlot(null, "Z", true));
@@ -91,6 +95,7 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		return buildTypeSlot(Type.getDescriptor(clazz));
 	}
 
+	// FIXME Slot から作るときのこと考える
 	public TypeSlot buildTypeSlot(final String descriptor) {
 		// 前もって定義してるものだったらそのまま返す
 		if (systemTypes.containsKey(descriptor)) {
@@ -108,9 +113,16 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 	/** TypeSlot を新規に計算するよ */
 	private TypeSlot computeTypeSlot(final String descriptor) {
 		try {
-			final TypeSlotInitializer init = new TypeSlotInitializer();
-			init.accept(descriptor);
-			typeSlot = init.slot;
+			// ここに入るのは Slot からか Class の descriptor からなので
+			// 型パラメタとしての子要素を持つことはない
+			if (descriptor.startsWith("[")) {
+				// ただし、配列は子要素をもつので signature としてパースする
+				final TypeSlotInitializer init = new TypeSlotInitializer();
+				init.accept(descriptor);
+				typeSlot = init.slot;
+			} else {
+				typeSlot = new TypeSlot(null, descriptor, false);
+			}
 			new ClassReader(Type.getType(descriptor).getInternalName()).accept(this, 0);
 			return typeSlot;
 		} catch (IOException e) {
@@ -131,7 +143,6 @@ public final class TypeSlotBuilder extends DefaultClassVisitor {
 		protected TypeSlot newSlotLike(final String typeParam, final String descriptor) {
 			return new TypeSlot(typeParam, descriptor, false);
 		}
-
 	}
 
 	@Override

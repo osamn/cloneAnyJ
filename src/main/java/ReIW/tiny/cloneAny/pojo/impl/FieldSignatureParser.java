@@ -21,4 +21,7 @@ class FieldSignatureParser extends SlotLikeSignatureVisitor<Slot> {
 		return new Slot(typeParam, descriptor);
 	}
 
+	// Field に formal parameter はつけられないのでとくに例外にするとかは必要ないので
+	// visitFormalTypeParameter(String name)
+	// を override する必要はないよ
 }

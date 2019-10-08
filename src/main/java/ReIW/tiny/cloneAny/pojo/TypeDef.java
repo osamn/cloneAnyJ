@@ -34,6 +34,7 @@ public interface TypeDef {
 	}
 
 	static TypeDef createInstance(final Slot slot) {
-		return new TypeSlotBuilder().buildTypeSlot(slot.descriptor).bind(slot.slotList);
+		// FIXME Slot から直接作らないとまずくね？
+		return new TypeSlotBuilder().buildTypeSlot(slot.getTypeDescriptor()).bind(slot.slotList);
 	}
 }
