@@ -1,6 +1,6 @@
 package ReIW.tiny.cloneAny.impl
 
-import ReIW.tiny.cloneAny.pojo.AbortCallException
+import ReIW.tiny.cloneAny.pojo_.AbortCallException
 import spock.lang.Specification
 
 class OperandSpec extends Specification{

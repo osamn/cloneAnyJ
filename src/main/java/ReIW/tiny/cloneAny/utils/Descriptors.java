@@ -100,6 +100,7 @@ public interface Descriptors {
 		}
 	}
 
+	@Deprecated
 	static String toInternalName(final String descriptor) {
 		return Type.getType(descriptor).getInternalName();
 	}

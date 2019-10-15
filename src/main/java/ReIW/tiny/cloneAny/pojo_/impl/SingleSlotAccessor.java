@@ -1,10 +1,10 @@
-package ReIW.tiny.cloneAny.pojo.impl;
+package ReIW.tiny.cloneAny.pojo_.impl;
 
 import java.util.Map;
 import java.util.stream.Stream;
 
-import ReIW.tiny.cloneAny.pojo.Accessor;
-import ReIW.tiny.cloneAny.pojo.Slot;
+import ReIW.tiny.cloneAny.pojo_.Accessor;
+import ReIW.tiny.cloneAny.pojo_.Slot;
 
 public final class SingleSlotAccessor implements SlotAccessor {
 

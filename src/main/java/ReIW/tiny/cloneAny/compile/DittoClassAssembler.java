@@ -10,8 +10,9 @@ import org.objectweb.asm.ClassVisitor;
 
 import ReIW.tiny.cloneAny.core.AssemblyDomain;
 import ReIW.tiny.cloneAny.core.AssemblyException;
-import ReIW.tiny.cloneAny.pojo.TypeDef;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
+import ReIW.tiny.cloneAny.pojo_.TypeDef;
+
 import static ReIW.tiny.cloneAny.utils.Descriptors.*;
 
 final class DittoClassAssembler {

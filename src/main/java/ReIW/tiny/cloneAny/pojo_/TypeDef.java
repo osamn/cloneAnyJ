@@ -1,8 +1,8 @@
-package ReIW.tiny.cloneAny.pojo;
+package ReIW.tiny.cloneAny.pojo_;
 
 import java.util.stream.Stream;
 
-import ReIW.tiny.cloneAny.pojo.impl.TypeSlotBuilder;
+import ReIW.tiny.cloneAny.pojo_.impl.TypeSlotBuilder;
 
 public interface TypeDef {
 

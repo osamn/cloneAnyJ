@@ -5,8 +5,8 @@ import java.util.WeakHashMap;
 
 import ReIW.tiny.cloneAny.Ditto;
 import ReIW.tiny.cloneAny.core.AssemblyException;
-import ReIW.tiny.cloneAny.pojo.Slot;
-import ReIW.tiny.cloneAny.pojo.TypeDef;
+import ReIW.tiny.cloneAny.pojo_.Slot;
+import ReIW.tiny.cloneAny.pojo_.TypeDef;
 
 public final class DittoBuilder implements Ditto.Builder {
 

@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.pojo.impl;
+package ReIW.tiny.cloneAny.pojo_.impl;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -7,25 +7,30 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
-class ClassSignatureParser extends SlotLikeSignatureParser<SlotValue> {
+import ReIW.tiny.cloneAny.pojo_.Slot;
 
-	final Consumer<SlotValue> superCons;
+final class ClassSignatureParser extends SlotLikeSignatureVisitor<Slot> {
 
-	ClassSignatureParser(Consumer<SlotValue> thisCons, Consumer<SlotValue> superCons) {
-		this.superCons = superCons;
-		slotCons = thisCons;
+	private final Consumer<Slot> supers;
+
+	ClassSignatureParser(final Consumer<Slot> formals, final Consumer<Slot> supers) {
+		this.consumer = formals;
+		this.supers = supers;
 	}
 
 	void parse(final String superName, final String[] interfaces, final String signature) {
 		if (signature == null) {
+			if (superName == null) {
+				return;
+			}
 			// signature がない場合は、自クラスも継承元も non generic だし
 			// superName とか interfaces の中身とかに配列 '[' がくることはない
 			// はずなんで new Slot で
-			superCons.accept(new SlotValue(null, Type.getObjectType(superName).getDescriptor()));
+			supers.accept(new Slot(null, Type.getObjectType(superName).getDescriptor()));
 			if (interfaces != null) {
 				Arrays.stream(interfaces)
-						.map(intfName -> new SlotValue(null, Type.getObjectType(intfName).getDescriptor()))
-						.forEach(superCons);
+						.map(intfName -> new Slot(null, Type.getObjectType(intfName).getDescriptor()))
+						.forEach(supers);
 			}
 		} else {
 			new SignatureReader(signature).accept(this);
@@ -33,13 +38,13 @@ class ClassSignatureParser extends SlotLikeSignatureParser<SlotValue> {
 	}
 
 	@Override
-	protected SlotValue newSlotLike(final String typeParam, final String descriptor) {
-		return new SlotValue(typeParam, descriptor);
+	protected Slot newSlotLike(final String typeParam, final String descriptor) {
+		return new Slot(typeParam, descriptor);
 	}
 
 	@Override
 	public SignatureVisitor visitSuperclass() {
-		slotCons = superCons;
+		consumer = supers;
 		return super.visitSuperclass();
 	}
 

@@ -1,7 +1,8 @@
-package ReIW.tiny.cloneAny.pojo.impl
+package ReIW.tiny.cloneAny.pojo_.impl
 
-import ReIW.tiny.cloneAny.pojo.Slot
-import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException
+import ReIW.tiny.cloneAny.pojo_.Slot
+import ReIW.tiny.cloneAny.pojo_.UnboundFormalTypeParameterException
+import ReIW.tiny.cloneAny.pojo_.impl.MethodSignatureParser
 import spock.lang.Specification
 
 class MethodSignatureParserSpec extends Specification {

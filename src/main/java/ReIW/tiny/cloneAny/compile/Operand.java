@@ -1,6 +1,6 @@
 package ReIW.tiny.cloneAny.compile;
 
-import ReIW.tiny.cloneAny.pojo.Slot;
+import ReIW.tiny.cloneAny.pojo_.Slot;
 
 public interface Operand {
 

@@ -1,7 +1,8 @@
-package ReIW.tiny.cloneAny.pojo
+package ReIW.tiny.cloneAny.pojo_
 
 import org.objectweb.asm.Type
 
+import ReIW.tiny.cloneAny.pojo_.Slot
 import spock.lang.Specification
 
 class SlotSpec extends Specification implements SlotTestHelper {

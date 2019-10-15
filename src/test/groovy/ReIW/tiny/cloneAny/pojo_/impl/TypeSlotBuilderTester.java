@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.pojo.impl;
+package ReIW.tiny.cloneAny.pojo_.impl;
 
 interface TypeSlotBuilderTester {
 

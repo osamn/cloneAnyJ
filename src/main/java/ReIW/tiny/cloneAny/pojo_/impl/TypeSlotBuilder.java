@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.pojo.impl;
+package ReIW.tiny.cloneAny.pojo_.impl;
 
 import static ReIW.tiny.cloneAny.utils.Descriptors.toInternalName;
 
@@ -19,10 +19,10 @@ import org.objectweb.asm.Type;
 
 import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 import ReIW.tiny.cloneAny.asm7.DefaultMethodVisitor;
-import ReIW.tiny.cloneAny.pojo.Accessor;
-import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 import ReIW.tiny.cloneAny.pojo.UnboundMethodParameterNameException;
+import ReIW.tiny.cloneAny.pojo_.Accessor;
+import ReIW.tiny.cloneAny.pojo_.Slot;
 import ReIW.tiny.cloneAny.utils.AccessFlag;
 import ReIW.tiny.cloneAny.utils.Propertys;
 

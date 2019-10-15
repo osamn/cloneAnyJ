@@ -1,6 +1,7 @@
-package ReIW.tiny.cloneAny.pojo.impl
+package ReIW.tiny.cloneAny.pojo_.impl
 
-import ReIW.tiny.cloneAny.pojo.Accessor
+import ReIW.tiny.cloneAny.pojo_.Accessor
+import ReIW.tiny.cloneAny.pojo_.impl.TypeSlotBuilder
 import spock.lang.Specification
 
 class TypeSlotBuilderSpec extends Specification {

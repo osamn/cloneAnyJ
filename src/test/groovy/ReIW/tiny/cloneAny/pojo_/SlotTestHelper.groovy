@@ -1,4 +1,6 @@
-package ReIW.tiny.cloneAny.pojo
+package ReIW.tiny.cloneAny.pojo_
+
+import ReIW.tiny.cloneAny.pojo_.Slot
 
 trait SlotTestHelper {
 

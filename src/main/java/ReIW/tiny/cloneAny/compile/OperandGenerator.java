@@ -1,6 +1,6 @@
 package ReIW.tiny.cloneAny.compile;
 
-import static ReIW.tiny.cloneAny.pojo.Accessor.asSingle;
+import static ReIW.tiny.cloneAny.pojo_.Accessor.asSingle;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,9 +33,9 @@ import ReIW.tiny.cloneAny.compile.Operand.StartIndexLoop;
 import ReIW.tiny.cloneAny.compile.Operand.StartKeyLoop;
 import ReIW.tiny.cloneAny.compile.Operand.StoreRhs;
 import ReIW.tiny.cloneAny.compile.Operand.TestMapKeyExists;
-import ReIW.tiny.cloneAny.pojo.Accessor;
-import ReIW.tiny.cloneAny.pojo.Slot;
-import ReIW.tiny.cloneAny.pojo.TypeDef;
+import ReIW.tiny.cloneAny.pojo_.Accessor;
+import ReIW.tiny.cloneAny.pojo_.Slot;
+import ReIW.tiny.cloneAny.pojo_.TypeDef;
 
 public class OperandGenerator {
 

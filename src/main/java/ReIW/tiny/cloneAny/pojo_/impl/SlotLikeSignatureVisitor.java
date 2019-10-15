@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.pojo.impl;
+package ReIW.tiny.cloneAny.pojo_.impl;
 
 import java.util.Stack;
 import java.util.function.Consumer;
@@ -8,7 +8,7 @@ import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
 import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
-import ReIW.tiny.cloneAny.pojo.Slot;
+import ReIW.tiny.cloneAny.pojo_.Slot;
 
 public abstract class SlotLikeSignatureVisitor<TSlot extends Slot> extends DefaultSignatureVisitor {
 

@@ -1,43 +1,51 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 
+import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
-import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 
-final class MethodSignatureParser extends SlotLikeSignatureVisitor<Slot> {
+public class MethodSignatureParser extends SlotLikeSignatureParser<SlotValue> {
 
-	private static final Consumer<Slot> NOP = v -> {
+	private static final Consumer<SlotValue> NOP = v -> {
 	};
-	private final Consumer<Slot> argCons;
-	private final Consumer<Slot> retCons;
 
-	MethodSignatureParser(final Consumer<Slot> argCons, final Consumer<Slot> retCons) {
+	private final Consumer<SlotValue> argCons;
+	private final Consumer<SlotValue> retCons;
+
+	MethodSignatureParser(final Consumer<SlotValue> argCons, final Consumer<SlotValue> retCons) {
 		this.argCons = argCons == null ? NOP : argCons;
 		this.retCons = retCons == null ? NOP : retCons;
 	}
 
 	void parseArgumentsAndReturn(final String descriptor, final String signature) {
-		new SignatureReader(signature == null ? descriptor : signature).accept(this);
+		if (signature == null) {
+			Arrays.stream(Type.getArgumentTypes(descriptor))
+					.forEach(t -> argCons.accept(newSlotLike(null, t.getDescriptor())));
+			retCons.accept(newSlotLike(null, Type.getReturnType(descriptor).getDescriptor()));
+		} else {
+			new SignatureReader(signature == null ? descriptor : signature).accept(this);
+		}
 	}
 
 	@Override
-	protected Slot newSlotLike(final String typeParam, final String descriptor) {
-		return new Slot(typeParam, descriptor);
+	protected SlotValue newSlotLike(final String typeParam, final String descriptor) {
+		return new SlotValue(typeParam, descriptor);
 	}
 
 	@Override
 	public SignatureVisitor visitParameterType() {
-		consumer = argCons;
+		slotCons = argCons;
 		return super.visitParameterType();
 	}
 
 	@Override
 	public SignatureVisitor visitReturnType() {
-		consumer = retCons;
+		slotCons = retCons;
 		return super.visitReturnType();
 	}
 

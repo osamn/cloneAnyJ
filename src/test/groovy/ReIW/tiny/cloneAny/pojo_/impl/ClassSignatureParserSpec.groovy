@@ -1,7 +1,8 @@
-package ReIW.tiny.cloneAny.pojo.impl
+package ReIW.tiny.cloneAny.pojo_.impl
 
 import org.objectweb.asm.Type
 
+import ReIW.tiny.cloneAny.pojo_.impl.ClassSignatureParser
 import spock.lang.Specification
 
 class ClassSignatureParserSpec extends Specification {
@@ -147,7 +148,7 @@ class ClassSignatureParserSpec extends Specification {
 
 	def "partial bound generic classs"() {
 		setup:
-		def clazz = ReIW.tiny.cloneAny.pojo.impl.ClassSignatureParserTester$Unbound.class
+		def clazz = ReIW.tiny.cloneAny.pojo.impl_.ClassSignatureParserTester$Unbound.class
 
 		when:
 		new ClassSignatureParser({formals << it}, {supers << it}).parse(null, null,

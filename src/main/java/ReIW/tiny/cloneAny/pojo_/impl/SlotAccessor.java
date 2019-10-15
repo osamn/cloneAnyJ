@@ -1,8 +1,8 @@
-package ReIW.tiny.cloneAny.pojo.impl;
+package ReIW.tiny.cloneAny.pojo_.impl;
 
 import java.util.Map;
 
-import ReIW.tiny.cloneAny.pojo.Accessor;
+import ReIW.tiny.cloneAny.pojo_.Accessor;
 
 interface SlotAccessor extends Accessor {
 

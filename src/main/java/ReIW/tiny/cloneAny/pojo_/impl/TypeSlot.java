@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.pojo.impl;
+package ReIW.tiny.cloneAny.pojo_.impl;
 
 import static ReIW.tiny.cloneAny.utils.Consumers.withIndex;
 import static ReIW.tiny.cloneAny.utils.Descriptors.toInternalName;
@@ -9,9 +9,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
 
-import ReIW.tiny.cloneAny.pojo.Accessor;
-import ReIW.tiny.cloneAny.pojo.Slot;
-import ReIW.tiny.cloneAny.pojo.TypeDef;
+import ReIW.tiny.cloneAny.pojo_.Accessor;
+import ReIW.tiny.cloneAny.pojo_.Slot;
+import ReIW.tiny.cloneAny.pojo_.TypeDef;
 
 public final class TypeSlot extends Slot implements TypeDef {
 
@@ -179,7 +179,8 @@ public final class TypeSlot extends Slot implements TypeDef {
 		// -> X, Y
 		// に対して
 		// class Foo<A> extends Bar<A, String>
-		// -> A, String
+		// -> X, TA
+		// -> Y, String
 		// この対応をマップとして作成する
 		superType.slotList.forEach(withIndex((superFormalSlot, i) -> {
 			// extends 元のクラスで宣言されている type argument を退避
