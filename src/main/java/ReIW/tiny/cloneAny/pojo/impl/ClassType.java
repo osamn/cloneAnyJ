@@ -55,7 +55,9 @@ final class ClassType {
 		final Map<String, String> binds = ClassTypeBuilder.createBindMap(supers.get(0), superType.thisSlot);
 		pullAllUp(binds, superType);
 
-		// 継承階層の descriptor のみを収集する
+		// 継承階層の descriptor を収集する
+		// ここには配列はでてこないよ、継承関係だから
+		// あと、instanceOf 相当なんで generic もみないよ
 		ancestors = Stream.concat(supers.stream().map(s -> s.descriptor), superType.ancestors.stream())
 				.collect(Collectors.toUnmodifiableSet());
 

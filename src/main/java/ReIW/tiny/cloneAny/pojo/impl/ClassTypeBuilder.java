@@ -57,19 +57,22 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 			ct.accessors.add(new IndexedAccess(AccessType.ArraySet, elementSlot));
 			return ct;
 		}
+		className = Type.getType(descriptor).getInternalName();
 		classType = new ClassType();
 		classType.thisSlot = new SlotValue(null, descriptor);
-		ownerName = Type.getType(descriptor).getInternalName();
 		try {
-			new ClassReader(ownerName).accept(this, 0);
+			new ClassReader(className).accept(this, 0);
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e);
 		}
 		return classType;
 	}
 
+	// ClassType 作成してる対象クラスの internalName
+	// Accessor の owner で使う
+	private String className;
+
 	private ClassType classType;
-	private String ownerName;
 
 	@Override
 	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
@@ -94,7 +97,7 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 		if (isAccessible(access)) {
 			// final なものは読み取り専用になるよ
 			final AccessType type = AccessFlag.isFinal(access) ? AccessType.ReadonlyField : AccessType.Field;
-			new FieldSignatureParser(slot -> classType.accessors.add(new FieldAccess(type, ownerName, name, slot)))
+			new FieldSignatureParser(slot -> classType.accessors.add(new FieldAccess(type, className, name, slot)))
 					.parse(descriptor, signature);
 		}
 		return null;
@@ -108,7 +111,8 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 		}
 
 		if (name.contentEquals("<init>")) {
-			final LumpSetAccess ctor = new LumpSetAccess(ownerName, name, descriptor);
+			// コンストラクタの場合
+			final LumpSetAccess ctor = new LumpSetAccess(className, name, descriptor);
 			classType.accessors.add(ctor);
 
 			if (descriptor.contentEquals("()V")) {
@@ -116,23 +120,26 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 				return null;
 			}
 
-			// 引数のスロットをパースしてリストを作る
+			// descriptor/signature をパースして型パラメタのスロットのリストを作る
 			final ArrayList<SlotValue> params = new ArrayList<>();
-			// ちなみに <init> にフォーマルパラメタはないので try で囲むひつようなし
+			// ちなみに <init> にフォーマルパラメタはありえないので try で囲むひつようなし
 			new MethodSignatureParser(params::add, null).parseArgumentsAndReturn(descriptor, signature);
 
 			// そのスロットとパラメタ名とくっつけてもらうように MethodVisitor をかえしてあげる
 			return new MethodParamNameMapper(params, ctor.slotInfo::put);
 		} else {
 			try {
+
+				// FIXME プロパティ名作るところはほんとは BeanInfo を先に見ないといかんとおもう
+
 				if (Propertys.isGetter(name, descriptor)) {
 					new MethodSignatureParser(null, slot -> {
-						classType.accessors.add(new PropAccess(AccessType.Get, ownerName,
+						classType.accessors.add(new PropAccess(AccessType.Get, className,
 								Propertys.getPropertyName(name), name, descriptor, slot));
 					}).parseArgumentsAndReturn(descriptor, signature);
 				} else if (Propertys.isSetter(name, descriptor)) {
 					new MethodSignatureParser(slot -> {
-						classType.accessors.add(new PropAccess(AccessType.Set, ownerName,
+						classType.accessors.add(new PropAccess(AccessType.Set, className,
 								Propertys.getPropertyName(name), name, descriptor, slot));
 					}, null).parseArgumentsAndReturn(descriptor, signature);
 				}
@@ -187,6 +194,7 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 		return map;
 	}
 
+	// メソッドのパラメタ名を対応するスロットにくっつけるひと
 	private static final class MethodParamNameMapper extends DefaultMethodVisitor {
 
 		private final Iterator<SlotValue> slots;

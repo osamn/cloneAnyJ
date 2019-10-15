@@ -33,6 +33,7 @@ public interface Accessor {
 	String getName();
 
 	class FieldAccess implements Accessor {
+
 		private final AccessType type;
 		private final String owner;
 		private final String name;
@@ -70,9 +71,15 @@ public interface Accessor {
 		public String getName() {
 			return name;
 		}
+
+		@Override
+		public String toString() {
+			return "FieldAccess [type=" + type + ", owner=" + owner + ", name=" + name + ", slot=" + slot + "]";
+		}
 	}
 
 	class PropAccess implements Accessor {
+
 		private final AccessType type;
 		private final String owner;
 		private final String name;
@@ -115,9 +122,16 @@ public interface Accessor {
 		public String getName() {
 			return name;
 		}
+
+		@Override
+		public String toString() {
+			return "PropAccess [type=" + type + ", owner=" + owner + ", name=" + name + ", rel=" + rel
+					+ ", methodDescriptor=" + methodDescriptor + ", slot=" + slot + "]";
+		}
 	}
 
 	class LumpSetAccess implements Accessor {
+
 		private final String owner;
 
 		public final String rel;
@@ -155,6 +169,12 @@ public interface Accessor {
 		public String getName() {
 			return rel;
 		}
+
+		@Override
+		public String toString() {
+			return "LumpSetAccess [owner=" + owner + ", rel=" + rel + ", methodDescriptor=" + methodDescriptor
+					+ ", slotInfo=" + slotInfo + "]";
+		}
 	}
 
 	/*
@@ -169,6 +189,7 @@ public interface Accessor {
 
 	// Array/java.util.List
 	class IndexedAccess implements Accessor {
+
 		private final AccessType type;
 
 		public final Slot elementSlot;
@@ -202,10 +223,16 @@ public interface Accessor {
 		public String getName() {
 			return "@indexed";
 		}
+
+		@Override
+		public String toString() {
+			return "IndexedAccess [type=" + type + ", elementSlot=" + elementSlot + "]";
+		}
 	}
 
 	// java.util.Map
 	class KeyedAccess implements Accessor {
+
 		private final AccessType type;
 
 		public final Slot keySlot;
@@ -242,6 +269,10 @@ public interface Accessor {
 			return "@keyed";
 		}
 
+		@Override
+		public String toString() {
+			return "KeyedAccess [type=" + type + ", keySlot=" + keySlot + ", valueSlot=" + valueSlot + "]";
+		}
 	}
 
 }
