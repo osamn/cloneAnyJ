@@ -4,7 +4,7 @@ import java.util.function.Consumer;
 
 import org.objectweb.asm.signature.SignatureReader;
 
-class FieldSignatureParser extends SlotLikeSignatureParser<SlotValue> {
+class FieldSignatureParser extends SlotLikeSignatureParser {
 
 	FieldSignatureParser(Consumer<SlotValue> fieldCons) {
 		super.slotCons = fieldCons;
@@ -19,13 +19,13 @@ class FieldSignatureParser extends SlotLikeSignatureParser<SlotValue> {
 			new SignatureReader(descriptor).accept(this);
 		} else {
 			// それ以外は子要素をもたないのでそのまま作る
-			slotCons.accept(newSlotLike(null, descriptor));
+			slotCons.accept(newSlotLike(null, null, descriptor));
 		}
 	}
 
 	@Override
-	protected SlotValue newSlotLike(final String typeParam, final String descriptor) {
-		return new SlotValue(typeParam, descriptor);
+	protected SlotValue newSlotLike(final String wildcard, final String typeParam, final String descriptor) {
+		return new SlotValue(wildcard, typeParam, descriptor);
 	}
 
 	// Field に formal parameter はつけられないので

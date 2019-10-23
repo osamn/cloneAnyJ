@@ -8,6 +8,6 @@ import java.util.List;
 public interface Slot {
 
 	String getDescriptor();
-	
+
 	List<Slot> descendants();
 }

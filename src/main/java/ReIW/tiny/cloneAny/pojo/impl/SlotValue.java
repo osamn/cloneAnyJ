@@ -10,6 +10,7 @@ import ReIW.tiny.cloneAny.utils.Descriptors;
 
 class SlotValue implements Slot {
 
+	final String wildcard;
 	final String typeParam;
 	final String descriptor;
 
@@ -19,7 +20,8 @@ class SlotValue implements Slot {
 
 	final List<SlotValue> slotList = new ArrayList<>();
 
-	SlotValue(final String typeParam, final String descriptor) {
+	SlotValue(final String wildcard, final String typeParam, final String descriptor) {
+		this.wildcard = wildcard;
 		this.typeParam = typeParam;
 		this.descriptor = descriptor;
 		arrayType = descriptor.contentEquals("[");
@@ -68,8 +70,7 @@ class SlotValue implements Slot {
 	}
 
 	boolean isCertainBound() {
-		final boolean bound = typeParam == null || typeParam.contentEquals("=") || typeParam.contentEquals("+")
-				|| typeParam.contentEquals("-");
+		final boolean bound = typeParam == null;
 		return bound && (slotList == null || slotList.stream().allMatch(SlotValue::isCertainBound));
 	}
 
@@ -82,7 +83,7 @@ class SlotValue implements Slot {
 		final String bound = binds.get(typeParam);
 		if (bound == null) {
 			// 自分の typeParam が再定義されていない
-			final SlotValue slot = new SlotValue(typeParam, descriptor);
+			final SlotValue slot = new SlotValue(wildcard, typeParam, descriptor);
 			// 子スロットを bind しながらコピーする
 			for (SlotValue child : slotList) {
 				slot.slotList.add(child.rebind(binds));
@@ -94,7 +95,7 @@ class SlotValue implements Slot {
 			if (bound.startsWith("T")) {
 				// 型パラメタ名の再定義
 				// see TypeSlot#createBindMap
-				return new SlotValue(bound.substring(1), descriptor);
+				return new SlotValue(wildcard, bound.substring(1), descriptor);
 			} else {
 				// 型パラメタに型引数をくっつける
 				// certain bind
@@ -103,7 +104,7 @@ class SlotValue implements Slot {
 					return new SlotValueBuilder("=").build(bound);
 				} else {
 					// そのまま Slot つくればおｋ
-					return new SlotValue("=", bound);
+					return new SlotValue("=", null, bound);
 				}
 			}
 		} else {
@@ -114,7 +115,8 @@ class SlotValue implements Slot {
 
 	@Override
 	public String toString() {
-		return "SlotValue [typeParam=" + typeParam + ", descriptor=" + descriptor + ", slotList=" + slotList + "]";
+		return "SlotValue [wildcard=" + wildcard + ", typeParam=" + typeParam + ", descriptor=" + descriptor
+				+ ", slotList=" + slotList + "]";
 	}
 
 }

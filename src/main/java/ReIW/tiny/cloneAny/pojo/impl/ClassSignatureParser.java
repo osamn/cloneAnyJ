@@ -7,7 +7,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
-class ClassSignatureParser extends SlotLikeSignatureParser<SlotValue> {
+class ClassSignatureParser extends SlotLikeSignatureParser {
 
 	final Consumer<SlotValue> superCons;
 
@@ -23,10 +23,10 @@ class ClassSignatureParser extends SlotLikeSignatureParser<SlotValue> {
 		// なんで signature のありなしだけで判断する
 		if (signature == null) {
 			// 自クラスも継承元も non generic なんで子要素なし
-			superCons.accept(new SlotValue(null, Type.getObjectType(superName).getDescriptor()));
+			superCons.accept(newSlotLike(null, null, Type.getObjectType(superName).getDescriptor()));
 			if (interfaces != null) {
 				Arrays.stream(interfaces)
-						.map(intfName -> newSlotLike(null, Type.getObjectType(intfName).getDescriptor()))
+						.map(intfName -> newSlotLike(null, null, Type.getObjectType(intfName).getDescriptor()))
 						.forEach(superCons);
 			}
 		} else {
@@ -42,8 +42,8 @@ class ClassSignatureParser extends SlotLikeSignatureParser<SlotValue> {
 	}
 
 	@Override
-	protected SlotValue newSlotLike(final String typeParam, final String descriptor) {
-		return new SlotValue(typeParam, descriptor);
+	protected SlotValue newSlotLike(final String wildcard, final String typeParam, final String descriptor) {
+		return new SlotValue(wildcard, typeParam, descriptor);
 	}
 
 }

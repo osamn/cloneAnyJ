@@ -1,10 +1,10 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
-final class SlotValueBuilder extends SlotLikeSignatureParser<SlotValue> {
+final class SlotValueBuilder extends SlotLikeSignatureParser {
 	private SlotValue slot;
 
-	SlotValueBuilder(final String typeParam) {
-		super.typeParamName = typeParam;
+	SlotValueBuilder(final String wildcard) {
+		super.wildcard = wildcard;
 		super.slotCons = (val) -> {
 			this.slot = val;
 		};
@@ -16,8 +16,8 @@ final class SlotValueBuilder extends SlotLikeSignatureParser<SlotValue> {
 	}
 
 	@Override
-	protected SlotValue newSlotLike(final String typeParam, final String descriptor) {
-		return new SlotValue(typeParam, descriptor);
+	protected SlotValue newSlotLike(final String wildcard, final String typeParam, final String descriptor) {
+		return new SlotValue(wildcard, typeParam, descriptor);
 	}
 
 }

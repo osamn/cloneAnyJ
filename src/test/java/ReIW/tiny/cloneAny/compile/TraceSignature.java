@@ -10,7 +10,7 @@ import org.objectweb.asm.signature.SignatureVisitor;
 public class TraceSignature extends SignatureVisitor {
 
 	public static void main(String[] args) {
-		final String signature = "Ljava/util/List<*>;";
+		final String signature = "Ljava/util/List<Ljava/lang/String;>;";
 		new SignatureReader(signature).accept(new TraceSignature());
 	}
 

@@ -10,7 +10,7 @@ import org.objectweb.asm.signature.SignatureVisitor;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 import ReIW.tiny.cloneAny.utils.Consumers;
 
-public class MethodSignatureParser extends SlotLikeSignatureParser<SlotValue> {
+public class MethodSignatureParser extends SlotLikeSignatureParser {
 
 	private final Consumer<SlotValue> argCons;
 	private final Consumer<SlotValue> retCons;
@@ -30,14 +30,14 @@ public class MethodSignatureParser extends SlotLikeSignatureParser<SlotValue> {
 		} else {
 			// generic でも配列でもないので子要素を持たないよ
 			Arrays.stream(Type.getArgumentTypes(descriptor))
-					.forEach(t -> argCons.accept(newSlotLike(null, t.getDescriptor())));
-			retCons.accept(newSlotLike(null, Type.getReturnType(descriptor).getDescriptor()));
+					.forEach(t -> argCons.accept(newSlotLike(null, null, t.getDescriptor())));
+			retCons.accept(newSlotLike(null, null, Type.getReturnType(descriptor).getDescriptor()));
 		}
 	}
 
 	@Override
-	protected SlotValue newSlotLike(final String typeParam, final String descriptor) {
-		return new SlotValue(typeParam, descriptor);
+	protected SlotValue newSlotLike(final String wildcard, final String typeParam, final String descriptor) {
+		return new SlotValue(wildcard, typeParam, descriptor);
 	}
 
 	@Override

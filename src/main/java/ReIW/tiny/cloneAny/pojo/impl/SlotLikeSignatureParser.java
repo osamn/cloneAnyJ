@@ -9,76 +9,85 @@ import org.objectweb.asm.signature.SignatureVisitor;
 
 import ReIW.tiny.cloneAny.asm7.DefaultSignatureVisitor;
 
-public abstract class SlotLikeSignatureParser<TSlot extends SlotValue> extends DefaultSignatureVisitor {
+public abstract class SlotLikeSignatureParser extends DefaultSignatureVisitor {
 
-	private final Stack<TSlot> stack = new Stack<>();
+	private final Stack<SlotValue> stack = new Stack<>();
 
-	String typeParamName;
-	Consumer<TSlot> slotCons;
+	String typeParam;
+	String wildcard;
+	Consumer<SlotValue> slotCons;
 
-	protected abstract TSlot newSlotLike(final String typeParam, final String descriptor);
+	protected abstract SlotValue newSlotLike(final String wildcard, final String typeParam, final String descriptor);
 
 	public void accept(final String signature) {
 		new SignatureReader(signature).accept(this);
 	}
-	
+
 	@Override
 	public void visitFormalTypeParameter(final String name) {
-		typeParamName = name;
+		typeParam = name;
 	}
 
 	@Override
 	public void visitClassType(final String name) {
-		stack.push(newSlotLike(typeParamName, Type.getObjectType(name).getDescriptor()));
+		stack.push(newSlotLike(wildcard, typeParam, Type.getObjectType(name).getDescriptor()));
 	}
 
 	@Override
 	public void visitBaseType(final char descriptor) {
-		stack.push(newSlotLike(typeParamName, Character.toString(descriptor)));
+		stack.push(newSlotLike(wildcard, typeParam, Character.toString(descriptor)));
 		// primitive の場合 visitEnd に回らないので、ここで明示的に呼んでおく
-		visitEnd();
+		completeSlot();
 	}
 
 	@Override
 	public SignatureVisitor visitArrayType() {
-		stack.push(newSlotLike(typeParamName, "["));
-		typeParamName = null;
+		stack.push(newSlotLike(wildcard, typeParam, "["));
+		// 配列は特別の型なんで completeSlot しないよ
+		typeParam = null;
+		wildcard = null;
 		return super.visitArrayType();
 	}
 
 	@Override
 	public SignatureVisitor visitTypeArgument(final char wildcard) {
-		typeParamName = String.valueOf(wildcard);
+		this.wildcard = String.valueOf(wildcard);
 		return super.visitTypeArgument(wildcard);
 	}
 
+	// List<*> みたいに未指定を明示した時
 	@Override
 	public void visitTypeArgument() {
-		// List<*> みたいに未指定を明示した時にくるよ
-		stack.push(newSlotLike("*", "Ljava/lang/Object;"));
-		visitEnd();
+		stack.push(newSlotLike("*", null, "Ljava/lang/Object;"));
+		// visitEnd にいかないので明示的に
+		completeSlot();
 	}
 
 	@Override
 	public void visitTypeVariable(final String name) {
-		stack.push(newSlotLike(name, "Ljava/lang/Object;"));
-		// visitEnd にいかないので明示的に visitEnd しておく
-		visitEnd();
+		stack.push(newSlotLike(wildcard, name, "Ljava/lang/Object;"));
+		// visitEnd にいかないので明示的に
+		completeSlot();
 	}
 
 	@Override
 	public void visitEnd() {
-		TSlot slot = unrollArray();
+		completeSlot();
+	}
+	
+	private void completeSlot() {
+		SlotValue slot = unrollArray();
 		if (stack.isEmpty()) {
 			slotCons.accept(slot);
 		} else {
 			stack.peek().slotList.add(slot);
 		}
-		typeParamName = null;
+		typeParam = null;
+		wildcard = null;
 	}
 
-	private TSlot unrollArray() {
-		TSlot slot = stack.pop();
+	private SlotValue unrollArray() {
+		SlotValue slot = stack.pop();
 		while (!stack.isEmpty() && stack.peek().arrayType) {
 			stack.peek().slotList.add(slot);
 			slot = stack.pop();

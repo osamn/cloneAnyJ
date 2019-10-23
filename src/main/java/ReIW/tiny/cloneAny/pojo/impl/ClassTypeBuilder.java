@@ -59,7 +59,7 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 
 		this.className = Type.getType(descriptor).getInternalName();
 		this.classType = new ClassType();
-		this.classType.thisSlot = new SlotValue(null, descriptor);
+		this.classType.thisSlot = new SlotValue(null, null, descriptor);
 		try {
 			new ClassReader(className).accept(this, 0);
 		} catch (IOException e) {
