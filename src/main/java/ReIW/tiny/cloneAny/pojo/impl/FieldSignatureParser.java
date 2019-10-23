@@ -6,15 +6,20 @@ import org.objectweb.asm.signature.SignatureReader;
 
 class FieldSignatureParser extends SlotLikeSignatureParser<SlotValue> {
 
-	FieldSignatureParser(Consumer<SlotValue> cons) {
-		super.slotCons = cons;
+	FieldSignatureParser(Consumer<SlotValue> fieldCons) {
+		super.slotCons = fieldCons;
 	}
 
 	void parse(final String descriptor, final String signature) {
-		if (signature == null) {
-			slotCons.accept(newSlotLike(null, descriptor));
+		if (signature != null) {
+			// generic なとき
+			new SignatureReader(signature).accept(this);
+		} else if (descriptor.startsWith("[")) {
+			// 配列の時
+			new SignatureReader(descriptor).accept(this);
 		} else {
-			new SignatureReader(signature == null ? descriptor : signature).accept(this);
+			// それ以外は子要素をもたないのでそのまま作る
+			slotCons.accept(newSlotLike(null, descriptor));
 		}
 	}
 
@@ -25,6 +30,6 @@ class FieldSignatureParser extends SlotLikeSignatureParser<SlotValue> {
 
 	// Field に formal parameter はつけられないので
 	// visitFormalTypeParameter(String name)
-	// を override する必要はないよ
+	// を処理する必要はないよ
 
 }

@@ -21,7 +21,7 @@ public abstract class SlotLikeSignatureParser<TSlot extends SlotValue> extends D
 	public void accept(final String signature) {
 		new SignatureReader(signature).accept(this);
 	}
-
+	
 	@Override
 	public void visitFormalTypeParameter(final String name) {
 		typeParamName = name;
@@ -50,6 +50,13 @@ public abstract class SlotLikeSignatureParser<TSlot extends SlotValue> extends D
 	public SignatureVisitor visitTypeArgument(final char wildcard) {
 		typeParamName = String.valueOf(wildcard);
 		return super.visitTypeArgument(wildcard);
+	}
+
+	@Override
+	public void visitTypeArgument() {
+		// List<*> みたいに未指定を明示した時にくるよ
+		stack.push(newSlotLike("*", "Ljava/lang/Object;"));
+		visitEnd();
 	}
 
 	@Override

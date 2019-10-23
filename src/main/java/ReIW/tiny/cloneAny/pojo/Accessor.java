@@ -10,7 +10,8 @@ public interface Accessor {
 		Field, ReadonlyField,
 		// プロパティ
 		Get, Set,
-		// ctor の引数セット
+		// 基本コンストラクタしかないけど
+		// 複数の引数で設定するタイプ
 		LumpSet,
 		// Array
 		ArrayGet, ArraySet,
@@ -41,6 +42,7 @@ public interface Accessor {
 		public final Slot slot;
 
 		public FieldAccess(final AccessType type, final String owner, final String name, final Slot slot) {
+			assert type == AccessType.Field || type == AccessType.ReadonlyField;
 			this.type = type;
 			this.owner = owner;
 			this.name = name;
@@ -90,6 +92,7 @@ public interface Accessor {
 
 		public PropAccess(final AccessType type, final String owner, final String name, final String rel,
 				final String methodDescriptor, final Slot slot) {
+			assert type == AccessType.Get || type == AccessType.ArraySet;
 			this.type = type;
 			this.owner = owner;
 			this.name = name;
@@ -172,8 +175,8 @@ public interface Accessor {
 
 		@Override
 		public String toString() {
-			return "LumpSetAccess [owner=" + owner + ", rel=" + rel + ", methodDescriptor=" + methodDescriptor
-					+ ", slotInfo=" + slotInfo + "]";
+			return "TypeInit [owner=" + owner + ", rel=" + rel + ", methodDescriptor="
+					+ methodDescriptor + ", slotInfo=" + slotInfo + "]";
 		}
 	}
 
@@ -195,6 +198,8 @@ public interface Accessor {
 		public final Slot elementSlot;
 
 		public IndexedAccess(final AccessType type, final Slot elementSlot) {
+			assert type == AccessType.ArrayGet || type == AccessType.ArraySet || type == AccessType.ListGet
+					|| type == AccessType.ListAdd;
 			this.type = type;
 			this.elementSlot = elementSlot;
 		}
@@ -239,6 +244,7 @@ public interface Accessor {
 		public final Slot valueSlot;
 
 		public KeyedAccess(final AccessType type, final Slot keySlot, final Slot valueSlot) {
+			assert type == AccessType.MapGet || type == AccessType.MapPut;
 			this.type = type;
 			this.keySlot = keySlot;
 			this.valueSlot = valueSlot;

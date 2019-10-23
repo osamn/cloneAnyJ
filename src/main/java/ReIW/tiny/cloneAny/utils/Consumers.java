@@ -21,6 +21,10 @@ import java.util.function.ObjIntConsumer;
  */
 public interface Consumers {
 
+	public static <T> Consumer<T> nop() {
+		return value -> {};
+	}
+
 	/**
 	 * stream 処理にインデックス値を提供する Consumer を生成する.
 	 *

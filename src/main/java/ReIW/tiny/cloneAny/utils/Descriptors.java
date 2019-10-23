@@ -2,7 +2,6 @@ package ReIW.tiny.cloneAny.utils;
 
 import org.objectweb.asm.Type;
 
-// TODO あとでテスト
 public interface Descriptors {
 
 	static Class<?> toClass(final String descriptor) {

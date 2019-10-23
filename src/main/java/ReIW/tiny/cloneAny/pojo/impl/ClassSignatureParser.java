@@ -11,20 +11,22 @@ class ClassSignatureParser extends SlotLikeSignatureParser<SlotValue> {
 
 	final Consumer<SlotValue> superCons;
 
-	ClassSignatureParser(Consumer<SlotValue> thisCons, Consumer<SlotValue> superCons) {
+	ClassSignatureParser(Consumer<SlotValue> formalParamCons, Consumer<SlotValue> superCons) {
 		this.superCons = superCons;
-		slotCons = thisCons;
+		// 先に自クラスの型パラメタが読み取られるので
+		// その cons をいれておく
+		super.slotCons = formalParamCons;
 	}
 
 	void parse(final String superName, final String[] interfaces, final String signature) {
+		// superName とか interfaces の中身とかに配列 '[' がくることはないよ
+		// なんで signature のありなしだけで判断する
 		if (signature == null) {
-			// signature がない場合は、自クラスも継承元も non generic だし
-			// superName とか interfaces の中身とかに配列 '[' がくることはない
-			// はずなんで new Slot で
+			// 自クラスも継承元も non generic なんで子要素なし
 			superCons.accept(new SlotValue(null, Type.getObjectType(superName).getDescriptor()));
 			if (interfaces != null) {
 				Arrays.stream(interfaces)
-						.map(intfName -> new SlotValue(null, Type.getObjectType(intfName).getDescriptor()))
+						.map(intfName -> newSlotLike(null, Type.getObjectType(intfName).getDescriptor()))
 						.forEach(superCons);
 			}
 		} else {
@@ -33,14 +35,15 @@ class ClassSignatureParser extends SlotLikeSignatureParser<SlotValue> {
 	}
 
 	@Override
-	protected SlotValue newSlotLike(final String typeParam, final String descriptor) {
-		return new SlotValue(typeParam, descriptor);
+	public SignatureVisitor visitSuperclass() {
+		// こっから継承元に入るので cons を super 用に切り替える
+		super.slotCons = superCons;
+		return super.visitSuperclass();
 	}
 
 	@Override
-	public SignatureVisitor visitSuperclass() {
-		slotCons = superCons;
-		return super.visitSuperclass();
+	protected SlotValue newSlotLike(final String typeParam, final String descriptor) {
+		return new SlotValue(typeParam, descriptor);
 	}
 
 }

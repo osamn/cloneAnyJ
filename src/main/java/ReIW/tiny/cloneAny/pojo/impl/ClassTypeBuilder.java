@@ -48,7 +48,6 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 	private ClassType computeClassType(String descriptor) {
 		if (descriptor.startsWith("[")) {
 			// 配列の場合はそのアクセサだけ追加してかえす
-			// クラスのパースはしないよ
 			final SlotValue slot = new SlotValueBuilder(null).build(descriptor);
 			final SlotValue elementSlot = slot.slotList.get(0);
 			final ClassType ct = new ClassType();
@@ -57,9 +56,10 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 			ct.accessors.add(new IndexedAccess(AccessType.ArraySet, elementSlot));
 			return ct;
 		}
-		className = Type.getType(descriptor).getInternalName();
-		classType = new ClassType();
-		classType.thisSlot = new SlotValue(null, descriptor);
+
+		this.className = Type.getType(descriptor).getInternalName();
+		this.classType = new ClassType();
+		this.classType.thisSlot = new SlotValue(null, descriptor);
 		try {
 			new ClassReader(className).accept(this, 0);
 		} catch (IOException e) {
@@ -76,8 +76,13 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 
 	@Override
 	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+		if (AccessFlag.isInterface(access)) {
+			// インターフェースだと右側に指定されたとき何を new すればいいかわからんので
+			throw new IllegalArgumentException();
+		}
+		// abstract とか not public なクラスは継承ツリー上にあるかもしれないので除外しない
 		new ClassSignatureParser(classType.thisSlot.slotList::add, superSlot -> {
-			classType.supers.add(superSlot);
+			classType.superSlots.add(superSlot);
 			// extends/implements してるスロットについて List/Map をチェックする
 			if (superSlot.descriptor.contentEquals("Ljava/util/List;")) {
 				classType.accessors.add(new IndexedAccess(AccessType.ListGet, superSlot.slotList.get(0)));
@@ -129,9 +134,7 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 			return new MethodParamNameMapper(params, ctor.slotInfo::put);
 		} else {
 			try {
-
 				// FIXME プロパティ名作るところはほんとは BeanInfo を先に見ないといかんとおもう
-
 				if (Propertys.isGetter(name, descriptor)) {
 					new MethodSignatureParser(null, slot -> {
 						classType.accessors.add(new PropAccess(AccessType.Get, className,
@@ -156,31 +159,32 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 
 	private static boolean isAccessible(int access) {
 		return AccessFlag.isPublic(access) // public で
-				&& !AccessFlag.isStatic(access) // instance で
-				&& !AccessFlag.isAbstract(access); // concrete で
-		// lombok とかがつけそうなので synthetic は判定しないでおく
-		// && !AccessFlag.isSynthetic(access);
+				&& !AccessFlag.isStatic(access) // インスタンスのメンバで
+				&& !AccessFlag.isInterface(access) // インターフェース上の定義は実装がないのでだめ
+				&& !AccessFlag.isAbstract(access); // abstract も実装がないのでだめ
+		// lombok とかがつけそうなので synthetic はおっけにしておく
+		//// && !AccessFlag.isSynthetic(access)
 	}
 
 	static Map<String, String> createBindMap(final SlotValue lhs/*this.super[0]*/, final SlotValue rhs/*super.this*/) {
 		final HashMap<String, String> map = new HashMap<>();
-		// class Bar<X, Y> >>> super.this -> definedSlot
+		// class Bar<X, Y> ==> super.this -> definedSlot
 		// -> X, Y
 		// に対して
-		// class Foo<A> extends Bar<A, String> >>> this.super[0] -> extendsSlot
+		// class Foo<A> extends Bar<A, String> ==> this.super[0] -> actualSlot
 		// -> X, TA
 		// -> Y, String
 		// この対応をマップとして作成する
-		rhs.slotList.forEach(withIndex((definedSlot, i) -> {
-			// extends 元のクラスで宣言されている type argument を退避
-			final SlotValue extendsSlot = lhs.slotList.get(i);
+		rhs.slotList.forEach(withIndex((definedSlot/* 親のフォーマルスロット */, i) -> {
+			// extends に定義された型引数をとってきて
+			final SlotValue actualSlot = lhs.slotList.get(i);
 			// で、それらを比べてなにが型パラメタにくっついたかを調べる
 			// それぞれの型パラメタの数とか並び順はコンパイルとおってるかぎり絶対一致してるはずだよ
 
-			if (extendsSlot.isCertainBound()) {
+			if (actualSlot.isCertainBound()) {
 				// 型パラメタが解決されてるので、そいつをくっつける
-				// TODO シグネチャ考えなくていいのはなんで？コメントつけといて
-				map.put(definedSlot.typeParam, extendsSlot.getTypeDescriptor());
+				// X -> List<String> みたいのもあるので signature ベースで名前作る
+				map.put(definedSlot.typeParam, actualSlot.getSignature());
 			} else {
 				// 型パラメタをリネームする。目印として 'T' をつける
 				// 以下より T で始まる型引数はありえないため T を目印にしてるよ
@@ -188,7 +192,7 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 				//// void -> V
 				//// primitive -> ZCBSIFJD
 				//// array -> [
-				map.put(definedSlot.typeParam, "T" + extendsSlot.typeParam);
+				map.put(definedSlot.typeParam, "T" + actualSlot.typeParam);
 			}
 		}));
 		return map;

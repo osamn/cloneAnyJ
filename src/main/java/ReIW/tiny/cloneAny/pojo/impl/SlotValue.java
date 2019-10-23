@@ -27,24 +27,44 @@ class SlotValue implements Slot {
 		boxingType = arrayType ? false : Descriptors.isBoxingType(descriptor);
 	}
 
-	@Override
-	public String getDescriptor() {
-		return descriptor;
-	}
-
-	@Override
-	public List<Slot> descendants() {
-		return slotList.stream().map(Slot.class::cast).collect(Collectors.toUnmodifiableList());
-	}
-
 	/** 配列も考慮した descriptor */
 	// 型パラメタはふくまない単純な descriptor
 	// なんだけど、rebind とかされて決定する場合もあるので実行時に作成する
-	String getTypeDescriptor() {
+	// spock でつかうときは descriptor(getter) と @descriptor(field) で使い分けてね
+	@Override
+	public String getDescriptor() {
 		if (arrayType) {
-			return descriptor + slotList.get(0).getTypeDescriptor();
+			return descriptor + slotList.get(0).getDescriptor();
 		}
 		return descriptor;
+	}
+
+	public String getSignature() {
+		if (arrayType) {
+			return descriptor + slotList.get(0).getSignature();
+		}
+		if (slotList.size() == 0) {
+			if (typeParam == null || typeParam.contentEquals("=") || typeParam.contentEquals("+")
+					|| typeParam.contentEquals("-")) {
+				return descriptor;
+			} else {
+				return "T" + typeParam + ";";
+			}
+		}
+		// シグネチャを再構築する
+		final StringBuilder buf = new StringBuilder();
+		buf.append(descriptor.substring(0, descriptor.length() - 1));
+		buf.append("<");
+		slotList.forEach(slot -> buf.append(slot.getSignature()));
+		buf.append(">;");
+		return buf.toString();
+	}
+
+	// 型パラメタのスロットリスト
+	// 配列の要素スロットもあるよ
+	@Override
+	public List<Slot> descendants() {
+		return slotList.stream().map(Slot.class::cast).collect(Collectors.toUnmodifiableList());
 	}
 
 	boolean isCertainBound() {
@@ -79,7 +99,7 @@ class SlotValue implements Slot {
 				// 型パラメタに型引数をくっつける
 				// certain bind
 				if (bound.startsWith("[") || bound.indexOf('<') >= 0) {
-					// 配列もしくはシグネチャなんでパースしてつくる
+					// 配列、もしくは generic なんでパースしてつくる
 					return new SlotValueBuilder("=").build(bound);
 				} else {
 					// そのまま Slot つくればおｋ
