@@ -10,17 +10,11 @@ class ClassSignatureParserSpec extends Specification {
 		def supers = []
 
 		when:
-		new ClassSignatureParser({formals << it},  {supers << it}).parse(null,'foo/bar/Hoge', [
-			'foo/bar/IPiyo',
-			'foo/bar/IFuga'] as String[])
+		new ClassSignatureParser({formals << it},  {supers << it}).parse(null,'foo/bar/Hoge', ['foo/bar/IPiyo', 'foo/bar/IFuga'] as String[])
 
 		then:
 		formals == []
-		supers.collect { (it as SlotValue).descriptor } == [
-			'Lfoo/bar/Hoge;',
-			'Lfoo/bar/IPiyo;',
-			'Lfoo/bar/IFuga;'
-		]
+		supers.collect { (it as SlotValue).descriptor } == ['Lfoo/bar/Hoge;', 'Lfoo/bar/IPiyo;', 'Lfoo/bar/IFuga;']
 	}
 
 	def "generic extends + implements"() {
