@@ -3,6 +3,7 @@ package ReIW.tiny.cloneAny.pojo.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import ReIW.tiny.cloneAny.pojo.Slot;
@@ -21,6 +22,8 @@ class SlotValue implements Slot {
 	final List<SlotValue> slotList = new ArrayList<>();
 
 	SlotValue(final String wildcard, final String typeParam, final String descriptor) {
+		assert descriptor != null;
+
 		this.wildcard = wildcard;
 		this.typeParam = typeParam;
 		this.descriptor = descriptor;
@@ -33,7 +36,6 @@ class SlotValue implements Slot {
 	// 型パラメタはふくまない単純な descriptor
 	// なんだけど、rebind とかされて決定する場合もあるので実行時に作成する
 	// spock でつかうときは descriptor(getter) と @descriptor(field) で使い分けてね
-	@Override
 	public String getDescriptor() {
 		if (arrayType) {
 			return descriptor + slotList.get(0).getDescriptor();
@@ -46,11 +48,14 @@ class SlotValue implements Slot {
 			return descriptor + slotList.get(0).getSignature();
 		}
 		if (slotList.size() == 0) {
-			if (typeParam == null || typeParam.contentEquals("=") || typeParam.contentEquals("+")
-					|| typeParam.contentEquals("-")) {
-				return descriptor;
+			if (Objects.equals(wildcard, "*")) {
+				return wildcard;
+			}
+			final String c = (wildcard == null || wildcard.contentEquals("=")) ? "" : wildcard;
+			if (typeParam == null) {
+				return c + descriptor;
 			} else {
-				return "T" + typeParam + ";";
+				return c + "T" + typeParam + ";";
 			}
 		}
 		// シグネチャを再構築する
@@ -80,7 +85,7 @@ class SlotValue implements Slot {
 			return this;
 		}
 
-		final String bound = binds.get(typeParam);
+		final String bound = typeParam == null ? null : binds.get(typeParam);
 		if (bound == null) {
 			// 自分の typeParam が再定義されていない
 			final SlotValue slot = new SlotValue(wildcard, typeParam, descriptor);
@@ -94,14 +99,14 @@ class SlotValue implements Slot {
 			// 型パラメタのスロットに子供がいることはありえないので slotList.size == 0 ね
 			if (bound.startsWith("T")) {
 				// 型パラメタ名の再定義
-				// see TypeSlot#createBindMap
+				// see ClassType#createBindMap
 				return new SlotValue(wildcard, bound.substring(1), descriptor);
 			} else {
 				// 型パラメタに型引数をくっつける
 				// certain bind
 				if (bound.startsWith("[") || bound.indexOf('<') >= 0) {
 					// 配列、もしくは generic なんでパースしてつくる
-					return new SlotValueBuilder("=").build(bound);
+					return new SlotValueBuilder().setPrimaryWildcard(wildcard).build(bound);
 				} else {
 					// そのまま Slot つくればおｋ
 					return new SlotValue("=", null, bound);
@@ -116,7 +121,7 @@ class SlotValue implements Slot {
 	@Override
 	public String toString() {
 		return "SlotValue [wildcard=" + wildcard + ", typeParam=" + typeParam + ", descriptor=" + descriptor
-				+ ", slotList=" + slotList + "]";
+				+ ", " + slotList + "]";
 	}
 
 }

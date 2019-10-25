@@ -8,7 +8,7 @@ class SlotValueBuilderSpec extends Specification {
 	// @Unroll
 	def "単純なクラスと配列のルート : #descriptor"() {
 		expect:
-		def actual = new SlotValueBuilder(null).build(descriptor)
+		def actual = new SlotValueBuilder().build(descriptor)
 		actual.arrayType       == isArray
 		actual.boxingType      == isBoxing
 		actual.primitiveType   == isPrimitive
@@ -30,27 +30,39 @@ class SlotValueBuilderSpec extends Specification {
 		def signature = 'Ljava/util/List<Ljava/util/Map<Ljava/lang/String;TX;>;>;'
 
 		when:
-		def actual = new SlotValueBuilder(null).build(signature);
-
+		def actual = new SlotValueBuilder().build(signature);
+		
 		then:
-		actual.typeParam == null
-		actual.descriptor == 'Ljava/util/List;'
 		actual.slotList.size() ==  1
-
-		then:
-		actual.slotList[0].typeParam == '='
-		actual.slotList[0].descriptor == 'Ljava/util/Map;'
 		actual.slotList[0].slotList.size() ==  2
-
-		then:
-		actual.slotList[0].slotList[0].typeParam == '='
-		actual.slotList[0].slotList[0].descriptor == 'Ljava/lang/String;'
 		actual.slotList[0].slotList[0].slotList == []
+		actual.slotList[0].slotList[1].slotList == []
+		
+		when:
+		def list_slot = actual
+		def map_slot = list_slot.slotList[0]
+		def key_slot = map_slot.slotList[0]
+		def val_slot = map_slot.slotList[1]
 
 		then:
-		actual.slotList[0].slotList[1].typeParam == 'X'
-		actual.slotList[0].slotList[1].descriptor == 'Ljava/lang/Object;'
-		actual.slotList[0].slotList[1].slotList == []
+		list_slot.wildcard == null
+		list_slot.typeParam == null
+		list_slot.descriptor == 'Ljava/util/List;'
+
+		then:
+		map_slot.wildcard == '='
+		map_slot.typeParam == null
+		map_slot.descriptor == 'Ljava/util/Map;'
+
+		then:
+		key_slot.wildcard == '='
+		key_slot.typeParam == null
+		key_slot.descriptor == 'Ljava/lang/String;'
+
+		then:
+		val_slot.wildcard == '='
+		val_slot.typeParam == 'X'
+		val_slot.descriptor == 'Ljava/lang/Object;'
 	}
 
 	def "配列"() {
@@ -59,25 +71,38 @@ class SlotValueBuilderSpec extends Specification {
 		def signature = '[[J'
 
 		when:
-		def actual = new SlotValueBuilder(null).build(signature);
-
+		def actual = new SlotValueBuilder().build(signature);
+		
 		then:
-		actual.typeParam == null
-		actual.@descriptor == '['
-		actual.arrayType == true
 		actual.slotList.size() ==  1
-
-		then:
-		actual.slotList[0].typeParam == null
-		actual.slotList[0].@descriptor == '['
-		actual.slotList[0].arrayType == true
 		actual.slotList[0].slotList.size() ==  1
+		actual.slotList[0].slotList[0].slotList == []
+		
+		when:
+		def array_slot = actual
+		def array_array_slot = array_slot.slotList[0]
+		def long_slot = array_array_slot.slotList[0]
 
 		then:
-		actual.slotList[0].slotList[0].typeParam == null
-		actual.slotList[0].slotList[0].@descriptor == 'J'
-		actual.slotList[0].slotList[0].arrayType == false
-		actual.slotList[0].slotList[0].slotList == []
+		array_slot.wildcard == null
+		array_slot.typeParam == null
+		array_slot.@descriptor == '['
+		array_slot.descriptor == '[[J'
+		array_slot.arrayType == true
+
+		then:
+		array_array_slot.wildcard == null
+		array_array_slot.typeParam == null
+		array_array_slot.@descriptor == '['
+		array_array_slot.descriptor == '[J'
+		array_array_slot.arrayType == true
+
+		then:
+		long_slot.wildcard == null
+		long_slot.typeParam == null
+		long_slot.@descriptor == 'J'
+		long_slot.descriptor == 'J'
+		long_slot.arrayType == false
 	}
 
 	def "generic クラスの配列"() {
@@ -86,28 +111,40 @@ class SlotValueBuilderSpec extends Specification {
 		def signature = '[Ljava/util/Map<Ljava/lang/String;TX;>;'
 
 		when:
-		def actual = new SlotValueBuilder(null).build(signature);
-
+		def actual = new SlotValueBuilder().build(signature);
+		
 		then:
-		actual.typeParam == null
-		actual.@descriptor == '['
-		actual.arrayType == true
 		actual.slotList.size() ==  1
-
-		then:
-		actual.slotList[0].typeParam == null
-		actual.slotList[0].@descriptor == 'Ljava/util/Map;'
 		actual.slotList[0].slotList.size() == 2
-
-		then:
-		actual.slotList[0].slotList[0].typeParam == '='
-		actual.slotList[0].slotList[0].@descriptor == 'Ljava/lang/String;'
 		actual.slotList[0].slotList[0].slotList == []
+		actual.slotList[0].slotList[1].slotList == []
+		
+		when:
+		def array_slot = actual
+		def map_slot = array_slot.slotList[0]
+		def key_slot = map_slot.slotList[0]
+		def val_slot = map_slot.slotList[1]
 
 		then:
-		actual.slotList[0].slotList[1].typeParam == 'X'
-		actual.slotList[0].slotList[1].@descriptor == 'Ljava/lang/Object;'
-		actual.slotList[0].slotList[1].slotList == []
+		array_slot.typeParam == null
+		array_slot.arrayType == true
+		array_slot.descriptor == '[Ljava/util/Map;'
+		array_slot.@descriptor == '['
+
+		then:
+		map_slot.wildcard == null
+		map_slot.typeParam == null
+		map_slot.descriptor == 'Ljava/util/Map;'
+
+		then:
+		key_slot.wildcard == '='
+		key_slot.typeParam == null
+		key_slot.descriptor == 'Ljava/lang/String;'
+
+		then:
+		val_slot.wildcard == '='
+		val_slot.typeParam == 'X'
+		val_slot.descriptor == 'Ljava/lang/Object;'
 	}
 
 	def "型パラメタに配列を持つ generic なクラス"() {
@@ -116,22 +153,33 @@ class SlotValueBuilderSpec extends Specification {
 		def signature = 'Ljava/util/List<[J>;'
 
 		when:
-		def actual = new SlotValueBuilder(null).build(signature);
+		def actual = new SlotValueBuilder().build(signature);
 
 		then:
-		actual.typeParam == null
-		actual.descriptor == 'Ljava/util/List;'
 		actual.slotList.size() ==  1
-
-		then:
-		actual.slotList[0].typeParam == '='
-		actual.slotList[0].@descriptor == '['
 		actual.slotList[0].slotList.size() == 1
+		actual.slotList[0].slotList[0].slotList == []
+		
+		when:
+		def list_slot = actual
+		def array_slot = list_slot.slotList[0]
+		def long_slot = array_slot.slotList[0]
 
 		then:
-		actual.slotList[0].slotList[0].typeParam == null
-		actual.slotList[0].slotList[0].@descriptor == 'J'
-		actual.slotList[0].slotList[0].slotList == []
+		list_slot.wildcard == null
+		list_slot.typeParam == null
+		list_slot.descriptor == 'Ljava/util/List;'
+
+		then:
+		array_slot.wildcard == '='
+		array_slot.typeParam == null
+		array_slot.descriptor == '[J'
+		array_slot.@descriptor == '['
+
+		then:
+		long_slot.wildcard == null
+		long_slot.typeParam == null
+		long_slot.descriptor == 'J'
 	}
 
 }

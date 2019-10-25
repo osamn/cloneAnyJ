@@ -1,9 +1,5 @@
 package ReIW.tiny.cloneAny.pojo.impl
 
-import static org.junit.jupiter.api.Assertions.*
-
-import org.junit.jupiter.api.Test
-
 import spock.lang.Specification
 
 class ClassSignatureParserSpec extends Specification {
@@ -14,11 +10,17 @@ class ClassSignatureParserSpec extends Specification {
 		def supers = []
 
 		when:
-		new ClassSignatureParser({formals << it},  {supers << it}).parse('foo/bar/Hoge', ['foo/bar/IPiyo', 'foo/bar/IFuga'] as String[], null)
+		new ClassSignatureParser({formals << it},  {supers << it}).parse(null,'foo/bar/Hoge', [
+			'foo/bar/IPiyo',
+			'foo/bar/IFuga'] as String[])
 
 		then:
 		formals == []
-		supers.collect { it.@descriptor } == ['Lfoo/bar/Hoge;', 'Lfoo/bar/IPiyo;', 'Lfoo/bar/IFuga;']
+		supers.collect { (it as SlotValue).descriptor } == [
+			'Lfoo/bar/Hoge;',
+			'Lfoo/bar/IPiyo;',
+			'Lfoo/bar/IFuga;'
+		]
 	}
 
 	def "generic extends + implements"() {
@@ -29,31 +31,44 @@ class ClassSignatureParserSpec extends Specification {
 		def signature = '<A:Ljava/lang/Object;>Lfoo/Y<TA;>;Lfoo/X<Ljava/lang/String;TA;>;'
 
 		when:
-		new ClassSignatureParser({formals << it},  {supers << it}).parse(null, null, signature)
-		
+		new ClassSignatureParser({formals << it},  {supers << it}).parse(signature, null, null)
+
 		then:
 		formals.size() == 1
 		supers.size() == 2
 
-		then:
-		formals[0].typeParam == 'A'
-		formals[0].descriptor == 'Ljava/lang/Object;'
-		formals[0].slotList == []
-		
-		then:
-		supers[0].typeParam == null
-		supers[0].descriptor == 'Lfoo/Y;'
-		supers[0].slotList.size() == 1
-		supers[0].slotList[0].typeParam == 'A'
-		supers[0].slotList[0].descriptor == 'Ljava/lang/Object;'
+		when:
+		SlotValue formal_slot = formals[0]
+		SlotValue super_slot_1 = supers[0]
+		SlotValue super_slot_2 = supers[1]
 
 		then:
-		supers[1].typeParam == null
-		supers[1].descriptor == 'Lfoo/X;'
-		supers[1].slotList.size() == 2
-		supers[1].slotList[0].typeParam == '='
-		supers[1].slotList[0].descriptor == 'Ljava/lang/String;'
-		supers[1].slotList[1].typeParam == 'A'
-		supers[1].slotList[1].descriptor == 'Ljava/lang/Object;'
+		formal_slot.wildcard == null
+		formal_slot.typeParam == 'A'
+		formal_slot.descriptor == 'Ljava/lang/Object;'
+		formal_slot.slotList == []
+
+		then:
+		super_slot_1.wildcard == null
+		super_slot_1.typeParam == null
+		super_slot_1.descriptor == 'Lfoo/Y;'
+		super_slot_1.slotList.size() == 1
+
+		super_slot_1.slotList[0].wildcard == '='
+		super_slot_1.slotList[0].typeParam == 'A'
+		super_slot_1.slotList[0].descriptor == 'Ljava/lang/Object;'
+
+		then:
+		super_slot_2.typeParam == null
+		super_slot_2.descriptor == 'Lfoo/X;'
+		super_slot_2.slotList.size() == 2
+
+		super_slot_2.slotList[0].wildcard == '='
+		super_slot_2.slotList[0].typeParam == null
+		super_slot_2.slotList[0].descriptor == 'Ljava/lang/String;'
+
+		super_slot_2.slotList[1].wildcard == '='
+		super_slot_2.slotList[1].typeParam == 'A'
+		super_slot_2.slotList[1].descriptor == 'Ljava/lang/Object;'
 	}
 }

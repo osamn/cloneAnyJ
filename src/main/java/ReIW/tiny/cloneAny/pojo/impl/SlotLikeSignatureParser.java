@@ -55,9 +55,11 @@ public abstract class SlotLikeSignatureParser extends DefaultSignatureVisitor {
 		return super.visitTypeArgument(wildcard);
 	}
 
-	// List<*> みたいに未指定を明示した時
+	// List<?> みたいに未指定を明示した時
 	@Override
 	public void visitTypeArgument() {
+		// visit*Type visitTypeVariable とか行かないので
+		// ここで push する
 		stack.push(newSlotLike("*", null, "Ljava/lang/Object;"));
 		// visitEnd にいかないので明示的に
 		completeSlot();

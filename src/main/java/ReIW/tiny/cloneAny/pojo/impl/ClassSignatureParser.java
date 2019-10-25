@@ -18,7 +18,7 @@ class ClassSignatureParser extends SlotLikeSignatureParser {
 		super.slotCons = formalParamCons;
 	}
 
-	void parse(final String superName, final String[] interfaces, final String signature) {
+	void parse(final String signature, final String superName, final String[] interfaces) {
 		// superName とか interfaces の中身とかに配列 '[' がくることはないよ
 		// なんで signature のありなしだけで判断する
 		if (signature == null) {

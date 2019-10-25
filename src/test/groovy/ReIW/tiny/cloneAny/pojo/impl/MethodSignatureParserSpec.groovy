@@ -1,9 +1,5 @@
 package ReIW.tiny.cloneAny.pojo.impl
 
-import static org.junit.Assert.*
-
-import org.junit.Test
-
 import spock.lang.Specification
 
 class MethodSignatureParserSpec extends Specification {
@@ -20,15 +16,21 @@ class MethodSignatureParserSpec extends Specification {
 		then:
 		args.size() == 2
 		
-		then:
-		args[0].typeParam == null
-		args[0].descriptor == 'I'
-		args[0].slotList.size() == 0
+		when:
+		SlotValue arg_slot_1 = args[0]
+		SlotValue arg_slot_2 = args[1]
 		
 		then:
-		args[1].typeParam == null
-		args[1].descriptor == 'Ljava/lang/String;'
-		args[1].slotList.size() == 0
+		arg_slot_1.wildcard == null
+		arg_slot_1.typeParam == null
+		arg_slot_1.descriptor == 'I'
+		arg_slot_1.slotList == []
+		
+		then:
+		arg_slot_2.wildcard == null
+		arg_slot_2.typeParam == null
+		arg_slot_2.descriptor == 'Ljava/lang/String;'
+		arg_slot_2.slotList == []
 	}
 
 	def "配列の引数あり"() {
@@ -43,20 +45,28 @@ class MethodSignatureParserSpec extends Specification {
 		then:
 		args.size() == 2
 		
-		then:
-		args[0].typeParam == null
-		args[0].descriptor == 'Ljava/lang/Integer;'
-		args[0].slotList.size() == 0
+		when:
+		SlotValue arg_slot_1 = args[0]
+		SlotValue arg_slot_2 = args[1]
 		
 		then:
-		args[1].typeParam == null
-		args[1].@descriptor == '['
-		args[1].slotList.size() == 1
+		arg_slot_1.wildcard == null
+		arg_slot_1.typeParam == null
+		arg_slot_1.descriptor == 'Ljava/lang/Integer;'
+		arg_slot_1.slotList == []
+		
+		then:
+		arg_slot_2.wildcard == null
+		arg_slot_2.typeParam == null
+		arg_slot_2.descriptor == '[Ljava/lang/String;'
+		arg_slot_2.@descriptor == '['
+		arg_slot_2.slotList.size() == 1
 
 		then:
-		args[1].slotList[0].typeParam == null
-		args[1].slotList[0].descriptor == 'Ljava/lang/String;'
-		args[1].slotList[0].slotList.size() == 0
+		arg_slot_2.slotList[0].wildcard == null
+		arg_slot_2.slotList[0].typeParam == null
+		arg_slot_2.slotList[0].descriptor == 'Ljava/lang/String;'
+		arg_slot_2.slotList[0].slotList == []
 	}
 
 	def "non generic な戻り値"() {
@@ -71,10 +81,14 @@ class MethodSignatureParserSpec extends Specification {
 		then:
 		ret.size() == 1
 		
+		when:
+		SlotValue ret_slot = ret[0]
+
 		then:
-		ret[0].typeParam == null
-		ret[0].descriptor == 'Ljava/lang/String;'
-		ret[0].slotList.size() == 0
+		ret_slot.wildcard == null
+		ret_slot.typeParam == null
+		ret_slot.descriptor == 'Ljava/lang/String;'
+		ret_slot.slotList == []
 
 	}
 
@@ -90,15 +104,23 @@ class MethodSignatureParserSpec extends Specification {
 		then:
 		ret.size() == 1
 		
-		then:
-		ret[0].typeParam == null
-		ret[0].@descriptor == '['
-		ret[0].slotList.size() == 1
+		when:
+		SlotValue ret_slot = ret[0]
 
 		then:
-		ret[0].slotList[0].typeParam == null
-		ret[0].slotList[0].descriptor == 'J'
-		ret[0].slotList[0].slotList.size() == 0
+		ret_slot.wildcard == null
+		ret_slot.typeParam == null
+		ret_slot.descriptor == '[J'
+		ret_slot.@descriptor == '['
+		ret_slot.arrayType == true
+		ret_slot.slotList.size() == 1
+
+		then:
+		ret_slot.slotList[0].wildcard == null
+		ret_slot.slotList[0].typeParam == null
+		ret_slot.slotList[0].descriptor == 'J'
+		ret_slot.slotList[0].slotList == []
+
 	}
 
 	def "gneric なやつ"() {
@@ -115,25 +137,34 @@ class MethodSignatureParserSpec extends Specification {
 		args.size() == 1
 		ret.size() == 1
 		
+		when:
+		SlotValue arg_slot = args[0]
+		SlotValue ret_slot = ret[0]
+		
 		then:
-		args[0].typeParam == null
-		args[0].descriptor == 'Ljava/util/List;'
-		args[0].slotList.size() == 1
+		arg_slot.wildcard == null
+		arg_slot.typeParam == null
+		arg_slot.descriptor == 'Ljava/util/List;'
+		arg_slot.slotList.size() == 1
 
 		then:
-		args[0].slotList[0].typeParam == '='
-		args[0].slotList[0].descriptor == 'Ljava/lang/String;'
-		args[0].slotList[0].slotList.size() == 0
+		arg_slot.slotList[0].wildcard == '='
+		arg_slot.slotList[0].typeParam == null
+		arg_slot.slotList[0].descriptor == 'Ljava/lang/String;'
+		arg_slot.slotList[0].slotList == []
 
 		then:
-		ret[0].typeParam == null
-		ret[0].@descriptor == '['
-		ret[0].slotList.size() == 1
+		ret_slot.wildcard == null
+		ret_slot.typeParam == null
+		ret_slot.@descriptor == '['
+		ret_slot.descriptor == '[Ljava/lang/Object;'
+		ret_slot.slotList.size() == 1
 
 		then:
-		ret[0].slotList[0].typeParam == 'A'
-		ret[0].slotList[0].descriptor == 'Ljava/lang/Object;'
-		ret[0].slotList[0].slotList.size() == 0
+		ret_slot.slotList[0].wildcard == null
+		ret_slot.slotList[0].typeParam == 'A'
+		ret_slot.slotList[0].descriptor == 'Ljava/lang/Object;'
+		ret_slot.slotList[0].slotList == []
 
 	}
 }
