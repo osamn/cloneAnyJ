@@ -27,24 +27,19 @@ public interface Accessor {
 
 	boolean canWrite();
 
-	// Field/Method の持ち主の internalName
-	String getOwner();
-
 	// プロパティとしての名称
 	String getName();
 
 	class FieldAccess implements Accessor {
 
 		private final AccessType type;
-		private final String owner;
 		private final String name;
 
 		public final Slot slot;
 
-		public FieldAccess(final AccessType type, final String owner, final String name, final Slot slot) {
+		public FieldAccess(final AccessType type, final String name, final Slot slot) {
 			assert type == AccessType.Field || type == AccessType.ReadonlyField;
 			this.type = type;
-			this.owner = owner;
 			this.name = name;
 			this.slot = slot;
 		}
@@ -65,36 +60,29 @@ public interface Accessor {
 		}
 
 		@Override
-		public String getOwner() {
-			return owner;
-		}
-
-		@Override
 		public String getName() {
 			return name;
 		}
 
 		@Override
 		public String toString() {
-			return "FieldAccess [type=" + type + ", owner=" + owner + ", name=" + name + ", slot=" + slot + "]";
+			return "FieldAccess [type=" + type + ", name=" + name + ", slot=" + slot + "]";
 		}
 	}
 
 	class PropAccess implements Accessor {
 
 		private final AccessType type;
-		private final String owner;
 		private final String name;
 
 		public final String rel;
 		public final String methodDescriptor;
 		public final Slot slot;
 
-		public PropAccess(final AccessType type, final String owner, final String name, final String rel,
-				final String methodDescriptor, final Slot slot) {
+		public PropAccess(final AccessType type, final String name, final String rel, final String methodDescriptor,
+				final Slot slot) {
 			assert type == AccessType.Get || type == AccessType.ArraySet;
 			this.type = type;
-			this.owner = owner;
 			this.name = name;
 			this.rel = rel;
 			this.methodDescriptor = methodDescriptor;
@@ -117,33 +105,25 @@ public interface Accessor {
 		}
 
 		@Override
-		public String getOwner() {
-			return owner;
-		}
-
-		@Override
 		public String getName() {
 			return name;
 		}
 
 		@Override
 		public String toString() {
-			return "PropAccess [type=" + type + ", owner=" + owner + ", name=" + name + ", rel=" + rel
-					+ ", methodDescriptor=" + methodDescriptor + ", slot=" + slot + "]";
+			return "PropAccess [type=" + type + ", name=" + name + ", rel=" + rel + ", methodDescriptor="
+					+ methodDescriptor + ", slot=" + slot + "]";
 		}
 	}
 
 	class LumpSetAccess implements Accessor {
 
-		private final String owner;
-
 		public final String rel;
 		public final String methodDescriptor;
 
-		public final Map<String, Slot> slotInfo = new LinkedHashMap<>();
+		public final Map<String, Slot> parameters = new LinkedHashMap<>();
 
-		public LumpSetAccess(final String owner, final String rel, final String methodDescriptor) {
-			this.owner = owner;
+		public LumpSetAccess(final String rel, final String methodDescriptor) {
 			this.rel = rel;
 			this.methodDescriptor = methodDescriptor;
 		}
@@ -164,19 +144,14 @@ public interface Accessor {
 		}
 
 		@Override
-		public String getOwner() {
-			return owner;
-		}
-
-		@Override
 		public String getName() {
 			return rel;
 		}
 
 		@Override
 		public String toString() {
-			return "TypeInit [owner=" + owner + ", rel=" + rel + ", methodDescriptor="
-					+ methodDescriptor + ", slotInfo=" + slotInfo + "]";
+			return "LumpSetAccess [rel=" + rel + ", methodDescriptor=" + methodDescriptor
+					+ ", params=" + parameters + "]";
 		}
 	}
 
@@ -220,11 +195,6 @@ public interface Accessor {
 		}
 
 		@Override
-		public String getOwner() {
-			return null;
-		}
-
-		@Override
 		public String getName() {
 			return "@indexed";
 		}
@@ -263,11 +233,6 @@ public interface Accessor {
 		@Override
 		public boolean canWrite() {
 			return type == AccessType.ArraySet || type == AccessType.ListAdd;
-		}
-
-		@Override
-		public String getOwner() {
-			return null;
 		}
 
 		@Override
