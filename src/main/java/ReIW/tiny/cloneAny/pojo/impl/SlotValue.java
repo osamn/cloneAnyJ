@@ -44,6 +44,11 @@ class SlotValue implements Slot {
 		return descriptor;
 	}
 
+	@Override
+	public boolean isArray() {
+		return arrayType;
+	}
+
 	public String getSignature() {
 		if (arrayType) {
 			return descriptor + slotList.get(0).getSignature();

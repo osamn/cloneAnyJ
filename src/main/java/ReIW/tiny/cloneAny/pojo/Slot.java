@@ -9,5 +9,8 @@ public interface Slot {
 
 	String getDescriptor();
 
+	boolean isArray();
+
 	List<Slot> descendants();
+
 }
