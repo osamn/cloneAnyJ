@@ -14,11 +14,11 @@ public interface Accessor {
 		// 複数の引数で設定するタイプ
 		LumpSet,
 		// Array
-		ArrayGet, ArraySet,
+		ArrayType,
 		// List
-		ListGet, ListAdd,
+		ListType,
 		// Map
-		MapGet, MapPut,
+		MapType,
 	}
 
 	AccessType getType();
@@ -27,19 +27,25 @@ public interface Accessor {
 
 	boolean canWrite();
 
+	// プロパティが実際に宣言されてるクラスの descriptor
+	// デバッグ時に見れるとうれしいだけの情報なんで、これを使ってなんかすることはないよ
+	String getOwner();
+
 	// プロパティとしての名称
 	String getName();
 
 	class FieldAccess implements Accessor {
 
 		private final AccessType type;
+		private final String owner;
 		private final String name;
 
 		public final Slot slot;
 
-		public FieldAccess(final AccessType type, final String name, final Slot slot) {
+		public FieldAccess(final AccessType type, final String owner, final String name, final Slot slot) {
 			assert type == AccessType.Field || type == AccessType.ReadonlyField;
 			this.type = type;
+			this.owner = owner;
 			this.name = name;
 			this.slot = slot;
 		}
@@ -60,29 +66,36 @@ public interface Accessor {
 		}
 
 		@Override
+		public String getOwner() {
+			return owner;
+		}
+
+		@Override
 		public String getName() {
 			return name;
 		}
 
 		@Override
 		public String toString() {
-			return "FieldAccess [type=" + type + ", name=" + name + ", slot=" + slot + "]";
+			return "FieldAccess [type=" + type + ", owner=" + owner + ", name=" + name + ", slot=" + slot + "]";
 		}
 	}
 
 	class PropAccess implements Accessor {
 
 		private final AccessType type;
+		private final String owner;
 		private final String name;
 
 		public final String rel;
 		public final String methodDescriptor;
 		public final Slot slot;
 
-		public PropAccess(final AccessType type, final String name, final String rel, final String methodDescriptor,
-				final Slot slot) {
-			assert type == AccessType.Get || type == AccessType.ArraySet;
+		public PropAccess(final AccessType type, final String owner, final String name, final String rel,
+				final String methodDescriptor, final Slot slot) {
+			assert type == AccessType.Get || type == AccessType.Set;
 			this.type = type;
+			this.owner = owner;
 			this.name = name;
 			this.rel = rel;
 			this.methodDescriptor = methodDescriptor;
@@ -105,25 +118,32 @@ public interface Accessor {
 		}
 
 		@Override
+		public String getOwner() {
+			return owner;
+		}
+
+		@Override
 		public String getName() {
 			return name;
 		}
 
 		@Override
 		public String toString() {
-			return "PropAccess [type=" + type + ", name=" + name + ", rel=" + rel + ", methodDescriptor="
-					+ methodDescriptor + ", slot=" + slot + "]";
+			return "PropAccess [type=" + type + ", owner=" + owner + ", name=" + name + ", rel=" + rel
+					+ ", methodDescriptor=" + methodDescriptor + ", slot=" + slot + "]";
 		}
 	}
 
 	class LumpSetAccess implements Accessor {
 
+		private final String owner;
 		public final String rel;
 		public final String methodDescriptor;
 
 		public final Map<String, Slot> parameters = new LinkedHashMap<>();
 
-		public LumpSetAccess(final String rel, final String methodDescriptor) {
+		public LumpSetAccess(final String owner, final String rel, final String methodDescriptor) {
+			this.owner = owner;
 			this.rel = rel;
 			this.methodDescriptor = methodDescriptor;
 		}
@@ -144,37 +164,33 @@ public interface Accessor {
 		}
 
 		@Override
+		public String getOwner() {
+			return owner;
+		}
+
+		@Override
 		public String getName() {
 			return rel;
 		}
 
 		@Override
 		public String toString() {
-			return "LumpSetAccess [rel=" + rel + ", methodDescriptor=" + methodDescriptor
-					+ ", params=" + parameters + "]";
+			return "LumpSetAccess [owner=" + owner + ", rel=" + rel + ", methodDescriptor=" + methodDescriptor + ", "
+					+ parameters + "]";
 		}
 	}
-
-	/*
-	 * Indexed と Keyed は owner が null だよ
-	 * それ自身をアクセサとみなすので、Field/Method のようにオーナはないの
-	 * あえて言えば owner は this になるけど
-	 * 
-	 * class Bar extends List<Foo> で
-	 * ditto<Foo[], Bar> とかそんなとき
-	 * 
-	 */
 
 	// Array/java.util.List
 	class IndexedAccess implements Accessor {
 
 		private final AccessType type;
+		private final String owner;
 
 		public final Slot elementSlot;
 
-		public IndexedAccess(final AccessType type, final Slot elementSlot) {
-			assert type == AccessType.ArrayGet || type == AccessType.ArraySet || type == AccessType.ListGet
-					|| type == AccessType.ListAdd;
+		public IndexedAccess(final AccessType type, final String owner, final Slot elementSlot) {
+			assert type == AccessType.ArrayType || type == AccessType.ListType;
+			this.owner = owner;
 			this.type = type;
 			this.elementSlot = elementSlot;
 		}
@@ -186,12 +202,17 @@ public interface Accessor {
 
 		@Override
 		public boolean canRead() {
-			return type == AccessType.ArrayGet || type == AccessType.ListGet;
+			return true;
 		}
 
 		@Override
 		public boolean canWrite() {
-			return type == AccessType.ArraySet || type == AccessType.ListAdd;
+			return true;
+		}
+
+		@Override
+		public String getOwner() {
+			return owner;
 		}
 
 		@Override
@@ -201,7 +222,7 @@ public interface Accessor {
 
 		@Override
 		public String toString() {
-			return "IndexedAccess [type=" + type + ", elementSlot=" + elementSlot + "]";
+			return "IndexedAccess [type=" + type + ", owner=" + owner + ", elementSlot=" + elementSlot + "]";
 		}
 	}
 
@@ -209,12 +230,14 @@ public interface Accessor {
 	class KeyedAccess implements Accessor {
 
 		private final AccessType type;
+		private final String owner;
 
 		public final Slot keySlot;
 		public final Slot valueSlot;
 
-		public KeyedAccess(final AccessType type, final Slot keySlot, final Slot valueSlot) {
-			assert type == AccessType.MapGet || type == AccessType.MapPut;
+		public KeyedAccess(final AccessType type, final String owner, final Slot keySlot, final Slot valueSlot) {
+			assert type == AccessType.MapType;
+			this.owner = owner;
 			this.type = type;
 			this.keySlot = keySlot;
 			this.valueSlot = valueSlot;
@@ -227,12 +250,17 @@ public interface Accessor {
 
 		@Override
 		public boolean canRead() {
-			return type == AccessType.ArrayGet || type == AccessType.ListGet;
+			return true;
 		}
 
 		@Override
 		public boolean canWrite() {
-			return type == AccessType.ArraySet || type == AccessType.ListAdd;
+			return true;
+		}
+
+		@Override
+		public String getOwner() {
+			return owner;
 		}
 
 		@Override
@@ -242,7 +270,8 @@ public interface Accessor {
 
 		@Override
 		public String toString() {
-			return "KeyedAccess [type=" + type + ", keySlot=" + keySlot + ", valueSlot=" + valueSlot + "]";
+			return "KeyedAccess [type=" + type + ", owner=" + owner + ", keySlot=" + keySlot + ", valueSlot="
+					+ valueSlot + "]";
 		}
 	}
 

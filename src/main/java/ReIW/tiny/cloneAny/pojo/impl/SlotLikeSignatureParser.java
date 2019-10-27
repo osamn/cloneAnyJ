@@ -13,8 +13,9 @@ public abstract class SlotLikeSignatureParser extends DefaultSignatureVisitor {
 
 	private final Stack<SlotValue> stack = new Stack<>();
 
-	String typeParam;
+	/** '#' '*' '=' '-' '+' または null */
 	String wildcard;
+	String typeParam;
 	Consumer<SlotValue> slotCons;
 
 	protected abstract SlotValue newSlotLike(final String wildcard, final String typeParam, final String descriptor);
@@ -25,6 +26,8 @@ public abstract class SlotLikeSignatureParser extends DefaultSignatureVisitor {
 
 	@Override
 	public void visitFormalTypeParameter(final String name) {
+		// formal は目印に wildcard を # にしてみる
+		wildcard = "#";
 		typeParam = name;
 	}
 
@@ -44,8 +47,8 @@ public abstract class SlotLikeSignatureParser extends DefaultSignatureVisitor {
 	public SignatureVisitor visitArrayType() {
 		stack.push(newSlotLike(wildcard, typeParam, "["));
 		// 配列は特別の型なんで completeSlot しないよ
-		typeParam = null;
 		wildcard = null;
+		typeParam = null;
 		return super.visitArrayType();
 	}
 
@@ -58,8 +61,8 @@ public abstract class SlotLikeSignatureParser extends DefaultSignatureVisitor {
 	// List<?> みたいに未指定を明示した時
 	@Override
 	public void visitTypeArgument() {
-		// visit*Type visitTypeVariable とか行かないので
-		// ここで push する
+		// visit*Type とか visitTypeVariable とかに行かないのでここで push する
+		// wildcard は * にしておくよ
 		stack.push(newSlotLike("*", null, "Ljava/lang/Object;"));
 		// visitEnd にいかないので明示的に
 		completeSlot();
@@ -76,7 +79,7 @@ public abstract class SlotLikeSignatureParser extends DefaultSignatureVisitor {
 	public void visitEnd() {
 		completeSlot();
 	}
-	
+
 	private void completeSlot() {
 		SlotValue slot = unrollArray();
 		if (stack.isEmpty()) {
@@ -84,8 +87,8 @@ public abstract class SlotLikeSignatureParser extends DefaultSignatureVisitor {
 		} else {
 			stack.peek().slotList.add(slot);
 		}
-		typeParam = null;
 		wildcard = null;
+		typeParam = null;
 	}
 
 	private SlotValue unrollArray() {

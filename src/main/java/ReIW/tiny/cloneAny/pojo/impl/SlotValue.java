@@ -36,6 +36,7 @@ class SlotValue implements Slot {
 	// 型パラメタはふくまない単純な descriptor
 	// なんだけど、rebind とかされて決定する場合もあるので実行時に作成する
 	// spock でつかうときは descriptor(getter) と @descriptor(field) で使い分けてね
+	@Override
 	public String getDescriptor() {
 		if (arrayType) {
 			return descriptor + slotList.get(0).getDescriptor();
@@ -79,6 +80,7 @@ class SlotValue implements Slot {
 		return bound && (slotList == null || slotList.stream().allMatch(SlotValue::isCertainBound));
 	}
 
+	// see ClassType#createBindMap
 	SlotValue rebind(final Map<String, String> binds) {
 		if (isCertainBound()) {
 			// 型パラメタが解決済みなので自身をそのまま返す
@@ -99,7 +101,6 @@ class SlotValue implements Slot {
 			// 型パラメタのスロットに子供がいることはありえないので slotList.size == 0 ね
 			if (bound.startsWith("T")) {
 				// 型パラメタ名の再定義
-				// see ClassType#createBindMap
 				return new SlotValue(wildcard, bound.substring(1), descriptor);
 			} else {
 				// 型パラメタに型引数をくっつける
@@ -120,8 +121,12 @@ class SlotValue implements Slot {
 
 	@Override
 	public String toString() {
-		return "SlotValue [wildcard=" + wildcard + ", typeParam=" + typeParam + ", descriptor=" + descriptor
-				+ ", " + slotList + "]";
+		return "SlotValue [wildcard=" + wildcard + ", typeParam=" + typeParam + ", descriptor=" + descriptor + ", "
+				+ slotList + "]";
 	}
 
+	// なんかキャスト書くのもいまいちなんで追加してみたけどどうなんやろ
+	static SlotValue of(Slot slot) {
+		return (SlotValue) slot;
+	}
 }

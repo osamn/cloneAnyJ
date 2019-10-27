@@ -37,7 +37,7 @@ class ClassSignatureParserSpec extends Specification {
 		SlotValue super_slot_2 = supers[1]
 
 		then:
-		formal_slot.wildcard == null
+		formal_slot.wildcard == '#' // formal なやつなので
 		formal_slot.typeParam == 'A'
 		formal_slot.descriptor == 'Ljava/lang/Object;'
 		formal_slot.slotList == []

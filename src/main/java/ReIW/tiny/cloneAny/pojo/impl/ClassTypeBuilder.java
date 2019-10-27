@@ -5,12 +5,12 @@ import static ReIW.tiny.cloneAny.utils.Consumers.withIndex;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.ObjIntConsumer;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.FieldVisitor;
@@ -48,18 +48,19 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 	private ClassType computeClassType(String descriptor) {
 		if (descriptor.startsWith("[")) {
 			// 配列の場合はそのアクセサだけ追加してかえす
-			final SlotValue slot = new SlotValueBuilder(null).build(descriptor);
+			// で、配列なんで superSlot は null だよ
+			final SlotValue slot = new SlotValueBuilder().build(descriptor);
 			final SlotValue elementSlot = slot.slotList.get(0);
-			final ClassType ct = new ClassType();
-			ct.thisSlot = slot;
-			ct.accessors.add(new IndexedAccess(AccessType.ArrayGet, elementSlot));
-			ct.accessors.add(new IndexedAccess(AccessType.ArraySet, elementSlot));
+			final ClassType ct = new ClassType(slot);
+			// owner がいないのでアクセサの owner も明示的に null にしておく
+			ct.accessors.add(new IndexedAccess(AccessType.ArrayType, null, elementSlot));
 			return ct;
 		}
 
-		this.className = Type.getType(descriptor).getInternalName();
-		this.classType = new ClassType();
-		this.classType.thisSlot = new SlotValue(null, null, descriptor);
+		final String className = Type.getType(descriptor).getInternalName();
+		// formal slot はビルダが追加するのでそのルートの slot だけつくっておく
+		final SlotValue thisRoot = new SlotValue(null, null, descriptor);
+		this.classType = new ClassType(thisRoot);
 		try {
 			new ClassReader(className).accept(this, 0);
 		} catch (IOException e) {
@@ -67,10 +68,6 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 		}
 		return classType;
 	}
-
-	// ClassType 作成してる対象クラスの internalName
-	// Accessor の owner で使う
-	private String className;
 
 	private ClassType classType;
 
@@ -80,21 +77,36 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 			// インターフェースだと右側に指定されたとき何を new すればいいかわからんので
 			throw new IllegalArgumentException();
 		}
-		// abstract とか not public なクラスは継承ツリー上にあるかもしれないので除外しない
-		new ClassSignatureParser(classType.thisSlot.slotList::add, superSlot -> {
-			classType.superSlots.add(superSlot);
-			// extends/implements してるスロットについて List/Map をチェックする
-			if (superSlot.descriptor.contentEquals("Ljava/util/List;")) {
-				classType.accessors.add(new IndexedAccess(AccessType.ListGet, superSlot.slotList.get(0)));
-				classType.accessors.add(new IndexedAccess(AccessType.ListAdd, superSlot.slotList.get(0)));
+		// abstract とか not public なクラスでも継承ツリー上あるものは全部処理するよ
+		new ClassSignatureParser(classType.thisSlot.slotList::add, withIndex(addAncestorTo(classType))).parse(signature,
+				superName, interfaces);
+	}
+
+	// スロットを、指定された ClassType の継承階層として追加するひとを返すひと
+	// List と Map のインターフェース見つけたらアクセサ追加しとく処理もあるんで別途切り出しておいてみた
+	private static ObjIntConsumer<SlotValue> addAncestorTo(final ClassType ct) {
+		return (slot, i) -> {
+			if (i == 0) {
+				// extends しているクラスなので superSlot として設定する
+				ct.superSlot = slot;
+				// 継承階層として追加しておく
+				ct.ancestors.add(slot.descriptor);
+				return;
 			}
-			if (superSlot.descriptor.contentEquals("Ljava/util/Map;")) {
-				classType.accessors
-						.add(new KeyedAccess(AccessType.MapGet, superSlot.slotList.get(0), superSlot.slotList.get(1)));
-				classType.accessors
-						.add(new KeyedAccess(AccessType.MapPut, superSlot.slotList.get(0), superSlot.slotList.get(1)));
+			// i > 0 のスロットは implements として宣言されてるインターフェース
+			// List/Map のアクセサが重複して登録されないように、すでに登録されているか ancestors を確認する
+			if (ct.ancestors.add(slot.descriptor)) {
+				// 新規に追加されたので List/Map のアクセサ追加してもいいよ
+				if (slot.descriptor.contentEquals("Ljava/util/List;")) {
+					ct.accessors
+							.add(new IndexedAccess(AccessType.ListType, ct.thisSlot.descriptor, slot.slotList.get(0)));
+				}
+				if (slot.descriptor.contentEquals("Ljava/util/Map;")) {
+					ct.accessors.add(new KeyedAccess(AccessType.MapType, ct.thisSlot.descriptor, slot.slotList.get(0),
+							slot.slotList.get(1)));
+				}
 			}
-		}).parse(superName, interfaces, signature);
+		};
 	}
 
 	@Override
@@ -102,8 +114,9 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 		if (isAccessible(access)) {
 			// final なものは読み取り専用になるよ
 			final AccessType type = AccessFlag.isFinal(access) ? AccessType.ReadonlyField : AccessType.Field;
-			new FieldSignatureParser(slot -> classType.accessors.add(new FieldAccess(type, className, name, slot)))
-					.parse(descriptor, signature);
+			new FieldSignatureParser(
+					slot -> classType.accessors.add(new FieldAccess(type, classType.thisSlot.descriptor, name, slot)))
+							.parse(descriptor, signature);
 		}
 		return null;
 	}
@@ -117,7 +130,7 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 
 		if (name.contentEquals("<init>")) {
 			// コンストラクタの場合
-			final LumpSetAccess ctor = new LumpSetAccess(className, name, descriptor);
+			final LumpSetAccess ctor = new LumpSetAccess(classType.thisSlot.descriptor, name, descriptor);
 			classType.accessors.add(ctor);
 
 			if (descriptor.contentEquals("()V")) {
@@ -131,18 +144,18 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 			new MethodSignatureParser(params::add, null).parseArgumentsAndReturn(descriptor, signature);
 
 			// そのスロットとパラメタ名とくっつけてもらうように MethodVisitor をかえしてあげる
-			return new MethodParamNameMapper(params, ctor.slotInfo::put);
+			return new MethodParamNameMapper(params, ctor.parameters::put);
 		} else {
 			try {
 				// FIXME プロパティ名作るところはほんとは BeanInfo を先に見ないといかんとおもう
 				if (Propertys.isGetter(name, descriptor)) {
 					new MethodSignatureParser(null, slot -> {
-						classType.accessors.add(new PropAccess(AccessType.Get, className,
+						classType.accessors.add(new PropAccess(AccessType.Get, classType.thisSlot.descriptor,
 								Propertys.getPropertyName(name), name, descriptor, slot));
 					}).parseArgumentsAndReturn(descriptor, signature);
 				} else if (Propertys.isSetter(name, descriptor)) {
 					new MethodSignatureParser(slot -> {
-						classType.accessors.add(new PropAccess(AccessType.Set, className,
+						classType.accessors.add(new PropAccess(AccessType.Set, classType.thisSlot.descriptor,
 								Propertys.getPropertyName(name), name, descriptor, slot));
 					}, null).parseArgumentsAndReturn(descriptor, signature);
 				}
@@ -161,41 +174,12 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 		return AccessFlag.isPublic(access) // public で
 				&& !AccessFlag.isStatic(access) // インスタンスのメンバで
 				&& !AccessFlag.isInterface(access) // インターフェース上の定義は実装がないのでだめ
-				&& !AccessFlag.isAbstract(access); // abstract も実装がないのでだめ
-		// lombok とかがつけそうなので synthetic はおっけにしておく
-		//// && !AccessFlag.isSynthetic(access)
-	}
-
-	static Map<String, String> createBindMap(final SlotValue lhs/*this.super[0]*/, final SlotValue rhs/*super.this*/) {
-		final HashMap<String, String> map = new HashMap<>();
-		// class Bar<X, Y> ==> super.this -> definedSlot
-		// -> X, Y
-		// に対して
-		// class Foo<A> extends Bar<A, String> ==> this.super[0] -> actualSlot
-		// -> X, TA
-		// -> Y, String
-		// この対応をマップとして作成する
-		rhs.slotList.forEach(withIndex((definedSlot/* 親のフォーマルスロット */, i) -> {
-			// extends に定義された型引数をとってきて
-			final SlotValue actualSlot = lhs.slotList.get(i);
-			// で、それらを比べてなにが型パラメタにくっついたかを調べる
-			// それぞれの型パラメタの数とか並び順はコンパイルとおってるかぎり絶対一致してるはずだよ
-
-			if (actualSlot.isCertainBound()) {
-				// 型パラメタが解決されてるので、そいつをくっつける
-				// X -> List<String> みたいのもあるので signature ベースで名前作る
-				map.put(definedSlot.typeParam, actualSlot.getSignature());
-			} else {
-				// 型パラメタをリネームする。目印として 'T' をつける
-				// 以下より T で始まる型引数はありえないため T を目印にしてるよ
-				//// Object -> L
-				//// void -> V
-				//// primitive -> ZCBSIFJD
-				//// array -> [
-				map.put(definedSlot.typeParam, "T" + actualSlot.typeParam);
-			}
-		}));
-		return map;
+				&& !AccessFlag.isAbstract(access) // abstract も実装がないのでだめ
+				&& !AccessFlag.isSynthetic(access);
+		// generic を継承してメソッドを実装するとスロット Object を使う synthetic のメソッドができるの
+		// でアクセサのリスト作るときに Object と type_argument 版の２エントリができていやな感じ
+		// なんで synthetic は取り除いておく
+		// TODO lombok とかがつけそうなんだけど -> synthetic
 	}
 
 	// メソッドのパラメタ名を対応するスロットにくっつけるひと
