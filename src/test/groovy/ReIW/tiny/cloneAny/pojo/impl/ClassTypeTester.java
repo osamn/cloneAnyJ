@@ -8,10 +8,6 @@ interface ClassTypeTester {
 	class Base<X, Y, Z> extends HashMap<X, Y> {
 		public X field_X;
 
-		public Base(int capacity) {
-			super(capacity);
-		}
-
 		public void setPropY(Y val) {
 		};
 	}
@@ -20,7 +16,9 @@ interface ClassTypeTester {
 		public final A field_Y_A = null;
 
 		public Partial() {
-			super(100);
+		}
+
+		public Partial(A a, B b) {
 		}
 
 		public void setPropB(B val) {

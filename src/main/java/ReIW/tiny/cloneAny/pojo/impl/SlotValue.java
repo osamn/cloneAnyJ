@@ -1,10 +1,10 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.utils.Descriptors;
@@ -77,7 +77,7 @@ class SlotValue implements Slot {
 	// 配列の要素スロットもあるよ
 	@Override
 	public List<Slot> descendants() {
-		return slotList.stream().map(Slot.class::cast).collect(Collectors.toUnmodifiableList());
+		return Collections.unmodifiableList(slotList);
 	}
 
 	boolean isCertainBound() {

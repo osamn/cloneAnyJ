@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
 
-import ReIW.tiny.cloneAny.pojo.AccessDef;
+import ReIW.tiny.cloneAny.pojo.ClassTypeAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Accessor.AccessType;
 import ReIW.tiny.cloneAny.pojo.Accessor.FieldAccess;
@@ -24,7 +24,7 @@ import ReIW.tiny.cloneAny.pojo.Accessor.LumpSetAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.PropAccess;
 import ReIW.tiny.cloneAny.pojo.Slot;
 
-public final class ClassType implements AccessDef {
+public final class ClassType implements ClassTypeAccess {
 
 	@Override
 	public String getInternalName() {
@@ -36,7 +36,7 @@ public final class ClassType implements AccessDef {
 		return this.accessors.stream();
 	}
 
-	public AccessDef bind(final List<Slot> boundSlots) {
+	public ClassTypeAccess bind(final List<Slot> boundSlots) {
 		final List<SlotValue> lhs = boundSlots.stream().map(SlotValue.class::cast)
 				.collect(Collectors.toUnmodifiableList());
 		final Map<String, String> binds = createBindMap(lhs, thisSlot.slotList);
@@ -194,8 +194,7 @@ public final class ClassType implements AccessDef {
 		return map;
 	}
 
-	// FIXME みてい
-	class Binder implements AccessDef {
+	class Binder implements ClassTypeAccess {
 
 		private final Map<String, String> binds;
 

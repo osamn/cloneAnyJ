@@ -1,7 +1,5 @@
 package ReIW.tiny.cloneAny.compile;
 
-import static ReIW.tiny.cloneAny.pojo_.Accessor.asSingle;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -12,35 +10,17 @@ import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
 
-import ReIW.tiny.cloneAny.compile.Operand.ArrayGet;
-import ReIW.tiny.cloneAny.compile.Operand.ArraySet;
-import ReIW.tiny.cloneAny.compile.Operand.CheckMapKeyExists;
-import ReIW.tiny.cloneAny.compile.Operand.Convert;
-import ReIW.tiny.cloneAny.compile.Operand.EndIndexLoop;
-import ReIW.tiny.cloneAny.compile.Operand.EndKeyLoop;
-import ReIW.tiny.cloneAny.compile.Operand.FieldGet;
-import ReIW.tiny.cloneAny.compile.Operand.InvokeGet;
-import ReIW.tiny.cloneAny.compile.Operand.InvokeSpecial;
-import ReIW.tiny.cloneAny.compile.Operand.ListGet;
-import ReIW.tiny.cloneAny.compile.Operand.ListSet;
-import ReIW.tiny.cloneAny.compile.Operand.LoadLhs;
-import ReIW.tiny.cloneAny.compile.Operand.LoadRhs;
-import ReIW.tiny.cloneAny.compile.Operand.MapGet;
-import ReIW.tiny.cloneAny.compile.Operand.MapKeyNotExists;
-import ReIW.tiny.cloneAny.compile.Operand.MapPut;
-import ReIW.tiny.cloneAny.compile.Operand.New;
-import ReIW.tiny.cloneAny.compile.Operand.StartIndexLoop;
-import ReIW.tiny.cloneAny.compile.Operand.StartKeyLoop;
-import ReIW.tiny.cloneAny.compile.Operand.StoreRhs;
-import ReIW.tiny.cloneAny.compile.Operand.TestMapKeyExists;
-import ReIW.tiny.cloneAny.pojo_.Accessor;
-import ReIW.tiny.cloneAny.pojo_.Slot;
-import ReIW.tiny.cloneAny.pojo_.TypeDef;
+import com.thoughtworks.qdox.parser.structs.TypeDef;
+
+import ReIW.tiny.cloneAny.pojo.Accessor;
+import ReIW.tiny.cloneAny.pojo.Accessor.AccessType;
+import ReIW.tiny.cloneAny.pojo.ClassTypeAccess;
+import ReIW.tiny.cloneAny.pojo.Slot;
 
 public class OperandGenerator {
 
-	private final TypeDef lhs;
-	private final TypeDef rhs;
+	private final ClassTypeAccess lhs;
+	private final ClassTypeAccess rhs;
 
 	// 左のアクセサのパラメタ名をキーにするマップ
 	// ここにない場合は lhs の Map#get からとる感じになる
@@ -49,17 +29,17 @@ public class OperandGenerator {
 	private final Accessor effectiveCtor;
 	private final List<Accessor> effectiveDst;
 
-	OperandGenerator(final TypeDef lhs, final TypeDef rhs) {
+	OperandGenerator(final ClassTypeAccess lhs, final ClassTypeAccess rhs) {
 		this.lhs = lhs;
 		this.rhs = rhs;
 		this.sourceAccMap = lhs.accessors().filter(acc -> acc.canRead())
-				.collect(Collectors.toMap(acc -> acc.getName(), acc -> acc));
+				.collect(Collectors.toUnmodifiableMap(acc -> acc.getName(), acc -> acc));
 
 		final OperandGenerator.MaxArgsAccessor ctorSelector = new OperandGenerator.MaxArgsAccessor();
 		this.effectiveDst = this.rhs.accessors().filter(acc -> acc.canWrite()).filter(this::selectDstWithEffectiveSrc)
 				.filter(acc -> {
 					// コンストラクタを別途よせておいて
-					if (acc.getType() == Accessor.Kind.LumpSet) {
+					if (acc.getType() == AccessType.LumpSet) {
 						ctorSelector.set(acc);
 						return false;
 					}

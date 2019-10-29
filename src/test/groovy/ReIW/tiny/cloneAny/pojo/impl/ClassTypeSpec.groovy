@@ -2,6 +2,7 @@ package ReIW.tiny.cloneAny.pojo.impl
 
 import org.objectweb.asm.Type
 
+import ReIW.tiny.cloneAny.pojo.Accessor
 import ReIW.tiny.cloneAny.pojo.Accessor.AccessType
 import ReIW.tiny.cloneAny.pojo.Accessor.FieldAccess
 import ReIW.tiny.cloneAny.pojo.Accessor.KeyedAccess
@@ -114,6 +115,69 @@ class ClassTypeSpec extends Specification {
 		prop[3].owner == 'Ljava/util/HashMap;'
 		prop[3].name == 'empty'
 		prop[3].slot.descriptor == 'Z'
+	}
 
+	def "formal type pararm のバインド"() {
+		when:
+		def ct = new ClassTypeBuilder().buildClassType(Partial)
+		def bound = ct.bind([new SlotValue(null, null, 'Ljava/lang/String;'), new SlotValue(null, null, 'Ljava/lang/Integer;')])
+		def accs = bound.accessors().collect {it as Accessor}
+
+		then:
+		accs[0].type == AccessType.ReadonlyField
+		accs[0].owner == Type.getDescriptor(Partial)
+		accs[0].name == 'field_Y_A'
+		accs[0].slot.descriptor == 'Ljava/lang/String;'
+
+		then:
+		accs[1].type == AccessType.LumpSet
+		accs[0].owner == Type.getDescriptor(Partial)
+		accs[1].name == '<init>'
+		accs[1].methodDescriptor == '()V'
+		accs[1].parameters == [:]
+
+		then:
+		accs[2].type == AccessType.LumpSet
+		accs[0].owner == Type.getDescriptor(Partial)
+		accs[2].name == '<init>'
+		accs[2].methodDescriptor == '(Ljava/lang/Object;Ljava/lang/Object;)V'
+		accs[2].parameters .collect {[it.key,it.value.descriptor]} == [['a', 'Ljava/lang/String;'], ['b', 'Ljava/lang/Integer;']]
+
+		then:
+		accs[3].type == AccessType.Set
+		accs[0].owner == Type.getDescriptor(Partial)
+		accs[3].name == 'propB'
+		accs[3].rel == 'setPropB'
+		accs[3].methodDescriptor == '(Ljava/lang/Object;)V'
+		accs[3].slot.descriptor == 'Ljava/lang/Integer;'
+
+		then:
+		accs[4].type == AccessType.Field
+		accs[4].owner == Type.getDescriptor(Base)
+		accs[4].name == 'field_X'
+		accs[4].slot.descriptor == 'Ljava/lang/String;'
+
+		then:
+		accs[5].type == AccessType.Set
+		accs[5].owner == Type.getDescriptor(Base)
+		accs[5].name == 'propY'
+		accs[5].rel == 'setPropY'
+		accs[5].methodDescriptor == '(Ljava/lang/Object;)V'
+		accs[5].slot.descriptor == 'Ljava/lang/String;'
+
+		then:
+		accs[6].type == AccessType.MapType
+		accs[6].owner == 'Ljava/util/HashMap;'
+		accs[6].name == '@keyed'
+		accs[6].keySlot.descriptor == 'Ljava/lang/String;'
+		accs[6].valueSlot.descriptor == 'Ljava/lang/String;'
+		
+		then:
+		accs[7].type == AccessType.Get
+		accs[7].owner == 'Ljava/util/HashMap;'
+		accs[7].name == 'empty'
+		accs[7].rel == 'isEmpty'
+		accs[7].methodDescriptor == '()Z'
+		accs[7].slot.descriptor == 'Z'
 	}
 }

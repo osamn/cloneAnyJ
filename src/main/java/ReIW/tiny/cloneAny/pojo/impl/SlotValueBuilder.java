@@ -8,7 +8,7 @@ final class SlotValueBuilder extends SlotLikeSignatureParser {
 			this.slot = val;
 		};
 	}
-	
+
 	// 最初の wildcard の値を指定の値にするよ
 	SlotValueBuilder setPrimaryWildcard(final String wildcard) {
 		this.wildcard = wildcard;

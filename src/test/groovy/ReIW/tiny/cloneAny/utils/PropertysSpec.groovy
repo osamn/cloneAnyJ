@@ -1,8 +1,6 @@
 package ReIW.tiny.cloneAny.utils
 
-import ReIW.tiny.cloneAny.utils.Propertys
 import spock.lang.Specification
-import spock.lang.Unroll
 
 class PropertysSpec extends Specification {
 
