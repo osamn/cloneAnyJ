@@ -17,7 +17,7 @@ class ClassTypeSpec extends Specification {
 
 	def "継承階層のクラス、インターフェースがすべて抽出されること"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(Terminal)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(Terminal))
 		def expected = [
 			Type.getDescriptor(Base),
 			Type.getDescriptor(Partial),
@@ -36,7 +36,7 @@ class ClassTypeSpec extends Specification {
 
 	def "継承階層のコンストラクタが抽出されないこと"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(Terminal)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(Terminal))
 		def lump  = ct.accessors.findAll { it instanceof LumpSetAccess }.collect {it.owner}
 
 		then:
@@ -49,7 +49,7 @@ class ClassTypeSpec extends Specification {
 
 	def "継承階層上のマップのアクセサが抽出されること"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(Terminal)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(Terminal))
 		def keyed = ct.accessors.findAll { it instanceof KeyedAccess }.collect {(KeyedAccess)it}
 
 		then:
@@ -63,7 +63,7 @@ class ClassTypeSpec extends Specification {
 
 	def "フィールドアクセスが正しく継承されること"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(Terminal)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(Terminal))
 		def field = ct.accessors.findAll { it instanceof FieldAccess }.collect {(FieldAccess)it}
 
 		then:
@@ -84,26 +84,26 @@ class ClassTypeSpec extends Specification {
 
 	def "プロパティアクセスが正しく継承されること"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(Terminal)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(Terminal))
 		def prop  = ct.accessors.findAll { it instanceof PropAccess }.collect {(PropAccess)it}
 
 		then:
 		prop.size()== 4
 
 		then:
-		prop[0].type == AccessType.Set
+		prop[0].type == AccessType.Setter
 		prop[0].owner == Type.getDescriptor(Terminal)
 		prop[0].name == 'propB'
 		prop[0].slot.descriptor == 'Ljava/lang/Boolean;'
 
 		then:
-		prop[1].type == AccessType.Set
+		prop[1].type == AccessType.Setter
 		prop[1].owner == Type.getDescriptor(Terminal)
 		prop[1].name == 'propY'
 		prop[1].slot.descriptor == 'Ljava/lang/Integer;'
 
 		then:
-		prop[2].type == AccessType.Set
+		prop[2].type == AccessType.Setter
 		prop[2].owner == Type.getDescriptor(Partial)
 		prop[2].name == 'propB'
 		prop[2].slot.descriptor == 'Ljava/lang/Long;'
@@ -111,7 +111,7 @@ class ClassTypeSpec extends Specification {
 		// Base#setPropY はバインドした結果で Terminal#setPropY と同じものになるので抽出されない
 
 		then:
-		prop[3].type == AccessType.Get
+		prop[3].type == AccessType.Getter
 		prop[3].owner == 'Ljava/util/HashMap;'
 		prop[3].name == 'empty'
 		prop[3].slot.descriptor == 'Z'
@@ -119,7 +119,7 @@ class ClassTypeSpec extends Specification {
 
 	def "formal type pararm のバインド"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(Partial)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(Partial))
 		def bound = ct.bind([new SlotValue(null, null, 'Ljava/lang/String;'), new SlotValue(null, null, 'Ljava/lang/Integer;')])
 		def accs = bound.accessors().collect {it as Accessor}
 
@@ -144,7 +144,7 @@ class ClassTypeSpec extends Specification {
 		accs[2].parameters .collect {[it.key,it.value.descriptor]} == [['a', 'Ljava/lang/String;'], ['b', 'Ljava/lang/Integer;']]
 
 		then:
-		accs[3].type == AccessType.Set
+		accs[3].type == AccessType.Setter
 		accs[0].owner == Type.getDescriptor(Partial)
 		accs[3].name == 'propB'
 		accs[3].rel == 'setPropB'
@@ -158,7 +158,7 @@ class ClassTypeSpec extends Specification {
 		accs[4].slot.descriptor == 'Ljava/lang/String;'
 
 		then:
-		accs[5].type == AccessType.Set
+		accs[5].type == AccessType.Setter
 		accs[5].owner == Type.getDescriptor(Base)
 		accs[5].name == 'propY'
 		accs[5].rel == 'setPropY'
@@ -173,7 +173,7 @@ class ClassTypeSpec extends Specification {
 		accs[6].valueSlot.descriptor == 'Ljava/lang/String;'
 		
 		then:
-		accs[7].type == AccessType.Get
+		accs[7].type == AccessType.Getter
 		accs[7].owner == 'Ljava/util/HashMap;'
 		accs[7].name == 'empty'
 		accs[7].rel == 'isEmpty'

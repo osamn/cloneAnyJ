@@ -45,10 +45,6 @@ class SlotValue implements Slot {
 	}
 
 	@Override
-	public boolean isArray() {
-		return arrayType;
-	}
-
 	public String getSignature() {
 		if (arrayType) {
 			return descriptor + slotList.get(0).getSignature();
@@ -73,10 +69,15 @@ class SlotValue implements Slot {
 		return buf.toString();
 	}
 
+	@Override
+	public boolean isArray() {
+		return arrayType;
+	}
+
 	// 型パラメタのスロットリスト
 	// 配列の要素スロットもあるよ
 	@Override
-	public List<Slot> descendants() {
+	public List<Slot> elementSlot() {
 		return Collections.unmodifiableList(slotList);
 	}
 

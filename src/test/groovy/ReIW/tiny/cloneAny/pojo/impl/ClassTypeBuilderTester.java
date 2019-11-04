@@ -3,14 +3,22 @@ package ReIW.tiny.cloneAny.pojo.impl;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 interface ClassTypeBuilderTester {
+
+	enum MyEnum {
+		A, B, C,
+	}
 
 	class SimpleTester {
 	}
 
 	abstract class FromList implements List<String> {
+	}
+
+	abstract class FromSet implements Set<Integer> {
 	}
 
 	abstract class FromMap implements Map<String, Integer> {

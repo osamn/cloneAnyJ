@@ -8,9 +8,11 @@ import java.util.List;
 public interface Slot {
 
 	String getDescriptor();
+	
+	String getSignature();
 
 	boolean isArray();
 
-	List<Slot> descendants();
+	List<Slot> elementSlot();
 
 }

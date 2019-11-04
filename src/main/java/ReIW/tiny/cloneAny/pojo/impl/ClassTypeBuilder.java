@@ -22,7 +22,7 @@ import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 import ReIW.tiny.cloneAny.asm7.DefaultMethodVisitor;
 import ReIW.tiny.cloneAny.pojo.Accessor.AccessType;
 import ReIW.tiny.cloneAny.pojo.Accessor.FieldAccess;
-import ReIW.tiny.cloneAny.pojo.Accessor.IndexedAccess;
+import ReIW.tiny.cloneAny.pojo.Accessor.SequentialAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.KeyedAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.LumpSetAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.PropAccess;
@@ -31,15 +31,11 @@ import ReIW.tiny.cloneAny.pojo.UnboundMethodParameterNameException;
 import ReIW.tiny.cloneAny.utils.AccessFlag;
 import ReIW.tiny.cloneAny.utils.Propertys;
 
-final class ClassTypeBuilder extends DefaultClassVisitor {
+public final class ClassTypeBuilder extends DefaultClassVisitor {
 
 	private final Map<String, ClassType> hive = Collections.synchronizedMap(new WeakHashMap<>());
 
-	ClassType buildClassType(Class<?> clazz) {
-		return buildClassType(Type.getDescriptor(clazz));
-	}
-
-	ClassType buildClassType(String descriptor) {
+	public ClassType buildClassType(String descriptor) {
 		final ClassType ct = hive.computeIfAbsent(descriptor, this::computeClassType);
 		ct.complete();
 		return ct;
@@ -53,7 +49,7 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 			final SlotValue elementSlot = slot.slotList.get(0);
 			final ClassType ct = new ClassType(slot);
 			// owner がいないのでアクセサの owner も明示的に null にしておく
-			ct.accessors.add(new IndexedAccess(AccessType.ArrayType, null, elementSlot));
+			ct.accessors.add(new SequentialAccess(AccessType.ArrayType, null, elementSlot));
 			return ct;
 		}
 
@@ -99,7 +95,11 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 				// 新規に追加されたので List/Map のアクセサ追加してもいいよ
 				if (slot.descriptor.contentEquals("Ljava/util/List;")) {
 					ct.accessors
-							.add(new IndexedAccess(AccessType.ListType, ct.thisSlot.descriptor, slot.slotList.get(0)));
+							.add(new SequentialAccess(AccessType.ListType, ct.thisSlot.descriptor, slot.slotList.get(0)));
+				}
+				if (slot.descriptor.contentEquals("Ljava/util/Set;")) {
+					ct.accessors
+							.add(new SequentialAccess(AccessType.SetType, ct.thisSlot.descriptor, slot.slotList.get(0)));
 				}
 				if (slot.descriptor.contentEquals("Ljava/util/Map;")) {
 					ct.accessors.add(new KeyedAccess(AccessType.MapType, ct.thisSlot.descriptor, slot.slotList.get(0),
@@ -150,12 +150,12 @@ final class ClassTypeBuilder extends DefaultClassVisitor {
 				// FIXME プロパティ名作るところはほんとは BeanInfo を先に見ないといかんとおもう
 				if (Propertys.isGetter(name, descriptor)) {
 					new MethodSignatureParser(null, slot -> {
-						classType.accessors.add(new PropAccess(AccessType.Get, classType.thisSlot.descriptor,
+						classType.accessors.add(new PropAccess(AccessType.Getter, classType.thisSlot.descriptor,
 								Propertys.getPropertyName(name), name, descriptor, slot));
 					}).parseArgumentsAndReturn(descriptor, signature);
 				} else if (Propertys.isSetter(name, descriptor)) {
 					new MethodSignatureParser(slot -> {
-						classType.accessors.add(new PropAccess(AccessType.Set, classType.thisSlot.descriptor,
+						classType.accessors.add(new PropAccess(AccessType.Setter, classType.thisSlot.descriptor,
 								Propertys.getPropertyName(name), name, descriptor, slot));
 					}, null).parseArgumentsAndReturn(descriptor, signature);
 				}

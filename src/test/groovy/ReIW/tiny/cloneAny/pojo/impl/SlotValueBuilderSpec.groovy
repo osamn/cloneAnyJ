@@ -1,7 +1,9 @@
 package ReIW.tiny.cloneAny.pojo.impl
 
+import org.objectweb.asm.Type
+
+import ReIW.tiny.cloneAny.pojo.impl.ClassTypeBuilderTester.MyEnum
 import spock.lang.Specification
-import spock.lang.Unroll
 
 class SlotValueBuilderSpec extends Specification {
 
@@ -150,7 +152,7 @@ class SlotValueBuilderSpec extends Specification {
 	def "型パラメタに配列を持つ generic なクラス"() {
 		// List<long[]>
 		setup:
-		def signature = 'Ljava/util/List<[J>;'
+		def signature = 'Ljava/util/Set<[J>;'
 
 		when:
 		def actual = new SlotValueBuilder().build(signature);
@@ -168,7 +170,7 @@ class SlotValueBuilderSpec extends Specification {
 		then:
 		list_slot.wildcard == null
 		list_slot.typeParam == null
-		list_slot.descriptor == 'Ljava/util/List;'
+		list_slot.descriptor == 'Ljava/util/Set;'
 
 		then:
 		array_slot.wildcard == '='

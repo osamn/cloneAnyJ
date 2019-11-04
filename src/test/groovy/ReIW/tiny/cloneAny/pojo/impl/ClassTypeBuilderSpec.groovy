@@ -1,17 +1,29 @@
 package ReIW.tiny.cloneAny.pojo.impl
 
+import org.objectweb.asm.Type
+
 import ReIW.tiny.cloneAny.pojo.Accessor
 import ReIW.tiny.cloneAny.pojo.Accessor.*
 import ReIW.tiny.cloneAny.pojo.impl.ClassTypeBuilderTester.CtorAccTester
 import ReIW.tiny.cloneAny.pojo.impl.ClassTypeBuilderTester.FieldAccTester
 import ReIW.tiny.cloneAny.pojo.impl.ClassTypeBuilderTester.FromList
 import ReIW.tiny.cloneAny.pojo.impl.ClassTypeBuilderTester.FromMap
+import ReIW.tiny.cloneAny.pojo.impl.ClassTypeBuilderTester.FromSet
 import ReIW.tiny.cloneAny.pojo.impl.ClassTypeBuilderTester.ImplMany
+import ReIW.tiny.cloneAny.pojo.impl.ClassTypeBuilderTester.MyEnum
 import ReIW.tiny.cloneAny.pojo.impl.ClassTypeBuilderTester.PropAccTester
 import ReIW.tiny.cloneAny.pojo.impl.ClassTypeBuilderTester.SimpleTester
 import spock.lang.Specification
 
 class ClassTypeBuilderSpec extends Specification {
+
+	def "enum の場合"() {
+		when:
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(MyEnum))
+
+		then:
+		ct.ancestors.contains("Ljava/lang/Enum;") == true
+	}
 
 	def "配列の descrirptor からつくる"() {
 		// ここではクラスはなくてもいいので signature だけで
@@ -28,22 +40,24 @@ class ClassTypeBuilderSpec extends Specification {
 
 		then:
 		ct.accessors[0].getType() == Accessor.AccessType.ArrayType
-		ct.accessors[0].getName() == '@indexed'
+		ct.accessors[0].getName() == '@sequential'
 		ct.accessors[0].canRead() == true
 		ct.accessors[0].canWrite() == true
 
+		then:
+		Accessor.SequentialAccess.isCase(ct.accessors[0])
+
 		when:
-		def indexed = ct.accessors[0] as IndexedAccess
+		def actual = ct.accessors[0] as SequentialAccess
 
 		then:
 		// 配列の要素
-		indexed.elementSlot.descriptor == 'Ljava/lang/String;'
-
+		actual.elementSlot.descriptor == 'Ljava/lang/String;'
 	}
 
 	def "明示的なコンストラクタがない場合、デフォルトコンストラクタがアクセサに追加されること"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(SimpleTester)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(SimpleTester))
 
 		then:
 		ct.superSlot.descriptor == 'Ljava/lang/Object;'
@@ -57,27 +71,47 @@ class ClassTypeBuilderSpec extends Specification {
 
 	def "List を実装するクラス"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(FromList)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(FromList))
 
 		then:
 		ct.superSlot.descriptor == 'Ljava/lang/Object;'
 
 		then:
 		ct.accessors[0].getType() == Accessor.AccessType.ListType
-		ct.accessors[0].getName() == '@indexed'
+		ct.accessors[0].getName() == '@sequential'
 		ct.accessors[0].canRead() == true
 		ct.accessors[0].canWrite() == true
 
 		when:
-		def indexed = ct.accessors[0] as IndexedAccess
+		def indexed = ct.accessors[0] as SequentialAccess
 
 		then:
 		indexed.elementSlot.descriptor == 'Ljava/lang/String;'
 	}
 
+	def "Set を実装するクラス"() {
+		when:
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(FromSet))
+
+		then:
+		ct.superSlot.descriptor == 'Ljava/lang/Object;'
+
+		then:
+		ct.accessors[0].getType() == Accessor.AccessType.SetType
+		ct.accessors[0].getName() == '@sequential'
+		ct.accessors[0].canRead() == true
+		ct.accessors[0].canWrite() == true
+
+		when:
+		def indexed = ct.accessors[0] as SequentialAccess
+
+		then:
+		indexed.elementSlot.descriptor == 'Ljava/lang/Integer;'
+	}
+
 	def "Map を実装するクラス"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(FromMap)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(FromMap))
 
 		then:
 		ct.superSlot.descriptor == 'Ljava/lang/Object;'
@@ -98,7 +132,7 @@ class ClassTypeBuilderSpec extends Specification {
 
 	def "public なコンストラクタのみアクセサに追加される+パラメタのマップが正しいこと"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(CtorAccTester)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(CtorAccTester))
 
 		then:
 		ct.accessors.size() == 1
@@ -119,7 +153,7 @@ class ClassTypeBuilderSpec extends Specification {
 
 	def "public + non static フィールドのみアクセサに追加されること"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(FieldAccTester)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(FieldAccTester))
 
 		then:
 		ct.accessors.size() == 3
@@ -147,7 +181,7 @@ class ClassTypeBuilderSpec extends Specification {
 
 	def "public + non static なプロパティのみアクセサに追加されること"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(PropAccTester)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(PropAccTester))
 
 		then:
 		ct.accessors.size == 3
@@ -159,14 +193,14 @@ class ClassTypeBuilderSpec extends Specification {
 		props.size() == 2
 
 		then:
-		props[0].type == AccessType.Get
+		props[0].type == AccessType.Getter
 		props[0].name == 'publicStr'
 		props[0].canRead() == true
 		props[0].canWrite() == false
 		props[0].slot.descriptor == 'Ljava/lang/String;'
 
 		then:
-		props[1].type == AccessType.Set
+		props[1].type == AccessType.Setter
 		props[1].name == 'publicStr'
 		props[1].canRead() == false
 		props[1].canWrite() == true
@@ -175,7 +209,7 @@ class ClassTypeBuilderSpec extends Specification {
 
 	def "継承クラス・実装インターフェースがリストアップされてること"() {
 		when:
-		def ct = new ClassTypeBuilder().buildClassType(ImplMany)
+		def ct = new ClassTypeBuilder().buildClassType(Type.getDescriptor(ImplMany))
 		def expected = ['Ljava/lang/Object;', 'Ljava/io/Serializable;', 'Ljava/lang/Cloneable;']
 
 		then:

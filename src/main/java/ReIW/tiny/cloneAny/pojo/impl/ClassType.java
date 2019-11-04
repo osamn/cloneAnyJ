@@ -18,30 +18,13 @@ import ReIW.tiny.cloneAny.pojo.ClassTypeAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Accessor.AccessType;
 import ReIW.tiny.cloneAny.pojo.Accessor.FieldAccess;
-import ReIW.tiny.cloneAny.pojo.Accessor.IndexedAccess;
+import ReIW.tiny.cloneAny.pojo.Accessor.SequentialAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.KeyedAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.LumpSetAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.PropAccess;
 import ReIW.tiny.cloneAny.pojo.Slot;
 
 public final class ClassType implements ClassTypeAccess {
-
-	@Override
-	public String getInternalName() {
-		return Type.getType(thisSlot.getDescriptor()).getInternalName();
-	}
-
-	@Override
-	public Stream<Accessor> accessors() {
-		return this.accessors.stream();
-	}
-
-	public ClassTypeAccess bind(final List<Slot> boundSlots) {
-		final List<SlotValue> lhs = boundSlots.stream().map(SlotValue.class::cast)
-				.collect(Collectors.toUnmodifiableList());
-		final Map<String, String> binds = createBindMap(lhs, thisSlot.slotList);
-		return new Binder(binds);
-	}
 
 	// bind するときに型パラメタの情報で使うよ
 	final SlotValue thisSlot;
@@ -62,6 +45,33 @@ public final class ClassType implements ClassTypeAccess {
 		thisSlot = slot;
 	}
 
+	@Override
+	public Slot getSlot() {
+		return thisSlot;
+	}
+
+	@Override
+	public String getInternalName() {
+		return Type.getType(thisSlot.getDescriptor()).getInternalName();
+	}
+
+	@Override
+	public Stream<Accessor> accessors() {
+		return this.accessors.stream();
+	}
+	
+	@Override
+	public boolean isAssignableTo(String descriptor) {
+		return ancestors.contains(descriptor);
+	}
+
+	public ClassTypeAccess bind(final List<Slot> boundSlots) {
+		final List<SlotValue> lhs = boundSlots.stream().map(SlotValue.class::cast)
+				.collect(Collectors.toUnmodifiableList());
+		final Map<String, String> binds = createBindMap(lhs, thisSlot.slotList);
+		return new Binder(binds);
+	}
+
 	void complete() {
 		if (completed) {
 			return;
@@ -72,7 +82,7 @@ public final class ClassType implements ClassTypeAccess {
 			return;
 		}
 
-		/* 以下配列はありえないので getDescriptor じゃなく descriptor でおｋ*/
+		/* 以下配列はありえないので getDescriptor じゃなく descriptor でおｋ */
 
 		final String superDesc = superSlot.descriptor;
 		if (superDesc.contentEquals("Ljava/lang/Object;")) {
@@ -98,12 +108,12 @@ public final class ClassType implements ClassTypeAccess {
 		// 同じエントリがないように type + name で確認するための Set 用のキーをつくるひと
 		// setter の場合は overload があるので descriptor もキーに含める
 		final Function<Accessor, String> accKey = acc -> acc.getType().name() + ":" + acc.getName() + ":"
-				+ ((acc.getType() == Accessor.AccessType.Set) ? ((PropAccess) acc).slot.getDescriptor() : "");
+				+ ((acc.getType() == Accessor.AccessType.Setter) ? ((PropAccess) acc).slot.getDescriptor() : "");
 
 		// override したときとか同じエントリが階層上位にあったりするので
 		// セットに accKey で作った識別子いれて重複しないようにしておく
 		final Set<String> declaredMember = this.accessors.stream().map(accKey).collect(Collectors.toSet());
-		
+
 		// superSlots の implements 相当の型パラメタは、自身の型パラメタとしてアクセサに展開済みなので
 		// extends 相当の supers.get(0) のみで rebind すればいいよ
 		superType.accessors.stream()
@@ -129,15 +139,16 @@ public final class ClassType implements ClassTypeAccess {
 				final FieldAccess field = (FieldAccess) acc;
 				return new FieldAccess(field.getType(), field.getOwner(), field.getName(),
 						SlotValue.of(field.slot).rebind(binds));
-			case Get:
-			case Set:
+			case Getter:
+			case Setter:
 				final PropAccess prop = (PropAccess) acc;
 				return new PropAccess(prop.getType(), prop.getOwner(), prop.getName(), prop.rel, prop.methodDescriptor,
 						SlotValue.of(prop.slot).rebind(binds));
 			case ArrayType:
 			case ListType:
-				final IndexedAccess indexed = (IndexedAccess) acc;
-				return new IndexedAccess(indexed.getType(), indexed.getOwner(),
+			case SetType:
+				final SequentialAccess indexed = (SequentialAccess) acc;
+				return new SequentialAccess(indexed.getType(), indexed.getOwner(),
 						SlotValue.of(indexed.elementSlot).rebind(binds));
 			case MapType:
 				final KeyedAccess keyed = (KeyedAccess) acc;
@@ -203,6 +214,11 @@ public final class ClassType implements ClassTypeAccess {
 		}
 
 		@Override
+		public Slot getSlot() {
+			return ClassType.this.thisSlot.rebind(binds);
+		}
+
+		@Override
 		public String getInternalName() {
 			return ClassType.this.getInternalName();
 		}
@@ -212,6 +228,10 @@ public final class ClassType implements ClassTypeAccess {
 			return ClassType.this.accessors().map(rebindTypeParam(binds));
 		}
 
+		@Override
+		public boolean isAssignableTo(String descriptor) {
+			return ClassType.this.isAssignableTo(descriptor);
+		}
 	}
 
 }

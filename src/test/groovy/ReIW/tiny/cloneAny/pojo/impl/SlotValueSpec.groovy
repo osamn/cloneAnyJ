@@ -3,7 +3,7 @@ package ReIW.tiny.cloneAny.pojo.impl
 import spock.lang.Specification
 
 class SlotValueSpec extends Specification{
-
+	
 	//@spock.lang.Unroll
 	def "isCertainBound 型パラメタがすべて解決されてるか"() {
 		expect:

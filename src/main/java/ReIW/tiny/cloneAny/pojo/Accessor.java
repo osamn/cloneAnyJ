@@ -9,7 +9,7 @@ public interface Accessor {
 		// フィールド
 		Field, ReadonlyField,
 		// プロパティ
-		Get, Set,
+		Getter, Setter,
 		// 基本コンストラクタしかないけど
 		// 複数の引数で設定するタイプ
 		LumpSet,
@@ -17,6 +17,8 @@ public interface Accessor {
 		ArrayType,
 		// List
 		ListType,
+		// Set
+		SetType,
 		// Map
 		MapType,
 	}
@@ -93,7 +95,7 @@ public interface Accessor {
 
 		public PropAccess(final AccessType type, final String owner, final String name, final String rel,
 				final String methodDescriptor, final Slot slot) {
-			assert type == AccessType.Get || type == AccessType.Set;
+			assert type == AccessType.Getter || type == AccessType.Setter;
 			this.type = type;
 			this.owner = owner;
 			this.name = name;
@@ -109,12 +111,12 @@ public interface Accessor {
 
 		@Override
 		public boolean canRead() {
-			return type == AccessType.Get;
+			return type == AccessType.Getter;
 		}
 
 		@Override
 		public boolean canWrite() {
-			return type == AccessType.Set;
+			return type == AccessType.Setter;
 		}
 
 		@Override
@@ -180,16 +182,16 @@ public interface Accessor {
 		}
 	}
 
-	// Array/java.util.List
-	class IndexedAccess implements Accessor {
+	// Array/java.util.List/java.util.Set
+	class SequentialAccess implements Accessor {
 
 		private final AccessType type;
 		private final String owner;
 
 		public final Slot elementSlot;
 
-		public IndexedAccess(final AccessType type, final String owner, final Slot elementSlot) {
-			assert type == AccessType.ArrayType || type == AccessType.ListType;
+		public SequentialAccess(final AccessType type, final String owner, final Slot elementSlot) {
+			assert type == AccessType.ArrayType || type == AccessType.ListType || type == AccessType.SetType;
 			this.owner = owner;
 			this.type = type;
 			this.elementSlot = elementSlot;
@@ -217,12 +219,12 @@ public interface Accessor {
 
 		@Override
 		public String getName() {
-			return "@indexed";
+			return "@sequential";
 		}
 
 		@Override
 		public String toString() {
-			return "IndexedAccess [type=" + type + ", owner=" + owner + ", elementSlot=" + elementSlot + "]";
+			return "SequentialAccess [type=" + type + ", owner=" + owner + ", elementSlot=" + elementSlot + "]";
 		}
 	}
 
