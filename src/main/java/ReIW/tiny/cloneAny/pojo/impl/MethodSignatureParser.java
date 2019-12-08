@@ -7,8 +7,8 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
 
+import ReIW.tiny.cloneAny.function.Consumers;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
-import ReIW.tiny.cloneAny.utils.Consumers;
 
 public class MethodSignatureParser extends SlotLikeSignatureParser {
 

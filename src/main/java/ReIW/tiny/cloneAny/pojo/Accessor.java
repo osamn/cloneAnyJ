@@ -139,15 +139,23 @@ public interface Accessor {
 	class LumpSetAccess implements Accessor {
 
 		private final String owner;
+
 		public final String rel;
 		public final String methodDescriptor;
 
-		public final Map<String, Slot> parameters = new LinkedHashMap<>();
+		public final Map<String, Slot> parameters;
 
-		public LumpSetAccess(final String owner, final String rel, final String methodDescriptor) {
+		// 並び順が重要なんで LinkedHashMap
+		public static Map<String, Slot> emptyParamMap() {
+			return new LinkedHashMap<String, Slot>();
+		}
+
+		public LumpSetAccess(final String owner, final String rel, final String methodDescriptor,
+				final Map<String, Slot> parameters) {
 			this.owner = owner;
 			this.rel = rel;
 			this.methodDescriptor = methodDescriptor;
+			this.parameters = parameters;
 		}
 
 		@Override

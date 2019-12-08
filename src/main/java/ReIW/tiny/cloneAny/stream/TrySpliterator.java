@@ -2,18 +2,17 @@ package ReIW.tiny.cloneAny.stream;
 
 import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 import ReIW.tiny.cloneAny.stream.StreamExtention.UncheckedStreamException;
 
-class TrySpliterator<T> implements Spliterator<T> {
+final class TrySpliterator<T> implements Spliterator<T> {
 
 	private final Spliterator<T> spliterator;
-	private final BiFunction<? super Throwable, ? super T, Boolean> handler;
+	private final BiPredicate<? super Throwable, ? super T> handler;
 
-	TrySpliterator(final Spliterator<T> spliterator,
-			final BiFunction<? super Throwable, ? super T, Boolean> exceptionHandler) {
+	TrySpliterator(final Spliterator<T> spliterator, final BiPredicate<? super Throwable, ? super T> exceptionHandler) {
 		assert !(spliterator instanceof TrySpliterator);
 
 		this.spliterator = spliterator;
@@ -26,23 +25,23 @@ class TrySpliterator<T> implements Spliterator<T> {
 
 	@Override
 	public boolean tryAdvance(final Consumer<? super T> action) {
-		final AtomicBoolean continueStream = new AtomicBoolean(Boolean.TRUE);
-		boolean next = spliterator.tryAdvance(actionDelegate(action, continueStream));
-		if (next) {
+		final AtomicBoolean resumeNext = new AtomicBoolean(true);
+		final boolean hasNext = spliterator.tryAdvance(actionDelegate(action, resumeNext));
+		if (hasNext) {
 			// delegate で例外時には handler から継続、中止が返されるよ
-			// 例外が発生してない場合は初期値のままなので結局 true が返るよ
-			return continueStream.get();
+			// 例外が発生してない場合は初期値のままなので true だよ
+			return resumeNext.get();
 		}
-		return next;
+		return hasNext;
 	}
 
-	private Consumer<? super T> actionDelegate(final Consumer<? super T> action, final AtomicBoolean continueStream) {
+	private Consumer<? super T> actionDelegate(final Consumer<? super T> action, final AtomicBoolean resumeNext) {
 		return val -> {
 			try {
 				action.accept(val);
 			} catch (UncheckedStreamException e) {
-				final boolean result = this.handler.apply(e.getCause(), val);
-				continueStream.set(result);
+				final boolean result = this.handler.test(e.getCause(), val);
+				resumeNext.set(result);
 			}
 		};
 	}

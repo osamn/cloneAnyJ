@@ -1,6 +1,6 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
-import static ReIW.tiny.cloneAny.utils.Consumers.withIndex;
+import static ReIW.tiny.cloneAny.function.Consumers.withIndex;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.ObjIntConsumer;
 
 import org.objectweb.asm.ClassReader;
@@ -22,10 +22,11 @@ import ReIW.tiny.cloneAny.asm7.DefaultClassVisitor;
 import ReIW.tiny.cloneAny.asm7.DefaultMethodVisitor;
 import ReIW.tiny.cloneAny.pojo.Accessor.AccessType;
 import ReIW.tiny.cloneAny.pojo.Accessor.FieldAccess;
-import ReIW.tiny.cloneAny.pojo.Accessor.SequentialAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.KeyedAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.LumpSetAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.PropAccess;
+import ReIW.tiny.cloneAny.pojo.Accessor.SequentialAccess;
+import ReIW.tiny.cloneAny.pojo.Slot;
 import ReIW.tiny.cloneAny.pojo.UnboundFormalTypeParameterException;
 import ReIW.tiny.cloneAny.pojo.UnboundMethodParameterNameException;
 import ReIW.tiny.cloneAny.utils.AccessFlag;
@@ -94,12 +95,12 @@ public final class ClassTypeBuilder extends DefaultClassVisitor {
 			if (ct.ancestors.add(slot.descriptor)) {
 				// 新規に追加されたので List/Map のアクセサ追加してもいいよ
 				if (slot.descriptor.contentEquals("Ljava/util/List;")) {
-					ct.accessors
-							.add(new SequentialAccess(AccessType.ListType, ct.thisSlot.descriptor, slot.slotList.get(0)));
+					ct.accessors.add(
+							new SequentialAccess(AccessType.ListType, ct.thisSlot.descriptor, slot.slotList.get(0)));
 				}
 				if (slot.descriptor.contentEquals("Ljava/util/Set;")) {
-					ct.accessors
-							.add(new SequentialAccess(AccessType.SetType, ct.thisSlot.descriptor, slot.slotList.get(0)));
+					ct.accessors.add(
+							new SequentialAccess(AccessType.SetType, ct.thisSlot.descriptor, slot.slotList.get(0)));
 				}
 				if (slot.descriptor.contentEquals("Ljava/util/Map;")) {
 					ct.accessors.add(new KeyedAccess(AccessType.MapType, ct.thisSlot.descriptor, slot.slotList.get(0),
@@ -122,19 +123,19 @@ public final class ClassTypeBuilder extends DefaultClassVisitor {
 	}
 
 	@Override
-	public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
-			String[] exceptions) {
+	public MethodVisitor visitMethod(final int access, final String name, final String descriptor,
+			final String signature, final String[] exceptions) {
 		if (!isAccessible(access)) {
 			return null;
 		}
 
+		final String owner = classType.thisSlot.descriptor;
 		if (name.contentEquals("<init>")) {
 			// コンストラクタの場合
-			final LumpSetAccess ctor = new LumpSetAccess(classType.thisSlot.descriptor, name, descriptor);
-			classType.accessors.add(ctor);
-
 			if (descriptor.contentEquals("()V")) {
-				// 引数ないんで終了
+				// 引数ないんでデフォルトコンストラクタ追加して終了
+				final LumpSetAccess ctor = new LumpSetAccess(owner, name, descriptor, Map.of());
+				classType.accessors.add(ctor);
 				return null;
 			}
 
@@ -144,18 +145,21 @@ public final class ClassTypeBuilder extends DefaultClassVisitor {
 			new MethodSignatureParser(params::add, null).parseArgumentsAndReturn(descriptor, signature);
 
 			// そのスロットとパラメタ名とくっつけてもらうように MethodVisitor をかえしてあげる
-			return new MethodParamNameMapper(params, ctor.parameters::put);
+			return new LumpSetAccessBuilder(params, map -> {
+				final LumpSetAccess cctor = new LumpSetAccess(owner, name, descriptor, map);
+				classType.accessors.add(cctor);
+			});
 		} else {
 			try {
 				// FIXME プロパティ名作るところはほんとは BeanInfo を先に見ないといかんとおもう
 				if (Propertys.isGetter(name, descriptor)) {
 					new MethodSignatureParser(null, slot -> {
-						classType.accessors.add(new PropAccess(AccessType.Getter, classType.thisSlot.descriptor,
+						classType.accessors.add(new PropAccess(AccessType.Getter, owner,
 								Propertys.getPropertyName(name), name, descriptor, slot));
 					}).parseArgumentsAndReturn(descriptor, signature);
 				} else if (Propertys.isSetter(name, descriptor)) {
 					new MethodSignatureParser(slot -> {
-						classType.accessors.add(new PropAccess(AccessType.Setter, classType.thisSlot.descriptor,
+						classType.accessors.add(new PropAccess(AccessType.Setter, owner,
 								Propertys.getPropertyName(name), name, descriptor, slot));
 					}, null).parseArgumentsAndReturn(descriptor, signature);
 				}
@@ -182,13 +186,13 @@ public final class ClassTypeBuilder extends DefaultClassVisitor {
 		// TODO lombok とかがつけそうなんだけど -> synthetic
 	}
 
-	// メソッドのパラメタ名を対応するスロットにくっつけるひと
-	private static final class MethodParamNameMapper extends DefaultMethodVisitor {
+	private static final class LumpSetAccessBuilder extends DefaultMethodVisitor {
 
+		private final Map<String, Slot> paramMap = LumpSetAccess.emptyParamMap();
 		private final Iterator<SlotValue> slots;
-		private final BiConsumer<String, SlotValue> cons;
+		private final Consumer<Map<String, Slot>> cons;
 
-		private MethodParamNameMapper(final List<SlotValue> slotList, final BiConsumer<String, SlotValue> cons) {
+		private LumpSetAccessBuilder(final List<SlotValue> slotList, Consumer<Map<String, Slot>> cons) {
 			this.slots = slotList.iterator();
 			this.cons = cons;
 		}
@@ -206,7 +210,7 @@ public final class ClassTypeBuilder extends DefaultClassVisitor {
 			// this(0) を除いた引数だけ処理する
 			// あとイテレータでガードしないと引数じゃないローカル変数まで処理しちゃうよ
 			if (0 < index && slots.hasNext()) {
-				cons.accept(name, slots.next());
+				paramMap.put(name, slots.next());
 			}
 		}
 
@@ -220,7 +224,9 @@ public final class ClassTypeBuilder extends DefaultClassVisitor {
 				// ということでエラーにしておく
 				throw new UnboundMethodParameterNameException("No debug symbols.");
 			}
+			cons.accept(Collections.unmodifiableMap(paramMap));
 		}
 
 	}
+
 }

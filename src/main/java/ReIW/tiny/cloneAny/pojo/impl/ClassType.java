@@ -1,8 +1,9 @@
 package ReIW.tiny.cloneAny.pojo.impl;
 
-import static ReIW.tiny.cloneAny.utils.Consumers.withIndex;
+import static ReIW.tiny.cloneAny.function.Consumers.withIndex;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,16 +13,14 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.objectweb.asm.Type;
-
-import ReIW.tiny.cloneAny.pojo.ClassTypeAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor;
 import ReIW.tiny.cloneAny.pojo.Accessor.AccessType;
 import ReIW.tiny.cloneAny.pojo.Accessor.FieldAccess;
-import ReIW.tiny.cloneAny.pojo.Accessor.SequentialAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.KeyedAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.LumpSetAccess;
 import ReIW.tiny.cloneAny.pojo.Accessor.PropAccess;
+import ReIW.tiny.cloneAny.pojo.Accessor.SequentialAccess;
+import ReIW.tiny.cloneAny.pojo.ClassTypeAccess;
 import ReIW.tiny.cloneAny.pojo.Slot;
 
 public final class ClassType implements ClassTypeAccess {
@@ -51,15 +50,10 @@ public final class ClassType implements ClassTypeAccess {
 	}
 
 	@Override
-	public String getInternalName() {
-		return Type.getType(thisSlot.getDescriptor()).getInternalName();
-	}
-
-	@Override
 	public Stream<Accessor> accessors() {
 		return this.accessors.stream();
 	}
-	
+
 	@Override
 	public boolean isAssignableTo(String descriptor) {
 		return ancestors.contains(descriptor);
@@ -161,8 +155,10 @@ public final class ClassType implements ClassTypeAccess {
 			// LumpSet
 			assert acc.getType() == AccessType.LumpSet;
 			final LumpSetAccess lump = (LumpSetAccess) acc;
-			final LumpSetAccess dstLump = new LumpSetAccess(lump.getOwner(), lump.rel, lump.methodDescriptor);
-			lump.parameters.forEach((key, val) -> dstLump.parameters.put(key, SlotValue.of(val).rebind(binds)));
+			final Map<String, Slot> paramMap = LumpSetAccess.emptyParamMap();
+			lump.parameters.forEach((key, val) -> paramMap.put(key, SlotValue.of(val).rebind(binds)));
+			final LumpSetAccess dstLump = new LumpSetAccess(lump.getOwner(), lump.rel, lump.methodDescriptor,
+					Collections.unmodifiableMap(paramMap));
 			return dstLump;
 		};
 	}
@@ -216,11 +212,6 @@ public final class ClassType implements ClassTypeAccess {
 		@Override
 		public Slot getSlot() {
 			return ClassType.this.thisSlot.rebind(binds);
-		}
-
-		@Override
-		public String getInternalName() {
-			return ClassType.this.getInternalName();
 		}
 
 		@Override

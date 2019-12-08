@@ -21,7 +21,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
-final class StreamWrapper<T> implements StreamExtention<T>, AutoCloseable {
+final class StreamWrapper<T> implements StreamExtention<T> {
 
 	private final Stream<T> stream;
 
@@ -30,7 +30,7 @@ final class StreamWrapper<T> implements StreamExtention<T>, AutoCloseable {
 	}
 
 	@Override
-	public Stream<T> baseStream() {
+	public Stream<T> stream() {
 		return stream;
 	}
 

@@ -59,7 +59,7 @@ public class OperandGenerator {
 		return rhsAcc.slotInfo().allMatch(rhsInfo -> {
 			// 左側にパラメタ名前が一致するアクセサがあるかみて
 			if (sourceAccMap.containsKey(rhsInfo.param)) {
-				final Accessor lhsAcc = sourceAccMap.get(rhsInfo.param);
+				final Accessor lhsAcc = sourceAccMap.create(rhsInfo.param);
 				if (canMove(asSingle(lhsAcc).slot, rhsInfo.slot)) {
 					// スロットが move 可能なのでおｋ
 					return true;
@@ -86,7 +86,7 @@ public class OperandGenerator {
 		effectiveCtor.slotInfo().forEach(rhsInfo -> {
 			final String name = rhsInfo.param;
 			if (sourceAccMap.containsKey(name)) {
-				final Accessor rhsAcc = sourceAccMap.get(name);
+				final Accessor rhsAcc = sourceAccMap.create(name);
 				streams.add(readOps(rhsAcc));
 				streams.add(convOps(asSingle(rhsAcc).slot, rhsInfo.slot));
 			} else {
@@ -215,7 +215,7 @@ public class OperandGenerator {
 
 		// array -> array のチェック
 		if (lhs.isArrayType && rhs.isArrayType) {
-			return canMove(lhs.slotList.get(0), rhs.slotList.get(0));
+			return canMove(lhs.slotList.create(0), rhs.slotList.create(0));
 		}
 
 		// array -> List のチェック
@@ -223,7 +223,7 @@ public class OperandGenerator {
 			final TypeDef rhsDef = TypeDef.createInstance(rhs);
 			// 右側が List の場合 array と同等に生成できないといかんのでデフォルトコンストラクタが必要
 			if (rhsDef.isList() && rhsDef.hasDefaultCtor()) {
-				return canMove(lhs.slotList.get(0), rhsDef.elementSlot());
+				return canMove(lhs.slotList.create(0), rhsDef.elementSlot());
 			}
 			return false;
 		}
@@ -232,7 +232,7 @@ public class OperandGenerator {
 		if (rhs.isArrayType) {
 			final TypeDef lhsDef = TypeDef.createInstance(lhs);
 			if (lhsDef.isList()) {
-				return canMove(lhsDef.elementSlot(), rhs.slotList.get(0));
+				return canMove(lhsDef.elementSlot(), rhs.slotList.create(0));
 			}
 			return false;
 		}

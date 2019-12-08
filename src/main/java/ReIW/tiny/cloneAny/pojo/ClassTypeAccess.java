@@ -10,9 +10,6 @@ public interface ClassTypeAccess {
 
 	Slot getSlot();
 
-	// TODO これは Slot 側にうつす
-	String getInternalName();
-
 	Stream<Accessor> accessors();
 
 	boolean isAssignableTo(final String descriptor);

@@ -1,4 +1,4 @@
-package ReIW.tiny.cloneAny.pojo;
+package ReIW.tiny.cloneAny.compile;
 
 import ReIW.tiny.cloneAny.core.AssemblyException;
 

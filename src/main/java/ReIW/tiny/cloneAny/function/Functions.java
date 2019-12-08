@@ -1,6 +1,7 @@
-package ReIW.tiny.cloneAny.utils;
+package ReIW.tiny.cloneAny.function;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 public interface Functions {
@@ -17,20 +18,8 @@ public interface Functions {
 	}
 
 	static <T, R> Function<T, R> withIndex(final int from, final int step, final ObjIntFunction<T, R> function) {
-		final int[] counter = { from };
-		// +1 -1 の場合は後置演算子で
-		if (step == 1) {
-			return element -> function.apply(element, counter[0]++);
-		} else if (step == -1) {
-			return element -> function.apply(element, counter[0]--);
-		}
-
-		// それ以外
-		return element -> {
-			R ret = function.apply(element, counter[0]);
-			counter[0] += step;
-			return ret;
-		};
+		final AtomicInteger counter = new AtomicInteger();
+		return element -> function.apply(element, counter.getAndAdd(step));
 	}
 
 	static <T, R> Function<T, R> withIndex(final int from, final ObjIntFunction<T, R> function) {

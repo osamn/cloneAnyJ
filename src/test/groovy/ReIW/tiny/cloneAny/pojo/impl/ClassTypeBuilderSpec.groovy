@@ -147,8 +147,10 @@ class ClassTypeBuilderSpec extends Specification {
 		def ctor = ct.accessors[0] as LumpSetAccess
 		ctor.methodDescriptor == '(Ljava/lang/String;[Ljava/lang/Integer;I)V'
 
-		def expected = ['str':'Ljava/lang/String;', 'intArr':'[Ljava/lang/Integer;', 'i':'I' ]
-		ctor.parameters.collectEntries { key, val -> [key, val.descriptor]} == expected
+		def expectedName = ['str', 'intArr', 'i' ]
+		def expectedDesc = ['Ljava/lang/String;','[Ljava/lang/Integer;', 'I' ]
+		ctor.parameters.collect { it.key } == expectedName
+		ctor.parameters.collect { it.value.descriptor } == expectedDesc
 	}
 
 	def "public + non static フィールドのみアクセサに追加されること"() {

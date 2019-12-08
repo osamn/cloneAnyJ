@@ -1,41 +1,42 @@
 package ReIW.tiny.cloneAny.stream;
 
 import java.util.Spliterator;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public interface StreamExtention<T> extends Stream<T> {
 
-	static <R> StreamExtention<R> of(final Stream<R> stream) {
+	static <U> StreamExtention<U> of(final Stream<U> stream) {
 		return new StreamWrapper<>(stream);
 	}
 
-	interface ThrowableFunction<TVal, R> {
-		R apply(TVal value) throws Exception;
+	@FunctionalInterface
+	interface ThrowableFunction<U, R> {
+		R apply(U value) throws Exception;
 	}
 
 	@SuppressWarnings("serial")
-	static final class UncheckedStreamException extends RuntimeException {
+	final class UncheckedStreamException extends RuntimeException {
 		private UncheckedStreamException(final Exception e) {
 			super(e);
 		}
 	}
 
-	Stream<T> baseStream();
+	Stream<T> stream();
 
 	default <R> StreamExtention<R> tryMap(final ThrowableFunction<? super T, ? extends R> mapper) {
 		return tryMap(mapper, StreamExtention::resumeNext);
 	}
 
-	default <R> StreamExtention<R> tryMapUntil(final ThrowableFunction<? super T, ? extends R> mapper) {
-		return tryMap(mapper, StreamExtention::stallStream);
+	default <R> StreamExtention<R> tryUntilMap(final ThrowableFunction<? super T, ? extends R> mapper) {
+		return tryMap(mapper, StreamExtention::stalled);
 	}
 
 	default <R> StreamExtention<R> tryMap(final ThrowableFunction<? super T, ? extends R> mapper,
-			final BiFunction<? super Throwable, ? super T, Boolean> handler) {
-		final Spliterator<T> spliterator = new TrySpliterator<T>(unwrap(baseStream().spliterator()), handler);
-		return new StreamWrapper<R>(StreamSupport.stream(spliterator, isParallel()).map((v -> {
+			final BiPredicate<? super Throwable, ? super T> exceptionHandler) {
+		final Spliterator<T> spliterator = new TrySpliterator<T>(unwrap(stream().spliterator()), exceptionHandler);
+		return new StreamWrapper<R>(StreamSupport.stream(spliterator, isParallel()).map(v -> {
 			try {
 				return mapper.apply(v);
 			} catch (RuntimeException e) {
@@ -43,20 +44,20 @@ public interface StreamExtention<T> extends Stream<T> {
 			} catch (Exception e) {
 				throw new UncheckedStreamException(e);
 			}
-		})));
+		}));
 	}
 
-	private static <T> Boolean resumeNext(final Throwable e, final T val) {
-		return Boolean.TRUE;
+	private static <U> boolean resumeNext(final Throwable e, final U val) {
+		return true;
 	}
 
-	private static <T> Boolean stallStream(final Throwable e, final T val) {
-		return Boolean.FALSE;
+	private static <U> boolean stalled(final Throwable e, final U val) {
+		return false;
 	}
 
-	private static <V> Spliterator<V> unwrap(final Spliterator<V> spliterator) {
+	private static <U> Spliterator<U> unwrap(final Spliterator<U> spliterator) {
 		if (spliterator instanceof TrySpliterator) {
-			return ((TrySpliterator<V>) spliterator).getSourceSpliterator();
+			return ((TrySpliterator<U>) spliterator).getSourceSpliterator();
 		} else {
 			return spliterator;
 		}

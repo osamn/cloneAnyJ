@@ -1,5 +1,6 @@
-package ReIW.tiny.cloneAny.utils;
+package ReIW.tiny.cloneAny.function;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.ObjIntConsumer;
 
@@ -22,7 +23,8 @@ import java.util.function.ObjIntConsumer;
 public interface Consumers {
 
 	public static <T> Consumer<T> nop() {
-		return value -> {};
+		return value -> {
+		};
 	}
 
 	/**
@@ -35,19 +37,8 @@ public interface Consumers {
 	 * @return Consumer
 	 */
 	public static <T> Consumer<T> withIndex(final int from, final int step, final ObjIntConsumer<T> consumer) {
-		final int[] counter = { from };
-		// +1 -1 の場合は後置演算子で
-		if (step == 1) {
-			return element -> consumer.accept(element, counter[0]++);
-		} else if (step == -1) {
-			return element -> consumer.accept(element, counter[0]--);
-		}
-
-		// それ以外は accept + 複合代入で
-		return element -> {
-			consumer.accept(element, counter[0]);
-			counter[0] += step;
-		};
+		final AtomicInteger counter = new AtomicInteger(from);
+		return element -> consumer.accept(element, counter.getAndAdd(step));
 	}
 
 	/**
